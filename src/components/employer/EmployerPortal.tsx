@@ -347,7 +347,7 @@ export default function EmployerPortal() {
           </p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: "22px" }}>
+        <div className={`candidates-grid ${filteredCandidates.length === 1 ? "single-item" : ""}`}>
           {filteredCandidates.map((cand) => (
             <article key={cand.id} className="candidate-card">
               {/* Card Top: Candidate Info & Match Score */}

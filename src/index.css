@@ -1274,6 +1274,16 @@ label.custom-checkbox.agreement-checkbox,
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.02);
 }
 
+.candidates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: 22px;
+}
+
+.candidates-grid.single-item {
+  grid-template-columns: minmax(min(100%, 360px), 520px);
+}
+
 .candidate-card {
   padding: 24px;
   border-radius: 16px;
