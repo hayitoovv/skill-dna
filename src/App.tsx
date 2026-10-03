@@ -418,17 +418,6 @@ export default function App() {
           </nav>
         )}
 
-        {/* Sidebar bottom proof */}
-        <div className="sidebar-proof">
-          <div className="proof-icon">
-            <Icon name="check" />
-          </div>
-          <div>
-            <strong>5 Qatlamli model</strong>
-            <span>KNOW · DO · ADAPT · DEFEND · PROVE</span>
-          </div>
-        </div>
-
         {/* Current user mini info with Logout button */}
         <div
           className="user-mini"
