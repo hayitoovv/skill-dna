@@ -13,6 +13,7 @@ git pull origin main || git pull
 echo -e "\n📦 1. Frontend kutubxonalari tekshirilmoqda va build qilinmoqda..."
 npm install
 npm run build
+cp -r public/* dist/ 2>/dev/null || true
 ln -sfn dist skilldna
 chmod -R 755 .
 

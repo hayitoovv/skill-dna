@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import logoImage from "@/assets/logo.png";
 
 export type IconName =
   | "grid"
@@ -427,7 +428,7 @@ export function Logo({
   showTagline?: boolean;
   className?: string;
 } = {}) {
-  const logoSrc = `${import.meta.env.BASE_URL || "/"}logo.png`.replace(/\/{2,}/g, "/");
+  const logoSrc = logoImage;
   return (
     <div className={`logo-wrap logo-${size} ${className}`.trim()}>
       <div className="logo-mark">

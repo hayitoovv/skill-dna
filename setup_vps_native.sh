@@ -117,6 +117,7 @@ echo -e "\n${BLUE}5/5. Frontend yig'ilmoqda (Base path: /skilldna/)...${NC}"
 cd "$PROJECT_DIR"
 npm install
 npm run build
+cp -r "$PROJECT_DIR/public"/* "$PROJECT_DIR/dist"/ 2>/dev/null || true
 ln -sfn "$PROJECT_DIR/dist" "$PROJECT_DIR/skilldna"
 chmod -R 755 "$PROJECT_DIR"
 echo -e "${GREEN}✓ Frontend muvaffaqiyatli build qilindi!${NC}"

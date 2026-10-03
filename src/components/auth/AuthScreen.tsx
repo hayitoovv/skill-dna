@@ -3,6 +3,8 @@ import { Icon, GoogleIcon } from "../common/Icons";
 import { demoUsers } from "../../data/ontology";
 import type { User, Role, DirectionCode } from "../../types";
 import { api } from "../../services/api";
+import logoImg from "@/assets/logo.png";
+import authBgImg from "@/assets/auth-bg.png";
 
 export default function AuthScreen({
   onLogin,
@@ -191,7 +193,7 @@ export default function AuthScreen({
           <div
             className="auth-bg-art"
             style={{
-              backgroundImage: `url('${(import.meta.env.BASE_URL || "/").replace(/\/{2,}/g, "/")}auth-bg.png')`,
+              backgroundImage: `url(${authBgImg})`,
             }}
           />
 
@@ -200,7 +202,7 @@ export default function AuthScreen({
             <div className="auth-logo-row">
               <div className="auth-logo-badge">
                 <img
-                  src={`${(import.meta.env.BASE_URL || "/").replace(/\/{2,}/g, "/")}logo.png`}
+                  src={logoImg}
                   alt="Skill DNA"
                   className="auth-logo-img"
                 />
