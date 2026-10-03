@@ -21,7 +21,8 @@ async def init_database():
         # Check if already seeded
         res = await session.execute(select(Direction))
         if res.scalars().first():
-            print("Database already seeded with initial directions and data.")
+            print("Database already initialized. Ensuring demo students have full 80-90% progress...")
+            await ensure_demo_students(session)
             return
 
         print("Seeding initial data...")
@@ -323,7 +324,163 @@ async def init_database():
         session.add(career_backend)
 
         await session.commit()
+        await ensure_demo_students(session)
         print("Database seeded with sample users, directions, skills, tasks, and scores!")
+
+async def ensure_demo_students(session: AsyncSession):
+    dir_res = await session.execute(select(Direction).where(Direction.code == "software"))
+    dir_software = dir_res.scalars().first()
+    if not dir_software:
+        dir_res = await session.execute(select(Direction).limit(1))
+        dir_software = dir_res.scalars().first()
+    if not dir_software:
+        return
+
+    sk_res = await session.execute(select(Skill).where(Skill.direction_id == dir_software.id).limit(1))
+    sk_backend = sk_res.scalars().first()
+    if not sk_backend:
+        return
+
+    pwd_hash = get_password_hash("root123")
+    students_data = [
+        {
+            "full_name": "Azizbek Sobirov",
+            "email": "azizbek.sobirov@gmail.com",
+            "phone": "+998901234567",
+            "course": "3-kurs",
+            "group_id": "DI-2023-4A"
+        },
+        {
+            "full_name": "Shoxrux Mirzayev",
+            "email": "shoxrux@edu.uz",
+            "phone": "+998901234567",
+            "course": "3-kurs",
+            "group_id": "941-21 DI"
+        }
+    ]
+
+    for st_info in students_data:
+        u_res = await session.execute(select(User).where(User.email == st_info["email"]))
+        user = u_res.scalars().first()
+        if not user:
+            user = User(
+                full_name=st_info["full_name"],
+                email=st_info["email"],
+                phone=st_info["phone"],
+                hashed_password=pwd_hash,
+                role=UserRole.STUDENT.value,
+                locale="uz"
+            )
+            session.add(user)
+            await session.flush()
+
+        p_res = await session.execute(select(StudentProfile).where(StudentProfile.user_id == user.id))
+        if not p_res.scalars().first():
+            st_profile = StudentProfile(
+                user_id=user.id,
+                direction_id=dir_software.id,
+                course=st_info["course"],
+                group_id=st_info["group_id"],
+                cohort="2023-2027"
+            )
+            session.add(st_profile)
+
+        # Consents
+        c_res = await session.execute(select(Consent).where(Consent.user_id == user.id))
+        if not c_res.scalars().first():
+            consents = [
+                Consent(user_id=user.id, type="viva_record", granted_at=datetime.now(timezone.utc)),
+                Consent(user_id=user.id, type="employer_share", granted_at=datetime.now(timezone.utc)),
+                Consent(user_id=user.id, type="data_processing", granted_at=datetime.now(timezone.utc)),
+            ]
+            session.add_all(consents)
+
+        # Skill score
+        sc_res = await session.execute(
+            select(SkillScore).where(SkillScore.user_id == user.id, SkillScore.skill_id == sk_backend.id)
+        )
+        score_record = sc_res.scalars().first()
+        if not score_record:
+            score_record = SkillScore(
+                user_id=user.id,
+                skill_id=sk_backend.id,
+                score=83.0,
+                confidence=81.0,
+                level="L3",
+                components={
+                    "KNOW": 88.0,
+                    "DO": 85.0,
+                    "ADAPT": 78.0,
+                    "DEFEND": 82.0,
+                    "PROVE": 80.0
+                },
+                computed_at=datetime.now(timezone.utc),
+                formula_version="2.0"
+            )
+            session.add(score_record)
+        else:
+            score_record.score = 83.0
+            score_record.confidence = 81.0
+            score_record.level = "L3"
+            score_record.components = {
+                "KNOW": 88.0,
+                "DO": 85.0,
+                "ADAPT": 78.0,
+                "DEFEND": 82.0,
+                "PROVE": 80.0
+            }
+
+        # Evidence records
+        ev_res = await session.execute(select(Evidence).where(Evidence.user_id == user.id))
+        existing_ev = ev_res.scalars().all()
+        if len(existing_ev) < 5:
+            evidences = [
+                Evidence(
+                    user_id=user.id,
+                    skill_id=sk_backend.id,
+                    layer="KNOW",
+                    title="REST API Arxitekturasi va HTTP Metodlari Nazariyasi",
+                    score=88.0,
+                    status="verified"
+                ),
+                Evidence(
+                    user_id=user.id,
+                    skill_id=sk_backend.id,
+                    layer="DO",
+                    title="Token Bucket Rate Limiter Implementatsiyasi",
+                    score=85.0,
+                    status="verified"
+                ),
+                Evidence(
+                    user_id=user.id,
+                    skill_id=sk_backend.id,
+                    layer="ADAPT",
+                    title="Kesh uzilishi va DB Deadlock optimizatsiyasi",
+                    score=78.0,
+                    status="verified"
+                ),
+                Evidence(
+                    user_id=user.id,
+                    skill_id=sk_backend.id,
+                    layer="DEFEND",
+                    title="AI Viva: Himoya va Idempotency Asoslash",
+                    score=82.0,
+                    status="verified"
+                ),
+                Evidence(
+                    user_id=user.id,
+                    skill_id=sk_backend.id,
+                    layer="PROVE",
+                    title="Mikroservis Repozitoriysi va Docker CI/CD",
+                    score=80.0,
+                    status="verified"
+                )
+            ]
+            session.add_all(evidences)
+
+    await session.commit()
+    print("Demo students (Azizbek Sobirov, Shoxrux Mirzayev) verified with 80-90% progress!")
 
 if __name__ == "__main__":
     asyncio.run(init_database())
+

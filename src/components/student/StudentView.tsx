@@ -202,7 +202,11 @@ export default function StudentView({
   const [profileAvatar, setProfileAvatar] = useState(user?.avatar || "TL");
 
   const userName = profileName ? profileName.trim().split(" ")[0] : (user?.name ? user.name.trim().split(" ")[0] : "Talaba");
-  const isDemoStudent = user?.email === "shoxrux@edu.uz" || user?.id === "usr-student";
+  const isDemoStudent =
+    user?.email === "shoxrux@edu.uz" ||
+    user?.id === "usr-student" ||
+    user?.id === "usr-student-1" ||
+    user?.email === "azizbek.sobirov@gmail.com";
 
   const [completedScore, setCompletedScore] = useState<number | null>(() => {
     if (!user) return null;
