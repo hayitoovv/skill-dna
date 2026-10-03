@@ -93,6 +93,24 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const [teacherTab, setTeacherTab] = useState<"heatmap" | "queue" | "remedial" | "viva">(() => {
+    try {
+      const saved = localStorage.getItem("skill_dna_teacher_tab");
+      if (saved && ["heatmap", "queue", "remedial", "viva"].includes(saved)) {
+        return saved as "heatmap" | "queue" | "remedial" | "viva";
+      }
+    } catch {}
+    return "heatmap";
+  });
+
+  const handleTeacherTabChange = (tab: "heatmap" | "queue" | "remedial" | "viva") => {
+    setTeacherTab(tab);
+    try {
+      localStorage.setItem("skill_dna_teacher_tab", tab);
+    } catch {}
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const [moderatorTab, setModeratorTab] = useState<"flags" | "transcripts" | "rules">(() => {
     try {
       const saved = localStorage.getItem("skill_dna_moderator_tab");
@@ -339,16 +357,28 @@ export default function App() {
         {role === "teacher" && (
           <nav className="main-nav" aria-label="O‘qituvchi navigatsiyasi" style={{ marginTop: "12px" }}>
             <div className="nav-label">O‘QITUVCHI MODULLARI</div>
-            <button className="nav-item active">
+            <button
+              className={`nav-item ${teacherTab === "heatmap" ? "active" : ""}`}
+              onClick={() => handleTeacherTabChange("heatmap")}
+            >
               <Icon name="users" /> Guruh Skill Heatmap
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${teacherTab === "queue" ? "active" : ""}`}
+              onClick={() => handleTeacherTabChange("queue")}
+            >
               <Icon name="check" /> PROVE Tasdiqlash navbati
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${teacherTab === "remedial" ? "active" : ""}`}
+              onClick={() => handleTeacherTabChange("remedial")}
+            >
               <Icon name="code" /> Remedial Generator
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${teacherTab === "viva" ? "active" : ""}`}
+              onClick={() => handleTeacherTabChange("viva")}
+            >
               <Icon name="file" /> AI Viva natijalari
             </button>
           </nav>
@@ -629,7 +659,12 @@ export default function App() {
           />
         )}
 
-        {role === "teacher" && <TeacherPortal />}
+        {role === "teacher" && (
+          <TeacherPortal
+            activeTab={teacherTab}
+            onTabChange={handleTeacherTabChange}
+          />
+        )}
 
         {role === "employer" && <EmployerPortal />}
 

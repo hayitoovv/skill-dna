@@ -100,187 +100,155 @@ const initialStudents: GroupStudent[] = [
     evidenceCount: 18,
     status: "Bozorga tayyor",
     topSkills: [
-      { name: "Backend & REST API", score: 86 },
-      { name: "SQL & Databases", score: 82 },
-      { name: "OOP Patterns", score: 81 },
+      { name: "Backend va REST API", score: 88 },
+      { name: "SQL va ma’lumotlar bazasi", score: 84 },
+      { name: "DevOps va CI/CD", score: 79 },
     ],
-    layers: { KNOW: 88, DO: 86, ADAPT: 78, DEFEND: 84, PROVE: 79 },
+    layers: { KNOW: 85, DO: 88, ADAPT: 80, DEFEND: 86, PROVE: 77 },
   },
   {
     id: "st-2",
+    name: "Madina Karimova",
+    email: "madina.karimova@bdtu.uz",
+    avatar: "MK",
+    overallScore: 78,
+    level: "L3",
+    confidence: 76,
+    evidenceCount: 14,
+    status: "Faol rivojlanmoqda",
+    topSkills: [
+      { name: "OOP va dizayn pattern’lari", score: 85 },
+      { name: "SQL va ma’lumotlar bazasi", score: 82 },
+      { name: "Backend va REST API", score: 76 },
+    ],
+    layers: { KNOW: 83, DO: 76, ADAPT: 82, DEFEND: 78, PROVE: 71 },
+  },
+  {
+    id: "st-3",
     name: "Bobur Mirzayev",
     email: "bobur.mirzayev@bdtu.uz",
     avatar: "BM",
-    overallScore: 85,
+    overallScore: 86,
     level: "L4",
     confidence: 84,
     evidenceCount: 21,
     status: "Bozorga tayyor",
     topSkills: [
-      { name: "Backend & Microservices", score: 89 },
-      { name: "DevOps & CI/CD", score: 82 },
-      { name: "System Design", score: 85 },
+      { name: "Kompyuter tarmoqlari", score: 91 },
+      { name: "Linux Administration", score: 87 },
+      { name: "Backend va REST API", score: 82 },
     ],
-    layers: { KNOW: 91, DO: 88, ADAPT: 82, DEFEND: 81, PROVE: 85 },
-  },
-  {
-    id: "st-3",
-    name: "Madina Karimova",
-    email: "madina.karimova@bdtu.uz",
-    avatar: "MK",
-    overallScore: 79,
-    level: "L3",
-    confidence: 78,
-    evidenceCount: 14,
-    status: "Bozorga tayyor",
-    topSkills: [
-      { name: "SQL & Optimizatsiya", score: 86 },
-      { name: "Backend REST", score: 78 },
-      { name: "Algoritmlar", score: 75 },
-    ],
-    layers: { KNOW: 84, DO: 80, ADAPT: 76, DEFEND: 82, PROVE: 73 },
+    layers: { KNOW: 91, DO: 86, ADAPT: 84, DEFEND: 86, PROVE: 85 },
   },
   {
     id: "st-4",
-    name: "Shaxzod Alimov",
-    email: "shaxzod.alimov@bdtu.uz",
-    avatar: "SA",
-    overallScore: 78,
-    level: "L3",
-    confidence: 76,
-    evidenceCount: 12,
-    status: "Faol rivojlanmoqda",
-    topSkills: [
-      { name: "SQL va MB", score: 84 },
-      { name: "Backend REST", score: 76 },
-      { name: "Algoritmlar", score: 74 },
-    ],
-    layers: { KNOW: 82, DO: 79, ADAPT: 74, DEFEND: 80, PROVE: 71 },
-  },
-  {
-    id: "st-5",
-    name: "Sardor Ergashev",
-    email: "sardor.ergashev@bdtu.uz",
-    avatar: "SE",
-    overallScore: 75,
-    level: "L3",
-    confidence: 73,
-    evidenceCount: 10,
-    status: "Faol rivojlanmoqda",
-    topSkills: [
-      { name: "DSA & Algoritmlar", score: 78 },
-      { name: "Backend REST", score: 74 },
-      { name: "SQL & MB", score: 72 },
-    ],
-    layers: { KNOW: 80, DO: 76, ADAPT: 71, DEFEND: 75, PROVE: 68 },
-  },
-  {
-    id: "st-6",
-    name: "Javohir Toshmatov",
-    email: "javohir.toshmatov@bdtu.uz",
-    avatar: "JT",
-    overallScore: 71,
-    level: "L3",
-    confidence: 69,
-    evidenceCount: 9,
-    status: "Faol rivojlanmoqda",
-    topSkills: [
-      { name: "OOP Patterns", score: 77 },
-      { name: "SQL & MB", score: 70 },
-      { name: "DevOps", score: 62 },
-    ],
-    layers: { KNOW: 78, DO: 72, ADAPT: 67, DEFEND: 74, PROVE: 61 },
-  },
-  {
-    id: "st-7",
-    name: "Nilufar Rahimova",
-    email: "nilufar.rahimova@bdtu.uz",
-    avatar: "NR",
-    overallScore: 72,
-    level: "L3",
-    confidence: 70,
-    evidenceCount: 8,
-    status: "Faol rivojlanmoqda",
-    topSkills: [
-      { name: "Backend REST", score: 75 },
-      { name: "SQL & MB", score: 73 },
-      { name: "Algoritmlar", score: 68 },
-    ],
-    layers: { KNOW: 79, DO: 73, ADAPT: 66, DEFEND: 73, PROVE: 63 },
-  },
-  {
-    id: "st-8",
     name: "Jasur Qodirov",
     email: "jasur.qodirov@bdtu.uz",
     avatar: "JQ",
-    overallScore: 64,
-    level: "L2",
-    confidence: 62,
-    evidenceCount: 6,
-    status: "Bo‘shliq aniqlangan",
-    topSkills: [
-      { name: "SQL & MB", score: 68 },
-      { name: "Backend REST", score: 65 },
-      { name: "DevOps & CI/CD", score: 48 },
-    ],
-    layers: { KNOW: 72, DO: 66, ADAPT: 58, DEFEND: 64, PROVE: 52 },
-  },
-  {
-    id: "st-9",
-    name: "Rustam Xoliqov",
-    email: "rustam.xoliqov@bdtu.uz",
-    avatar: "RX",
     overallScore: 63,
     level: "L2",
-    confidence: 60,
-    evidenceCount: 6,
+    confidence: 65,
+    evidenceCount: 8,
     status: "Bo‘shliq aniqlangan",
     topSkills: [
-      { name: "Backend REST", score: 66 },
-      { name: "Algoritmlar (DSA)", score: 58 },
-      { name: "DevOps & CI/CD", score: 50 },
+      { name: "Ma’lumotlar tuzilmasi (DSA)", score: 62 },
+      { name: "Backend va REST API", score: 65 },
+      { name: "DevOps va CI/CD", score: 54 },
     ],
-    layers: { KNOW: 71, DO: 65, ADAPT: 56, DEFEND: 63, PROVE: 51 },
+    layers: { KNOW: 68, DO: 64, ADAPT: 60, DEFEND: 60, PROVE: 52 },
   },
   {
-    id: "st-10",
+    id: "st-5",
     name: "Malika Umarova",
     email: "malika.umarova@bdtu.uz",
     avatar: "MU",
     overallScore: 59,
     level: "L2",
-    confidence: 58,
-    evidenceCount: 5,
+    confidence: 62,
+    evidenceCount: 6,
     status: "Remedial kerak",
     topSkills: [
-      { name: "Backend REST", score: 62 },
-      { name: "Algoritmlar (DSA)", score: 51 },
-      { name: "DevOps & CI/CD", score: 42 },
+      { name: "Backend va REST API", score: 60 },
+      { name: "DevOps va CI/CD", score: 48 },
+      { name: "Ma’lumotlar tuzilmasi (DSA)", score: 52 },
     ],
-    layers: { KNOW: 67, DO: 59, ADAPT: 52, DEFEND: 61, PROVE: 48 },
+    layers: { KNOW: 70, DO: 55, ADAPT: 56, DEFEND: 63, PROVE: 42 },
+  },
+  {
+    id: "st-6",
+    name: "Rustam Xoliqov",
+    email: "rustam.xoliqov@bdtu.uz",
+    avatar: "RX",
+    overallScore: 66,
+    level: "L3",
+    confidence: 68,
+    evidenceCount: 9,
+    status: "Faol rivojlanmoqda",
+    topSkills: [
+      { name: "DevOps va CI/CD", score: 68 },
+      { name: "Linux Administration", score: 72 },
+      { name: "SQL va ma’lumotlar bazasi", score: 64 },
+    ],
+    layers: { KNOW: 72, DO: 69, ADAPT: 52, DEFEND: 68, PROVE: 60 },
   },
 ];
 
-export default function TeacherPortal() {
+interface TeacherPortalProps {
+  activeTab?: "heatmap" | "queue" | "remedial" | "viva";
+  onTabChange?: (tab: "heatmap" | "queue" | "remedial" | "viva") => void;
+}
+
+export default function TeacherPortal({
+  activeTab = "heatmap",
+  onTabChange,
+}: TeacherPortalProps) {
+  // Local or controlled tab state
+  const [currentTab, setCurrentTab] = useState<"heatmap" | "queue" | "remedial" | "viva">(activeTab);
+
+  useEffect(() => {
+    setCurrentTab(activeTab);
+  }, [activeTab]);
+
+  const setTab = (tab: "heatmap" | "queue" | "remedial" | "viva") => {
+    setCurrentTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
+  // State for PROVE Queue
   const [proveQueue, setProveQueue] = useState(teacherGroupData.proveQueue);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"heatmap" | "matrix" | "queue" | "remedial">("heatmap");
+  const [inspectedProveItem, setInspectedProveItem] = useState<any | null>(null);
+  const [proveSearch, setProveSearch] = useState<string>("");
+  const [proveTypeFilter, setProveTypeFilter] = useState<string>("all");
+  const [teacherReviewNote, setTeacherReviewNote] = useState<string>("");
+
+  // State for Radar and Layer Selection
   const [selectedLayerKey, setSelectedLayerKey] = useState<"KNOW" | "DO" | "ADAPT" | "DEFEND" | "PROVE">("DO");
 
-  // Filter and Search for Student Matrix
+  // State for Student Matrix
   const [matrixSearch, setMatrixSearch] = useState("");
   const [matrixFilter, setMatrixFilter] = useState("Barchasi");
-
-  // Inspect Student Modal State
   const [inspectedStudent, setInspectedStudent] = useState<GroupStudent | null>(null);
 
-  // Remedial Generator Wizard State
+  // State for Remedial Challenge Generator
+  const [remedialTasks, setRemedialTasks] = useState(teacherGroupData.remedialTasks);
   const [remedialModalOpen, setRemedialModalOpen] = useState(false);
   const [remedialSkill, setRemedialSkill] = useState("DevOps va CI/CD");
   const [remedialDifficulty, setRemedialDifficulty] = useState("L3");
   const [remedialAiMode, setRemedialAiMode] = useState("AI-assisted");
   const [generating, setGenerating] = useState(false);
   const [generatedSuccess, setGeneratedSuccess] = useState(false);
+  const [generationStep, setGenerationStep] = useState(1);
+
+  // State for AI Viva Results
+  const [vivaResults, setVivaResults] = useState(teacherGroupData.vivaResults);
+  const [vivaSearch, setVivaSearch] = useState("");
+  const [vivaFilter, setVivaFilter] = useState("all");
+  const [inspectedViva, setInspectedViva] = useState<any | null>(null);
+  const [playingVivaAudio, setPlayingVivaAudio] = useState(false);
+  const [vivaAudioProgress, setVivaAudioProgress] = useState(30);
 
   // Floating Toast Alert
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -295,7 +263,7 @@ export default function TeacherPortal() {
   useEffect(() => {
     let animId: number;
     let start: number | null = null;
-    const duration = 1200;
+    const duration = 1000;
     const step = (ts: number) => {
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
@@ -310,7 +278,7 @@ export default function TeacherPortal() {
   // Radar Polygon Points Calculation
   const radarPoints = useMemo(() => {
     const calcPoint = (targetX: number, targetY: number, score: number) => {
-      const frac = ((score / 100) * ease);
+      const frac = (score / 100) * ease;
       const x = Math.round(150 + frac * (targetX - 150));
       const y = Math.round(132 + frac * (targetY - 132));
       return `${x},${y}`;
@@ -352,29 +320,92 @@ export default function TeacherPortal() {
     });
   }, [matrixSearch, matrixFilter]);
 
+  // Filtered PROVE Queue
+  const filteredProveQueue = useMemo(() => {
+    return proveQueue.filter((item) => {
+      const matchSearch =
+        proveSearch.trim() === "" ||
+        item.studentName.toLowerCase().includes(proveSearch.toLowerCase()) ||
+        item.skillName.toLowerCase().includes(proveSearch.toLowerCase()) ||
+        item.title.toLowerCase().includes(proveSearch.toLowerCase());
+
+      const matchType =
+        proveTypeFilter === "all" || item.type === proveTypeFilter;
+
+      return matchSearch && matchType;
+    });
+  }, [proveQueue, proveSearch, proveTypeFilter]);
+
+  // Filtered Viva Results
+  const filteredVivaResults = useMemo(() => {
+    return vivaResults.filter((item) => {
+      const matchSearch =
+        vivaSearch.trim() === "" ||
+        item.studentName.toLowerCase().includes(vivaSearch.toLowerCase()) ||
+        item.taskTitle.toLowerCase().includes(vivaSearch.toLowerCase());
+
+      const matchStatus =
+        vivaFilter === "all" || item.status === vivaFilter;
+
+      return matchSearch && matchStatus;
+    });
+  }, [vivaResults, vivaSearch, vivaFilter]);
+
   // Handle Prove Approval
-  const handleApprove = (id: string, studentName: string, skill: string) => {
+  const handleApproveProve = (id: string, studentName: string, skill: string) => {
     setConfirmedId(id);
     setTimeout(() => {
       setProveQueue((prev) => prev.filter((item) => item.id !== id));
       setConfirmedId(null);
-      showToast(`${studentName}ning "${skill}" bo‘yicha L4 sertifikati tasdiqlandi va zanjirga yozildi!`);
-    }, 800);
+      setInspectedProveItem(null);
+      showToast(`${studentName}ning ${skill} bo‘yicha L4 sertifikati tasdiqlandi!`);
+    }, 400);
   };
 
-  // Handle Remedial Generator Action
+  // Handle Prove Rejection
+  const handleRejectProve = (id: string, studentName: string) => {
+    setProveQueue((prev) => prev.filter((item) => item.id !== id));
+    setInspectedProveItem(null);
+    showToast(`${studentName}ga qayta ishlash uchun izoh yuborildi.`);
+  };
+
+  // Handle AI Remedial Generation Simulation
   const handleGenerateRemedial = () => {
     setGenerating(true);
+    setGenerationStep(1);
+
+    setTimeout(() => {
+      setGenerationStep(2);
+    }, 900);
+
+    setTimeout(() => {
+      setGenerationStep(3);
+    }, 1800);
+
     setTimeout(() => {
       setGenerating(false);
       setGeneratedSuccess(true);
-      showToast(`${remedialSkill} bo‘yicha 12 ta parametrli remedial topshiriq talabalar portaliga yuborildi!`);
-    }, 1800);
+      // Append new task
+      const newTask = {
+        id: `rem-${Date.now()}`,
+        skill: remedialSkill,
+        title: `${remedialSkill} bo‘yicha individual parametrik chellinj`,
+        assignedStudentsCount: 12,
+        difficulty: remedialDifficulty,
+        aiMode: remedialAiMode,
+        progress: "0 / 12 bajarildi",
+        status: "Faol",
+        scoreBoost: "+14 ball",
+        deadline: "14-aprel, 2026",
+      };
+      setRemedialTasks((prev) => [newTask, ...prev]);
+      showToast(`${remedialSkill} bo‘yicha 12 ta parametrli topshiriq e’lon qilindi!`);
+    }, 2600);
   };
 
   return (
     <div className="page">
-      {/* Welcome Banner */}
+      {/* Top Welcome Row */}
       <section className="welcome-row">
         <div>
           <p className="eyebrow">AKADEMIK NAZORAT · O‘QITUVCHI BOSHQARUV PANELI</p>
@@ -387,6 +418,7 @@ export default function TeacherPortal() {
           <button
             className="primary-button"
             onClick={() => {
+              setTab("remedial");
               setRemedialModalOpen(true);
               setGeneratedSuccess(false);
             }}
@@ -397,373 +429,1148 @@ export default function TeacherPortal() {
       </section>
 
       {/* Overview Stat Cards with ease-in counting */}
-      <div className="task-overview" style={{ marginBottom: "24px" }}>
-        <div className="card overview-stat">
-          <div className="stat-icon blue">
-            <Icon name="users" />
-          </div>
-          <div>
-            <span>Jami talabalar</span>
-            <strong>{Math.round(28 * ease)} nafar</strong>
-          </div>
-        </div>
-        <div className="card overview-stat">
-          <div className="stat-icon emerald">
-            <Icon name="award" />
-          </div>
-          <div>
-            <span>O‘rtacha Skill Score</span>
-            <strong>{Math.round(73 * ease)} / 100</strong>
-          </div>
-        </div>
-        <div className="card overview-stat">
-          <div className="stat-icon violet">
-            <Icon name="shield" />
-          </div>
-          <div>
-            <span>O‘rtacha Ishonchlilik</span>
-            <strong>{Math.round(71 * ease)}%</strong>
-          </div>
-        </div>
-        <div className="card overview-stat">
-          <div className="stat-icon amber">
-            <Icon name="clock" />
-          </div>
-          <div>
-            <span>Tasdiqlash navbatida (PROVE)</span>
-            <strong>{proveQueue.length} ta</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* Hero Split Section: Group 5-Layer Radar + AI Remedial Recommendation Card */}
-      <section className="summary-grid" style={{ marginBottom: "24px" }}>
-        {/* Left: Group Competency Radar Card */}
-        <article className="card dna-card">
-          <div className="card-heading">
-            <div>
-              <p className="card-kicker">GURUH MALAKA RADARI</p>
-              <h2>5 qatlamli o‘rtacha guruh profili</h2>
-            </div>
-            <span className="level-badge">Bozorga moslik: {Math.round(74 * ease)}%</span>
-          </div>
-
-          <div className="dna-body">
-            <div className="chart-shell">
-              <svg viewBox="0 0 300 265" className="radar" aria-label="Guruh ko‘nikma diagrammasi">
-                <g className="radar-grid">
-                  <polygon points="150,29 260,109 218,238 82,238 40,109" />
-                  <polygon points="150,61 226,116 197,205 103,205 74,116" />
-                  <polygon points="150,93 192,123 176,173 124,173 108,123" />
-                  <line x1="150" y1="132" x2="150" y2="29" />
-                  <line x1="150" y1="132" x2="260" y2="109" />
-                  <line x1="150" y1="132" x2="218" y2="238" />
-                  <line x1="150" y1="132" x2="82" y2="238" />
-                  <line x1="150" y1="132" x2="40" y2="109" />
-                </g>
-                <polygon
-                  className="radar-area"
-                  points={radarPoints.polygon}
-                  style={{ opacity: ease > 0.05 ? 1 : 0 }}
-                />
-                <g
-                  className="radar-points"
-                  style={{ opacity: ease > 0.1 ? 1 : 0, transition: "opacity 0.2s ease" }}
-                >
-                  <circle cx={radarPoints.pKnow.split(",")[0]} cy={radarPoints.pKnow.split(",")[1]} r={selectedLayerKey === "KNOW" ? "7" : "4"} />
-                  <circle cx={radarPoints.pDo.split(",")[0]} cy={radarPoints.pDo.split(",")[1]} r={selectedLayerKey === "DO" ? "7" : "4"} />
-                  <circle cx={radarPoints.pAdapt.split(",")[0]} cy={radarPoints.pAdapt.split(",")[1]} r={selectedLayerKey === "ADAPT" ? "7" : "4"} />
-                  <circle cx={radarPoints.pDefend.split(",")[0]} cy={radarPoints.pDefend.split(",")[1]} r={selectedLayerKey === "DEFEND" ? "7" : "4"} />
-                  <circle cx={radarPoints.pProve.split(",")[0]} cy={radarPoints.pProve.split(",")[1]} r={selectedLayerKey === "PROVE" ? "7" : "4"} />
-                </g>
-                <g className="radar-labels">
-                  <text x="150" y="14" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("KNOW")}>
-                    KNOW
-                  </text>
-                  <text x="277" y="106" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("DO")}>
-                    DO
-                  </text>
-                  <text x="224" y="257" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("ADAPT")}>
-                    ADAPT
-                  </text>
-                  <text x="72" y="257" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("DEFEND")}>
-                    DEFEND
-                  </text>
-                  <text x="20" y="106" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("PROVE")}>
-                    PROVE
-                  </text>
-                </g>
-              </svg>
-              <div className="chart-score">
-                <strong>{Math.round(73 * ease)}</strong>
-                <span>/100</span>
-                <small>Guruh bali</small>
-              </div>
-            </div>
-
-            <div className="score-summary">
-              <div className="confidence-head">
-                <span>Guruh ishonch darajasi</span>
-                <strong>{Math.round(71 * ease)}%</strong>
-              </div>
-              <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${(71 * ease).toFixed(1)}%` }} />
-              </div>
-              <p>Yuqori ishonchlilik · 28 ta talabaning 142 ta tekshirilgan dalillari asosida</p>
-
-              {/* Selected Layer Details */}
-              <div className="selected-layer">
-                <div className={`layer-icon ${selectedLayer.tone}`}>
-                  <Icon name={selectedLayer.icon} />
-                </div>
-                <div>
-                  <span>Tanlangan qatlam tahlili</span>
-                  <strong>
-                    {selectedLayer.key} · {selectedLayer.label}
-                  </strong>
-                </div>
-                <b>{Math.round(selectedLayer.score * ease)}</b>
-              </div>
-              <p style={{ fontSize: "12px", color: "var(--muted)", margin: "4px 0 10px" }}>
-                {selectedLayer.desc}
-              </p>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#475569" }}>
-                <span>Yetakchi: <strong style={{ color: "var(--navy)" }}>{selectedLayer.topStudent}</strong></span>
-                <span>Yordam zarur: <strong style={{ color: "#ef4444" }}>{selectedLayer.lowStudent}</strong></span>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        {/* Right: Next-Card Style AI Remedial Recommendation */}
-        <article className="card next-card">
-          <div className="next-top">
-            <span className="small-badge">
-              <Icon name="lightning" size={15} /> AI PEDAGOGIK TAVSIYA
-            </span>
-            <span className="time">Bugun yangilandi</span>
-          </div>
-
-          <div className="task-visual">
-            <Icon name="code" size={36} />
-          </div>
-
-          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-            <p className="task-type">REMEDIAL CHELLINJ · AVTOMATIK GENERATSIYA</p>
-            <span
-              style={{
-                fontSize: "11px",
-                padding: "3px 8px",
-                borderRadius: "4px",
-                background: "#10b981",
-                color: "white",
-                fontWeight: 700,
-              }}
-            >
-              12 talaba
-            </span>
-          </div>
-
-          <h2>DevOps & CI/CD bo‘yicha 46% bo‘shliq aniqlandi</h2>
-          <p>
-            Guruhning 12 nafar talabasida Docker va avtomatlashtirishda yetishmovchilik mavjud. Sun’iy intellekt individual parametrli kod topshiriqlari paketini tayyorladi.
-          </p>
-
-          <div className="task-meta">
-            <span>
-              <Icon name="file" size={16} /> 12 ta variant
-            </span>
-            <span>
-              <Icon name="award" size={16} /> +14 ballgacha o‘sish
-            </span>
-          </div>
-
-          <button
-            className="dark-button"
-            onClick={() => {
-              setRemedialModalOpen(true);
-              setGeneratedSuccess(false);
+      <section className="employer-stats-row">
+        <div className="employer-stat-pill">
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              background: "#eff6ff",
+              color: "#2563eb",
+              display: "grid",
+              placeItems: "center",
             }}
           >
-            AI bilan generatsiya qilish <Icon name="arrow" size={17} />
-          </button>
-        </article>
-      </section>
-
-      {/* 5-Layer Group Competency Grid (Interactive Cards) */}
-      <section className="layers-section" style={{ marginBottom: "28px" }}>
-        <div className="section-heading">
-          <div>
-            <h2>5 qatlamli kompetensiya modeli (Guruh natijasi)</h2>
-            <p>Har bir qatlam bo‘yicha guruhning o‘zlashtirishi va vazn ko‘rsatkichi.</p>
+            <Icon name="users" size={20} />
           </div>
-          <span>
-            Umumiy tayyorlik <strong>{Math.round(74 * ease)}%</strong>
-          </span>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+              Jami talabalar
+            </div>
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{Math.round(28 * ease)} nafar</strong>
+          </div>
         </div>
 
-        <div className="layer-grid">
-          {groupLayers.map((layer) => (
-            <div
-              key={layer.key}
-              className={`layer-card ${selectedLayerKey === layer.key ? "selected" : ""}`}
-              onClick={() => setSelectedLayerKey(layer.key)}
-            >
-              <div className={`layer-icon ${layer.tone}`}>
-                <Icon name={layer.icon} />
-              </div>
-              <div className="layer-name">
-                <strong>{layer.key} · {layer.label}</strong>
-                <span>{layer.weight} vazn</span>
-              </div>
-              <div className="layer-score">
-                <strong>{Math.round(layer.score * ease)}</strong>
-                <span>/ 100</span>
-              </div>
-              <div className="mini-track">
-                <span style={{ width: `${(layer.score * ease).toFixed(1)}%` }} />
-              </div>
+        <div className="employer-stat-pill">
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              background: "#ecfdf5",
+              color: "#059669",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <Icon name="award" size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+              O‘rtacha Skill Score
             </div>
-          ))}
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{Math.round(73 * ease)} / 100</strong>
+          </div>
+        </div>
+
+        <div className="employer-stat-pill">
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              background: "#fef3c7",
+              color: "#d97706",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <Icon name="check" size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+              Tasdiqlash navbati (PROVE)
+            </div>
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{proveQueue.length} ta so‘rov</strong>
+          </div>
+        </div>
+
+        <div className="employer-stat-pill">
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              background: "#f5f3ff",
+              color: "#7c3aed",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <Icon name="file" size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+              AI Viva natijalari
+            </div>
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{vivaResults.length} ta himoya</strong>
+          </div>
         </div>
       </section>
 
-      {/* Navigation Filter Tabs */}
-      <div className="filter-row" style={{ marginBottom: "20px" }}>
-        <div className="filter-tabs">
-          <button
-            className={activeTab === "heatmap" ? "active" : ""}
-            onClick={() => setActiveTab("heatmap")}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+      {/* Navigation Filter Tabs (4 modules) */}
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          marginBottom: "24px",
+          borderBottom: "1.5px solid #e2e8f0",
+          paddingBottom: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setTab("heatmap")}
+          style={{
+            padding: "9px 18px",
+            borderRadius: "10px",
+            border: currentTab === "heatmap" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            background: currentTab === "heatmap" ? "var(--navy)" : "#ffffff",
+            color: currentTab === "heatmap" ? "#ffffff" : "var(--navy)",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            transition: "all 0.15s ease",
+            boxShadow: currentTab === "heatmap" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+          }}
+        >
+          <Icon name="chart" size={16} />
+          <span>Guruh Skill Heatmap</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("queue")}
+          style={{
+            padding: "9px 18px",
+            borderRadius: "10px",
+            border: currentTab === "queue" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            background: currentTab === "queue" ? "var(--navy)" : "#ffffff",
+            color: currentTab === "queue" ? "#ffffff" : "var(--navy)",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            transition: "all 0.15s ease",
+            boxShadow: currentTab === "queue" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+          }}
+        >
+          <Icon name="check" size={16} />
+          <span>PROVE Tasdiqlash navbati</span>
+          <span
+            style={{
+              padding: "2px 7px",
+              borderRadius: "10px",
+              background: currentTab === "queue" ? "rgba(255,255,255,0.2)" : "#fef3c7",
+              color: currentTab === "queue" ? "#ffffff" : "#d97706",
+              fontSize: "11px",
+              fontWeight: 800,
+            }}
           >
-            <Icon name="chart" size={15} /> Guruh Skill Heatmap
-          </button>
-          <button
-            className={activeTab === "matrix" ? "active" : ""}
-            onClick={() => setActiveTab("matrix")}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            {proveQueue.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("remedial")}
+          style={{
+            padding: "9px 18px",
+            borderRadius: "10px",
+            border: currentTab === "remedial" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            background: currentTab === "remedial" ? "var(--navy)" : "#ffffff",
+            color: currentTab === "remedial" ? "#ffffff" : "var(--navy)",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            transition: "all 0.15s ease",
+            boxShadow: currentTab === "remedial" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+          }}
+        >
+          <Icon name="code" size={16} />
+          <span>Remedial Generator</span>
+          <span
+            style={{
+              padding: "2px 7px",
+              borderRadius: "10px",
+              background: currentTab === "remedial" ? "rgba(255,255,255,0.2)" : "#eff6ff",
+              color: currentTab === "remedial" ? "#ffffff" : "#2563eb",
+              fontSize: "11px",
+              fontWeight: 800,
+            }}
           >
-            <Icon name="users" size={15} /> Talabalar Matritsasi ({initialStudents.length})
-          </button>
-          <button
-            className={activeTab === "queue" ? "active" : ""}
-            onClick={() => setActiveTab("queue")}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            {remedialTasks.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTab("viva")}
+          style={{
+            padding: "9px 18px",
+            borderRadius: "10px",
+            border: currentTab === "viva" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            background: currentTab === "viva" ? "var(--navy)" : "#ffffff",
+            color: currentTab === "viva" ? "#ffffff" : "var(--navy)",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            transition: "all 0.15s ease",
+            boxShadow: currentTab === "viva" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+          }}
+        >
+          <Icon name="file" size={16} />
+          <span>AI Viva natijalari</span>
+          <span
+            style={{
+              padding: "2px 7px",
+              borderRadius: "10px",
+              background: currentTab === "viva" ? "rgba(255,255,255,0.2)" : "#ecfdf5",
+              color: currentTab === "viva" ? "#ffffff" : "#059669",
+              fontSize: "11px",
+              fontWeight: 800,
+            }}
           >
-            <Icon name="shieldCheck" size={15} /> PROVE Tasdiqlash navbati ({proveQueue.length})
-          </button>
-          <button
-            className={activeTab === "remedial" ? "active" : ""}
-            onClick={() => setActiveTab("remedial")}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-          >
-            <Icon name="lightning" size={15} /> Remedial generator
-          </button>
-        </div>
+            {vivaResults.length}
+          </span>
+        </button>
       </div>
 
-      {/* TAB 1: Skill Heatmap */}
-      {activeTab === "heatmap" && (
-        <section className="card" style={{ padding: "26px" }}>
-          <div className="card-heading" style={{ marginBottom: "18px" }}>
-            <div>
-              <p className="card-kicker">KOMPETENSIYA VA BO‘SHLIQLAR XARITASI</p>
-              <h2>Fan va ko‘nikmalar bo‘yicha guruh holati</h2>
+      {/* =========================================================================
+          TAB 1: GURUH SKILL HEATMAP & MATRITSA
+         ========================================================================= */}
+      {currentTab === "heatmap" && (
+        <>
+          {/* Hero Split Section: Group 5-Layer Radar + AI Remedial Recommendation Card */}
+          <section className="summary-grid" style={{ marginBottom: "24px" }}>
+            {/* Left: Group Competency Radar Card */}
+            <article className="card dna-card">
+              <div className="card-heading">
+                <div>
+                  <p className="card-kicker">GURUH MALAKA RADARI</p>
+                  <h2>5 qatlamli o‘rtacha guruh profili</h2>
+                </div>
+                <span className="level-badge">Bozorga moslik: {Math.round(74 * ease)}%</span>
+              </div>
+
+              <div className="dna-body">
+                <div className="chart-shell">
+                  <svg viewBox="0 0 300 265" className="radar" aria-label="Guruh ko‘nikma diagrammasi">
+                    <g className="radar-grid">
+                      <polygon points="150,29 260,109 218,238 82,238 40,109" />
+                      <polygon points="150,61 226,116 197,205 103,205 74,116" />
+                      <polygon points="150,93 192,123 176,173 124,173 108,123" />
+                      <line x1="150" y1="132" x2="150" y2="29" />
+                      <line x1="150" y1="132" x2="260" y2="109" />
+                      <line x1="150" y1="132" x2="218" y2="238" />
+                      <line x1="150" y1="132" x2="82" y2="238" />
+                      <line x1="150" y1="132" x2="40" y2="109" />
+                    </g>
+                    <polygon
+                      className="radar-area"
+                      points={radarPoints.polygon}
+                      style={{ opacity: ease > 0.05 ? 1 : 0 }}
+                    />
+                    <g
+                      className="radar-points"
+                      style={{ opacity: ease > 0.1 ? 1 : 0, transition: "opacity 0.2s ease" }}
+                    >
+                      <circle cx={radarPoints.pKnow.split(",")[0]} cy={radarPoints.pKnow.split(",")[1]} r={selectedLayerKey === "KNOW" ? "7" : "4"} />
+                      <circle cx={radarPoints.pDo.split(",")[0]} cy={radarPoints.pDo.split(",")[1]} r={selectedLayerKey === "DO" ? "7" : "4"} />
+                      <circle cx={radarPoints.pAdapt.split(",")[0]} cy={radarPoints.pAdapt.split(",")[1]} r={selectedLayerKey === "ADAPT" ? "7" : "4"} />
+                      <circle cx={radarPoints.pDefend.split(",")[0]} cy={radarPoints.pDefend.split(",")[1]} r={selectedLayerKey === "DEFEND" ? "7" : "4"} />
+                      <circle cx={radarPoints.pProve.split(",")[0]} cy={radarPoints.pProve.split(",")[1]} r={selectedLayerKey === "PROVE" ? "7" : "4"} />
+                    </g>
+                    <g className="radar-labels">
+                      <text x="150" y="14" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("KNOW")}>
+                        KNOW
+                      </text>
+                      <text x="277" y="106" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("DO")}>
+                        DO
+                      </text>
+                      <text x="224" y="257" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("ADAPT")}>
+                        ADAPT
+                      </text>
+                      <text x="72" y="257" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("DEFEND")}>
+                        DEFEND
+                      </text>
+                      <text x="20" y="106" textAnchor="middle" style={{ cursor: "pointer" }} onClick={() => setSelectedLayerKey("PROVE")}>
+                        PROVE
+                      </text>
+                    </g>
+                  </svg>
+                  <div className="chart-score">
+                    <strong>{Math.round(73 * ease)}</strong>
+                    <span>/100</span>
+                    <small>Guruh bali</small>
+                  </div>
+                </div>
+
+                <div className="score-summary">
+                  <div className="confidence-head">
+                    <span>Guruh ishonch darajasi</span>
+                    <strong>{Math.round(71 * ease)}%</strong>
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${(71 * ease).toFixed(1)}%` }} />
+                  </div>
+                  <p>Yuqori ishonchlilik · 28 ta talabaning 142 ta tekshirilgan dalillari asosida</p>
+
+                  {/* Selected Layer Details */}
+                  <div className="selected-layer">
+                    <div className={`layer-icon ${selectedLayer.tone}`}>
+                      <Icon name={selectedLayer.icon} />
+                    </div>
+                    <div>
+                      <span>Tanlangan qatlam tahlili</span>
+                      <strong>{selectedLayer.key} · {selectedLayer.label} ({selectedLayer.score} ball)</strong>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: "4px 0 0" }}>
+                    {selectedLayer.desc}
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            {/* Right: AI Remedial Highlight Card */}
+            <article className="card task-highlight">
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <p className="task-type">REMEDIAL CHELLINJ · AVTOMATIK TAVSIYA</p>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    padding: "3px 8px",
+                    borderRadius: "4px",
+                    background: "#10b981",
+                    color: "white",
+                    fontWeight: 700,
+                  }}
+                >
+                  12 talaba
+                </span>
+              </div>
+
+              <h2>DevOps & CI/CD bo‘yicha 46% bo‘shliq aniqlandi</h2>
+              <p>
+                Guruhning 12 nafar talabasida Docker va avtomatlashtirishda yetishmovchilik mavjud. Sun’iy intellekt individual parametrli kod topshiriqlari paketini tayyorladi.
+              </p>
+
+              <div className="task-meta">
+                <span>
+                  <Icon name="file" size={16} /> 12 ta unikal variant
+                </span>
+                <span>
+                  <Icon name="award" size={16} /> +14 ballgacha o‘sish
+                </span>
+              </div>
+
+              <button
+                className="dark-button"
+                onClick={() => {
+                  setTab("remedial");
+                  setRemedialSkill("DevOps va CI/CD");
+                  setRemedialModalOpen(true);
+                  setGeneratedSuccess(false);
+                }}
+              >
+                Remedial generatoriga o‘tish <Icon name="arrow" size={17} />
+              </button>
+            </article>
+          </section>
+
+          {/* 5-Layer Group Competency Grid (Interactive Cards) */}
+          <section className="layers-section" style={{ marginBottom: "28px" }}>
+            <div className="section-heading">
+              <div>
+                <h2>5 qatlamli kompetensiya modeli (Guruh natijasi)</h2>
+                <p>Har bir qatlam bo‘yicha guruhning o‘zlashtirishi va vazn ko‘rsatkichi.</p>
+              </div>
+              <span>
+                Umumiy tayyorlik <strong>{Math.round(74 * ease)}%</strong>
+              </span>
             </div>
-            <span className="level-badge">2026-yil Bahor semestri</span>
+
+            <div className="layer-grid">
+              {groupLayers.map((layer) => (
+                <div
+                  key={layer.key}
+                  className={`layer-card ${selectedLayerKey === layer.key ? "selected" : ""}`}
+                  onClick={() => setSelectedLayerKey(layer.key)}
+                >
+                  <div className={`layer-icon ${layer.tone}`}>
+                    <Icon name={layer.icon} />
+                  </div>
+                  <div className="layer-name">
+                    <strong>{layer.key} · {layer.label}</strong>
+                    <span>{layer.weight} vazn</span>
+                  </div>
+                  <div className="layer-score">
+                    <strong>{Math.round(layer.score * ease)}</strong>
+                    <span>/ 100</span>
+                  </div>
+                  <div className="mini-track">
+                    <span style={{ width: `${(layer.score * ease).toFixed(1)}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Skill Heatmap Card */}
+          <section className="card" style={{ padding: "26px", marginBottom: "26px" }}>
+            <div className="card-heading" style={{ marginBottom: "18px" }}>
+              <div>
+                <p className="card-kicker">KOMPETENSIYA VA BO‘SHLIQLAR XARITASI</p>
+                <h2>Fan va ko‘nikmalar bo‘yicha guruh holati</h2>
+              </div>
+              <span className="level-badge">2026-yil Bahor semestri</span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {teacherGroupData.skillHeatmap.map((item) => (
+                <div
+                  key={item.skill}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "220px 1fr 90px 140px auto",
+                    alignItems: "center",
+                    gap: "20px",
+                    padding: "16px 20px",
+                    borderRadius: "10px",
+                    background: "#f8fafc",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <div>
+                    <strong style={{ display: "block", fontSize: "15px", color: "var(--navy)" }}>
+                      {item.skill}
+                    </strong>
+                    <span style={{ fontSize: "13px", color: "var(--muted)" }}>
+                      Bo‘shliq: {item.gapPct}%
+                    </span>
+                  </div>
+
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "13px", color: "var(--muted)" }}>Guruh o‘zlashtirishi</span>
+                      <strong style={{ fontSize: "13.5px", color: "var(--navy)" }}>{Math.round(item.avgScore * ease)}%</strong>
+                    </div>
+                    <div className="progress-track" style={{ height: "8px", margin: 0 }}>
+                      <div
+                        style={{
+                          width: `${(item.avgScore * ease).toFixed(1)}%`,
+                          height: "100%",
+                          borderRadius: "10px",
+                          background:
+                            item.avgScore >= 75
+                              ? "linear-gradient(90deg, #059669, #10b981)"
+                              : item.avgScore >= 65
+                              ? "linear-gradient(90deg, #3b82f6, #60a5fa)"
+                              : "linear-gradient(90deg, #f59e0b, #ef4444)",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: "right" }}>
+                    <strong style={{ fontSize: "20px", color: "var(--navy)" }}>
+                      {Math.round(item.avgScore * ease)}
+                    </strong>
+                    <span style={{ fontSize: "12px", color: "var(--muted)" }}> / 100</span>
+                  </div>
+
+                  <div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "5px 12px",
+                        borderRadius: "20px",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                        background:
+                          item.status === "Yaxshi"
+                            ? "#ecfdf5"
+                            : item.status.includes("O‘rtacha")
+                            ? "#eff6ff"
+                            : "#fef2f2",
+                        color:
+                          item.status === "Yaxshi"
+                            ? "#059669"
+                            : item.status.includes("O‘rtacha")
+                            ? "#2563eb"
+                            : "#dc2626",
+                      }}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+
+                  <button
+                    className="ghost-button"
+                    style={{ fontSize: "13px" }}
+                    onClick={() => {
+                      setTab("remedial");
+                      setRemedialSkill(item.skill);
+                    }}
+                  >
+                    Topshiriq tuzish →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Student Matrix Table */}
+          <section className="card" style={{ padding: "26px" }}>
+            <div className="card-heading" style={{ marginBottom: "18px" }}>
+              <div>
+                <p className="card-kicker">TALABALAR RO‘YXATI VA BAHOLARI</p>
+                <h2>Guruh talabalari matritsasi ({filteredStudents.length})</h2>
+              </div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <input
+                  type="text"
+                  placeholder="Ism bo‘yicha qidirish..."
+                  value={matrixSearch}
+                  onChange={(e) => setMatrixSearch(e.target.value)}
+                  style={{
+                    padding: "7px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    fontSize: "13px",
+                  }}
+                />
+                <select
+                  value={matrixFilter}
+                  onChange={(e) => setMatrixFilter(e.target.value)}
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    fontSize: "13px",
+                  }}
+                >
+                  <option value="Barchasi">Barchasi</option>
+                  <option value="L4">L4 darajalilar</option>
+                  <option value="L3">L3 darajalilar</option>
+                  <option value="L2">L2 darajalilar</option>
+                  <option value="Bo‘shliqdagilar">Bo‘shliqdagilar</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+                <thead>
+                  <tr style={{ borderBottom: "2px solid #e2e8f0", color: "var(--muted)", fontSize: "12px", textTransform: "uppercase" }}>
+                    <th style={{ padding: "12px 10px" }}>Talaba</th>
+                    <th style={{ padding: "12px 10px" }}>Daraja</th>
+                    <th style={{ padding: "12px 10px" }}>Umumiy ball</th>
+                    <th style={{ padding: "12px 10px" }}>KNOW / DO / ADAPT / DEFEND / PROVE</th>
+                    <th style={{ padding: "12px 10px" }}>Holat</th>
+                    <th style={{ padding: "12px 10px", textAlign: "right" }}>Amal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents.map((st) => (
+                    <tr key={st.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                      <td style={{ padding: "14px 10px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "50%",
+                              background: "#eff6ff",
+                              color: "var(--royal)",
+                              display: "grid",
+                              placeItems: "center",
+                              fontWeight: 800,
+                              fontSize: "13px",
+                            }}
+                          >
+                            {st.avatar}
+                          </div>
+                          <div>
+                            <strong style={{ fontSize: "14.5px", color: "var(--navy)" }}>{st.name}</strong>
+                            <div style={{ fontSize: "12px", color: "var(--muted)" }}>{st.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 10px" }}>
+                        <span
+                          style={{
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            background: st.level === "L4" ? "#ecfdf5" : "#eff6ff",
+                            color: st.level === "L4" ? "#047857" : "#1d4ed8",
+                            fontWeight: 800,
+                            fontSize: "12px",
+                          }}
+                        >
+                          {st.level}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 10px" }}>
+                        <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{st.overallScore}</strong>
+                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>/100</span>
+                      </td>
+                      <td style={{ padding: "14px 10px" }}>
+                        <div style={{ display: "flex", gap: "6px", fontSize: "11.5px", fontWeight: 700 }}>
+                          <span style={{ color: "#2563eb" }}>K:{st.layers.KNOW}</span>
+                          <span style={{ color: "#059669" }}>D:{st.layers.DO}</span>
+                          <span style={{ color: "#7c3aed" }}>A:{st.layers.ADAPT}</span>
+                          <span style={{ color: "#d97706" }}>DF:{st.layers.DEFEND}</span>
+                          <span style={{ color: "#e11d48" }}>P:{st.layers.PROVE}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px 10px" }}>
+                        <span
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "14px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            background:
+                              st.status === "Bozorga tayyor"
+                                ? "#ecfdf5"
+                                : st.status.includes("Bo‘shliq")
+                                ? "#fef3c7"
+                                : st.status.includes("Remedial")
+                                ? "#fee2e2"
+                                : "#f1f5f9",
+                            color:
+                              st.status === "Bozorga tayyor"
+                                ? "#059669"
+                                : st.status.includes("Bo‘shliq")
+                                ? "#b45309"
+                                : st.status.includes("Remedial")
+                                ? "#dc2626"
+                                : "#475569",
+                          }}
+                        >
+                          {st.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px 10px", textAlign: "right" }}>
+                        <button
+                          className="ghost-button"
+                          style={{ padding: "6px 12px", fontSize: "12.5px" }}
+                          onClick={() => setInspectedStudent(st)}
+                        >
+                          Profilni ko‘rish
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* =========================================================================
+          PAGE 1: PROVE TASDIQLASH NAVBATI
+         ========================================================================= */}
+      {currentTab === "queue" && (
+        <>
+          {/* Filter and Search Bar for PROVE Queue */}
+          <section className="employer-filter-card">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
+                marginBottom: "16px",
+              }}
+            >
+              <div>
+                <p className="card-kicker" style={{ margin: 0 }}>
+                  PROVE MODULI · INSON SIKLI (HUMAN-IN-THE-LOOP)
+                </p>
+                <span style={{ fontSize: "12.5px", color: "var(--muted)" }}>
+                  Talabalarning real kod repozitoriylari, test qamrovi va portfoliolarini rasmiy tasdiqlash
+                </span>
+              </div>
+
+              {/* Search box */}
+              <div style={{ position: "relative", minWidth: "280px" }}>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "var(--muted)",
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Icon name="search" size={16} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Talaba ismi, fan yoki repozitoriy..."
+                  value={proveSearch}
+                  onChange={(e) => setProveSearch(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px 9px 36px",
+                    borderRadius: "10px",
+                    border: "1.5px solid var(--border)",
+                    fontSize: "13px",
+                    outline: "none",
+                    background: "#f8fafc",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Type Filter Chips */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", minWidth: "90px" }}>
+                DALIL TURI:
+              </span>
+              {[
+                { key: "all", label: `Barchasi (${proveQueue.length})` },
+                { key: "GitHub Repozitoriy", label: "💻 GitHub Repozitoriy" },
+                { key: "Benchmarking Hisoboti", label: "📊 Benchmarking Hisoboti" },
+                { key: "CI/CD Pipeline", label: "⚙️ CI/CD Pipeline" },
+              ].map((tp) => (
+                <button
+                  key={tp.key}
+                  type="button"
+                  onClick={() => setProveTypeFilter(tp.key)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    border: proveTypeFilter === tp.key ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+                    background: proveTypeFilter === tp.key ? "var(--navy)" : "#ffffff",
+                    color: proveTypeFilter === tp.key ? "#ffffff" : "var(--navy)",
+                    transition: "0.15s ease",
+                  }}
+                >
+                  {tp.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* Heading */}
+          <div className="section-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "18px" }}>
+            <div>
+              <h2>Tasdiqlanishi kutilayotgan dalillar ({filteredProveQueue.length})</h2>
+              <p>Rasmiy Open Badges 3.0 L4 darajasini olish uchun talabalar tomonidan yuklangan amaliy dalillar</p>
+            </div>
+            {proveSearch && (
+              <button
+                type="button"
+                onClick={() => setProveSearch("")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--royal)",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Filtrni tozalash
+              </button>
+            )}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {teacherGroupData.skillHeatmap.map((item) => (
+          {filteredProveQueue.length === 0 ? (
+            <div className="card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--muted)" }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#ecfdf5", color: "#059669", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+                <Icon name="checkCircle" size={28} />
+              </div>
+              <h3 style={{ margin: "0 0 6px", color: "var(--navy)", fontSize: "17.5px" }}>
+                Barcha dalillar tasdiqlangan!
+              </h3>
+              <p style={{ margin: 0, fontSize: "13.5px" }}>
+                Navbatda tekshirilishi kerak bo‘lgan yangi so‘rovlar mavjud emas.
+              </p>
+            </div>
+          ) : (
+            <div className={`candidates-grid ${filteredProveQueue.length === 1 ? "single-item" : ""}`}>
+              {filteredProveQueue.map((item) => (
+                <article
+                  key={item.id}
+                  className="candidate-card"
+                  style={{
+                    background: confirmedId === item.id ? "#ecfdf5" : "white",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  {/* Top info */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div
+                        style={{
+                          width: "44px",
+                          height: "44px",
+                          borderRadius: "12px",
+                          background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+                          color: "#ffffff",
+                          display: "grid",
+                          placeItems: "center",
+                          fontWeight: 800,
+                          fontSize: "15px",
+                        }}
+                      >
+                        {item.studentAvatar || item.studentName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: "16.5px", color: "var(--navy)" }}>{item.studentName}</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                          <span style={{ fontSize: "12px", color: "var(--muted)" }}>{item.studentGroup || "DI-2023-4A"}</span>
+                          <span>•</span>
+                          <span
+                            style={{
+                              padding: "2px 7px",
+                              borderRadius: "6px",
+                              background: "#eff6ff",
+                              color: "var(--royal)",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {item.skillName}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span
+                      style={{
+                        padding: "5px 11px",
+                        borderRadius: "20px",
+                        fontSize: "11.5px",
+                        fontWeight: 700,
+                        background: "#ecfdf5",
+                        color: "#059669",
+                        border: "1px solid #a7f3d0",
+                      }}
+                    >
+                      Kutilmoqda (PROVE)
+                    </span>
+                  </div>
+
+                  {/* Project details */}
+                  <h4 style={{ margin: "0 0 6px", fontSize: "15.5px", color: "var(--navy)" }}>
+                    {item.title}
+                  </h4>
+                  <p style={{ margin: "0 0 14px", fontSize: "13px", color: "#475569", lineHeight: "1.5" }}>
+                    {item.description || "Talaba tomonidan tayyorlangan amaliy loyiha va test qamrovi."}
+                  </p>
+
+                  {/* Automated Badges */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      marginBottom: "16px",
+                      fontSize: "11.5px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span style={{ color: "#059669", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <Icon name="check" size={13} /> Testlar: {item.testsPassed || "95%"}
+                    </span>
+                    <span>•</span>
+                    <span style={{ color: "var(--royal)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <Icon name="code" size={13} /> {item.commitsCount || 20} commit
+                    </span>
+                    <span>•</span>
+                    <span style={{ color: "#7c3aed" }}>
+                      Plagiat: {item.plagiarismScore || "0%"}
+                    </span>
+                  </div>
+
+                  {/* Direct Link */}
+                  <div style={{ marginBottom: "16px", fontSize: "13px" }}>
+                    <a
+                      href={`https://${item.links}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        color: "var(--royal)",
+                        textDecoration: "underline",
+                        fontWeight: 600,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <Icon name="external" size={14} />
+                      {item.links}
+                    </a>
+                  </div>
+
+                  {/* Action Buttons Row */}
+                  <div className="candidate-actions-row">
+                    <button
+                      type="button"
+                      className="candidate-evidence-btn"
+                      onClick={() => setInspectedProveItem(item)}
+                    >
+                      <Icon name="file" size={16} />
+                      <span>Rubrika baholash</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="candidate-invite-btn"
+                      onClick={() => handleApproveProve(item.id, item.studentName, item.skillName)}
+                    >
+                      <Icon name="checkCircle" size={16} />
+                      <span>Tasdiqlash & L4 berish</span>
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* =========================================================================
+          PAGE 2: REMEDIAL CHALLENGE GENERATOR
+         ========================================================================= */}
+      {currentTab === "remedial" && (
+        <section className="card" style={{ padding: "26px", marginBottom: "26px" }}>
+          <div className="card-heading" style={{ marginBottom: "18px" }}>
+            <div>
+              <p className="card-kicker">ADAPTIV PEDAGOGIKA · AI CHALLENGE GENERATOR</p>
+              <h2>Mustahkamlovchi (Remedial) topshiriqlar generatori</h2>
+            </div>
+            <span className="level-badge">AI Viva & Kod Sandbox</span>
+          </div>
+
+          <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "22px", maxWidth: "820px", lineHeight: "1.6" }}>
+            Guruhda bo‘shliq aniqlangan ko‘nikmalar bo‘yicha har bir talabaga sun’iy intellekt orqali alohida parametrlar va unikal unit testlar bilan individual chellinjlar generatsiya qiling.
+          </p>
+
+          {/* Recommended AI Remedial Packages */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "18px", marginBottom: "28px" }}>
+            <div
+              style={{
+                padding: "22px",
+                borderRadius: "14px",
+                border: "1.5px solid #bfdbfe",
+                background: "linear-gradient(145deg, #f0f7ff, #e0f2fe)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "#1d4ed8", letterSpacing: "0.08em" }}>
+                  TAVSIYA ETILGAN PAKET #1
+                </span>
+                <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
+                  DevOps & CI/CD bo‘yicha 12 nafar talabaga
+                </h3>
+                <p style={{ fontSize: "13px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
+                  Dockerfile optimallash, GitHub Actions matrix build va Docker compose konfiguratsiyasi. Har bir talabaga individual sintaktik cheklov beriladi.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="primary-button"
+                style={{ width: "100%", fontSize: "13px" }}
+                onClick={() => {
+                  setRemedialSkill("DevOps va CI/CD");
+                  setRemedialModalOpen(true);
+                  setGeneratedSuccess(false);
+                }}
+              >
+                <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: "22px",
+                borderRadius: "14px",
+                border: "1.5px solid #e2e8f0",
+                background: "#f8fafc",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "#475569", letterSpacing: "0.08em" }}>
+                  TAVSIYA ETILGAN PAKET #2
+                </span>
+                <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
+                  DSA (Graf va Daraxtlar) bo‘yicha 8 nafar talabaga
+                </h3>
+                <p style={{ fontSize: "13px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
+                  Dijkstra, BFS/DFS va binary search bo‘yicha parametrli algoritmik chellinjlar va avtomatik sandbox tekshiruvi.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="candidate-evidence-btn"
+                style={{ width: "100%", fontSize: "13px" }}
+                onClick={() => {
+                  setRemedialSkill("Ma’lumotlar tuzilmasi (DSA)");
+                  setRemedialModalOpen(true);
+                  setGeneratedSuccess(false);
+                }}
+              >
+                <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: "22px",
+                borderRadius: "14px",
+                border: "1.5px solid #e2e8f0",
+                background: "#f8fafc",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "#475569", letterSpacing: "0.08em" }}>
+                  TAVSIYA ETILGAN PAKET #3
+                </span>
+                <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
+                  SQL Tranzaksiyalar & Indekslar (8 talaba)
+                </h3>
+                <p style={{ fontSize: "13px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
+                  Deadlock simulyatsiyasi, EXPLAIN ANALYZE hisoboti va MVCC izolatsiya sinovi bo‘yicha vazifalar to‘plami.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="candidate-evidence-btn"
+                style={{ width: "100%", fontSize: "13px" }}
+                onClick={() => {
+                  setRemedialSkill("SQL va ma’lumotlar bazasi");
+                  setRemedialModalOpen(true);
+                  setGeneratedSuccess(false);
+                }}
+              >
+                <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
+              </button>
+            </div>
+          </div>
+
+          {/* Active Remedial Tasks List */}
+          <div className="section-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "16px" }}>
+            <div>
+              <h3>Faol Remedial topshiriqlari monitoringi</h3>
+              <p>Talabalarga biriktirilgan individual mustahkamlovchi vazifalar holati</p>
+            </div>
+            <button
+              type="button"
+              className="primary-button"
+              style={{ padding: "8px 16px", fontSize: "12.5px" }}
+              onClick={() => {
+                setRemedialModalOpen(true);
+                setGeneratedSuccess(false);
+              }}
+            >
+              <Icon name="plus" size={14} /> Yangi generatsiya
+            </button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {remedialTasks.map((task) => (
               <div
-                key={item.skill}
+                key={task.id}
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "220px 1fr 90px 140px auto",
-                  alignItems: "center",
-                  gap: "20px",
                   padding: "16px 20px",
-                  borderRadius: "10px",
-                  background: "#f8fafc",
+                  borderRadius: "12px",
                   border: "1px solid var(--border)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                  background: "#ffffff",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "12px",
                 }}
               >
                 <div>
-                  <strong style={{ display: "block", fontSize: "15px", color: "var(--navy)" }}>
-                    {item.skill}
-                  </strong>
-                  <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-                    Bo‘shliq: {item.gapPct}%
-                  </span>
-                </div>
-
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <span style={{ fontSize: "13px", color: "var(--muted)" }}>Guruh o‘zlashtirishi</span>
-                    <strong style={{ fontSize: "13.5px", color: "var(--navy)" }}>{Math.round(item.avgScore * ease)}%</strong>
-                  </div>
-                  <div className="progress-track" style={{ height: "8px", margin: 0 }}>
-                    <div
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <span
                       style={{
-                        width: `${(item.avgScore * ease).toFixed(1)}%`,
-                        height: "100%",
-                        borderRadius: "10px",
-                        background:
-                          item.avgScore >= 75
-                            ? "linear-gradient(90deg, #059669, #10b981)"
-                            : item.avgScore >= 65
-                            ? "linear-gradient(90deg, #3b82f6, #60a5fa)"
-                            : "linear-gradient(90deg, #f59e0b, #ef4444)",
+                        padding: "2px 7px",
+                        borderRadius: "6px",
+                        background: "#eff6ff",
+                        color: "var(--royal)",
+                        fontSize: "11px",
+                        fontWeight: 700,
                       }}
-                    />
+                    >
+                      {task.skill}
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--muted)" }}>
+                      {task.difficulty} · {task.aiMode}
+                    </span>
+                  </div>
+                  <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{task.title}</strong>
+                  <div style={{ fontSize: "12.5px", color: "var(--muted)", marginTop: "2px" }}>
+                    Biriktirilgan: <strong>{task.assignedStudentsCount} nafar talaba</strong> · Muddat: {task.deadline}
                   </div>
                 </div>
 
-                <div style={{ textAlign: "right" }}>
-                  <strong style={{ fontSize: "20px", color: "var(--navy)", fontFamily: "Plus Jakarta Sans" }}>
-                    {Math.round(item.avgScore * ease)}
-                  </strong>
-                  <span style={{ fontSize: "12px", color: "var(--muted)" }}> / 100</span>
-                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "11.5px", color: "#059669", fontWeight: 700 }}>
+                      Kutilayotgan o‘sish: {task.scoreBoost}
+                    </div>
+                    <strong style={{ fontSize: "14px", color: "var(--navy)" }}>{task.progress}</strong>
+                  </div>
 
-                <div>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      padding: "5px 12px",
-                      borderRadius: "20px",
-                      fontSize: "12.5px",
-                      fontWeight: 700,
-                      background:
-                        item.status === "Yaxshi"
-                          ? "#ecfdf5"
-                          : item.status.includes("O‘rtacha")
-                          ? "#eff6ff"
-                          : "#fef2f2",
-                      color:
-                        item.status === "Yaxshi"
-                          ? "#059669"
-                          : item.status.includes("O‘rtacha")
-                          ? "#2563eb"
-                          : "#dc2626",
-                    }}
-                  >
-                    {item.status}
-                  </span>
-                </div>
-
-                <div>
                   <button
-                    className="card-button"
-                    style={{ padding: "7px 12px", fontSize: "12px", borderRadius: "7px", whiteSpace: "nowrap" }}
-                    onClick={() => {
-                      setRemedialSkill(item.skill);
-                      setRemedialModalOpen(true);
-                      setGeneratedSuccess(false);
-                    }}
+                    type="button"
+                    className="candidate-evidence-btn"
+                    style={{ padding: "8px 14px", fontSize: "12.5px" }}
+                    onClick={() => showToast(`"${task.title}" bo‘yicha talabalar natijalari yangilandi!`)}
                   >
-                    <Icon name="code" size={14} /> Remedial tuzish
+                    Natijalarni ko‘rish
                   </button>
                 </div>
               </div>
@@ -772,382 +1579,222 @@ export default function TeacherPortal() {
         </section>
       )}
 
-      {/* TAB 2: Student Competency Matrix */}
-      {activeTab === "matrix" && (
-        <section className="card" style={{ padding: "26px" }}>
+      {/* =========================================================================
+          PAGE 3: AI VIVA NATIJALARI
+         ========================================================================= */}
+      {currentTab === "viva" && (
+        <section className="card" style={{ padding: "26px", marginBottom: "26px" }}>
           <div className="card-heading" style={{ marginBottom: "18px" }}>
             <div>
-              <p className="card-kicker">TALABALAR KOMPETENSIYA MATRITSASI</p>
-              <h2>Guruh talabalarining amaliy ko‘nikma reytingi</h2>
+              <p className="card-kicker">OG‘ZAKI HIMOYA VA AI EXAMINER NATIJALARI</p>
+              <h2>Guruh talabalarining AI Viva natijalari ({filteredVivaResults.length})</h2>
             </div>
-            <span className="level-badge">{filteredStudents.length} nafar saralandi</span>
+            <span className="level-badge">DEFEND Qatlami tekshiruvi</span>
           </div>
 
-          {/* Filter and Search Bar */}
+          <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "20px", maxWidth: "800px" }}>
+            Talabalarning yozgan kodini og‘zaki himoya qilish, algoritmik asoslash va savol-javoblar bo‘yicha AI Examiner audio transkriptlari va baholari.
+          </p>
+
+          {/* Search & Filter Bar */}
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              gap: "16px",
-              marginBottom: "20px",
               flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "20px",
             }}
           >
-            <div style={{ display: "flex", gap: "6px" }}>
-              {["Barchasi", "L4", "L3", "L2", "Bo‘shliqdagilar"].map((f) => (
+            <div style={{ position: "relative", minWidth: "280px" }}>
+              <span
+                style={{
+                  position: "absolute",
+                  left: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--muted)",
+                  pointerEvents: "none",
+                }}
+              >
+                <Icon name="search" size={16} />
+              </span>
+              <input
+                type="text"
+                placeholder="Talaba ismi yoki mavzu bo‘yicha..."
+                value={vivaSearch}
+                onChange={(e) => setVivaSearch(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "9px 12px 9px 36px",
+                  borderRadius: "10px",
+                  border: "1.5px solid var(--border)",
+                  fontSize: "13px",
+                  outline: "none",
+                  background: "#f8fafc",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {[
+                { key: "all", label: "Barchasi" },
+                { key: "passed", label: "✅ O‘tganlar (Himoyalangan)" },
+                { key: "flagged", label: "🚩 Shubhali (Bayroq qo‘yilgan)" },
+              ].map((f) => (
                 <button
-                  key={f}
-                  onClick={() => setMatrixFilter(f)}
+                  key={f.key}
+                  type="button"
+                  onClick={() => setVivaFilter(f.key)}
                   style={{
                     padding: "7px 14px",
                     borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    background: matrixFilter === f ? "var(--navy)" : "white",
-                    color: matrixFilter === f ? "white" : "var(--muted)",
-                    fontSize: "13px",
+                    fontSize: "12.5px",
                     fontWeight: 600,
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    border: vivaFilter === f.key ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+                    background: vivaFilter === f.key ? "var(--navy)" : "#ffffff",
+                    color: vivaFilter === f.key ? "#ffffff" : "var(--navy)",
+                    transition: "0.15s ease",
                   }}
                 >
-                  {f}
+                  {f.label}
                 </button>
               ))}
             </div>
-
-            <div style={{ position: "relative", minWidth: "260px" }}>
-              <input
-                type="text"
-                placeholder="Talaba ismi bo‘yicha qidiruv..."
-                value={matrixSearch}
-                onChange={(e) => setMatrixSearch(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "8px 14px 8px 36px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  fontSize: "13px",
-                  outline: "none",
-                }}
-              />
-              <span style={{ position: "absolute", left: "12px", top: "10px", color: "var(--muted)" }}>
-                <Icon name="search" size={15} />
-              </span>
-            </div>
           </div>
 
-          {/* Students Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
-            {filteredStudents.map((st) => (
-              <div
-                key={st.id}
-                className="card"
-                style={{
-                  padding: "20px",
-                  borderRadius: "12px",
-                  border: "1px solid var(--border)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+          {/* Viva Results Cards */}
+          <div className={`candidates-grid ${filteredVivaResults.length === 1 ? "single-item" : ""}`}>
+            {filteredVivaResults.map((v) => {
+              const isFlagged = v.status === "flagged";
+
+              return (
+                <article
+                  key={v.id}
+                  className="candidate-card"
+                  style={{
+                    borderLeft: isFlagged ? "4px solid #ef4444" : "4px solid #10b981",
+                  }}
+                >
+                  {/* Top info */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <div
                         style={{
                           width: "44px",
                           height: "44px",
-                          borderRadius: "50%",
-                          background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
-                          color: "white",
+                          borderRadius: "12px",
+                          background: isFlagged
+                            ? "linear-gradient(135deg, #7f1d1d, #991b1b)"
+                            : "linear-gradient(135deg, #065f46, #059669)",
+                          color: "#ffffff",
                           display: "grid",
                           placeItems: "center",
-                          fontSize: "15px",
                           fontWeight: 800,
+                          fontSize: "15px",
                         }}
                       >
-                        {st.avatar}
+                        {v.studentAvatar}
                       </div>
                       <div>
-                        <strong style={{ fontSize: "15.5px", color: "var(--navy)", display: "block" }}>
-                          {st.name}
-                        </strong>
-                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>{st.email}</span>
+                        <h3 style={{ margin: 0, fontSize: "16.5px", color: "var(--navy)" }}>{v.studentName}</h3>
+                        <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
+                          {v.studentGroup} · {v.date} ({v.duration})
+                        </div>
                       </div>
                     </div>
-                    <span
-                      style={{
-                        padding: "4px 9px",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        fontWeight: 800,
-                        background: st.level === "L4" ? "#ecfdf5" : st.level === "L3" ? "#eff6ff" : "#fef3c7",
-                        color: st.level === "L4" ? "#047857" : st.level === "L3" ? "#1d4ed8" : "#d97706",
-                      }}
-                    >
-                      {st.level}
-                    </span>
-                  </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>SKILL SCORE</span>
-                      <strong style={{ fontSize: "18px", color: "var(--navy)", fontFamily: "Plus Jakarta Sans" }}>
-                        {st.overallScore} / 100
-                      </strong>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>ISHONCHLILIK</span>
-                      <strong style={{ fontSize: "18px", color: "var(--emerald)", fontFamily: "Plus Jakarta Sans" }}>
-                        {st.confidence}%
-                      </strong>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>DALILLAR</span>
-                      <strong style={{ fontSize: "18px", color: "var(--royal)", fontFamily: "Plus Jakarta Sans" }}>
-                        {st.evidenceCount} ta
-                      </strong>
+                    <div style={{ textAlign: "right" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 10px",
+                          borderRadius: "20px",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          background: isFlagged ? "#fee2e2" : "#ecfdf5",
+                          color: isFlagged ? "#dc2626" : "#059669",
+                        }}
+                      >
+                        {v.vivaScore} ball ({v.confidence}% ishonch)
+                      </span>
                     </div>
                   </div>
 
-                  {/* Top Skills Preview */}
+                  <h4 style={{ margin: "0 0 8px", fontSize: "15px", color: "var(--navy)" }}>
+                    {v.taskTitle}
+                  </h4>
+
+                  {/* Strengths & Weaknesses */}
                   <div style={{ marginBottom: "14px" }}>
-                    <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "6px" }}>
-                      YETAKCHI KO‘NIKMALARI:
-                    </span>
-                    {st.topSkills.map((sk) => (
-                      <div key={sk.name} style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", marginBottom: "4px" }}>
-                        <span style={{ color: "#334155" }}>{sk.name}</span>
-                        <strong style={{ color: "var(--navy)" }}>{sk.score} ball</strong>
+                    {v.strengths.slice(0, 2).map((s: string, idx: number) => (
+                      <div key={idx} style={{ fontSize: "12px", color: "#065f46", display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
+                        <span style={{ fontWeight: 800 }}>✓</span> {s}
+                      </div>
+                    ))}
+                    {v.weaknesses.slice(0, 1).map((w: string, idx: number) => (
+                      <div key={idx} style={{ fontSize: "12px", color: "#b91c1c", display: "flex", alignItems: "center", gap: "5px" }}>
+                        <span style={{ fontWeight: 800 }}>!</span> {w}
                       </div>
                     ))}
                   </div>
-                </div>
 
-                <button
-                  className="primary-button full"
-                  style={{ fontSize: "13px", padding: "9px 14px", marginTop: "auto" }}
-                  onClick={() => setInspectedStudent(st)}
-                >
-                  Profilni tekshirish & Dalillar <Icon name="arrow" size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* TAB 3: PROVE Verification Queue */}
-      {activeTab === "queue" && (
-        <section className="card" style={{ padding: "26px" }}>
-          <div className="card-heading" style={{ marginBottom: "18px" }}>
-            <div>
-              <p className="card-kicker">PROVE MODULI · INSON SIKLI (HUMAN-IN-THE-LOOP)</p>
-              <h2>Tasdiqlanishi kutilayotgan real dalillar va repozitoriylar</h2>
-            </div>
-            <span className="level-badge">{proveQueue.length} ta faol so‘rov</span>
-          </div>
-
-          {proveQueue.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "50px 20px", color: "var(--muted)" }}>
-              <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "#ecfdf5", color: "#059669", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
-                <Icon name="check" size={32} />
-              </div>
-              <h3 style={{ fontSize: "18px", color: "var(--navy)", margin: "0 0 6px" }}>Barcha dalillar ko‘rib chiqildi!</h3>
-              <p style={{ fontSize: "14px" }}>
-                Hozircha navbatda yangi dalillar yo‘q. Talabalar yangi loyihalar topshirganda bu yerda paydo bo‘ladi.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {proveQueue.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    padding: "20px 24px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border)",
-                    background: confirmedId === item.id ? "#ecfdf5" : "white",
-                    transition: "all 0.3s ease",
-                    boxShadow: "0 2px 8px rgba(15, 39, 68, 0.04)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-                    <div>
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          letterSpacing: "0.1em",
-                          color: "var(--royal)",
-                        }}
-                      >
-                        {item.type} · {item.skillName}
-                      </span>
-                      <h3 style={{ margin: "4px 0", fontSize: "17px", color: "var(--navy)" }}>{item.title}</h3>
-                      <p style={{ fontSize: "13.5px", color: "var(--muted)" }}>
-                        Talaba: <strong style={{ color: "var(--navy)" }}>{item.studentName}</strong> · Topshirilgan vaqti: {item.submittedAt}
-                      </p>
-                    </div>
-                    <span
-                      style={{
-                        padding: "5px 12px",
-                        borderRadius: "20px",
-                        fontSize: "12.5px",
-                        fontWeight: 600,
-                        background: "#fef3c7",
-                        color: "#d97706",
-                      }}
-                    >
-                      Kutilmoqda
-                    </span>
-                  </div>
-
+                  {/* Teacher Feedback Note */}
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      paddingTop: "14px",
-                      borderTop: "1px solid var(--border)",
-                      flexWrap: "wrap",
-                      gap: "12px",
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      fontSize: "12px",
+                      color: "#475569",
+                      marginBottom: "16px",
+                      fontStyle: "italic",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13.5px", color: "var(--royal)" }}>
-                      <Icon name="external" size={16} />
-                      <a href={`https://${item.links}`} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "underline", fontWeight: 600 }}>
-                        {item.links}
-                      </a>
-                    </div>
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <button
-                        className="dark-outline"
-                        style={{ padding: "8px 16px", fontSize: "13px" }}
-                        onClick={() => {
-                          setProveQueue((prev) => prev.filter((p) => p.id !== item.id));
-                          showToast(`Dalil rad etildi va izoh yuborildi.`);
-                        }}
-                      >
-                        Rad etish
-                      </button>
-                      <button
-                        className="primary-button"
-                        style={{ padding: "8px 18px", fontSize: "13px" }}
-                        onClick={() => handleApprove(item.id, item.studentName, item.skillName)}
-                      >
-                        <Icon name="check" size={15} /> Tasdiqlash & L4 berish
-                      </button>
-                    </div>
+                    <strong>O‘qituvchi xulosasi:</strong> "{v.teacherNote}"
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
 
-      {/* TAB 4: Remedial Challenge Generator */}
-      {activeTab === "remedial" && (
-        <section className="card" style={{ padding: "26px" }}>
-          <div className="card-heading" style={{ marginBottom: "18px" }}>
-            <div>
-              <p className="card-kicker">ADAPTIV PEDAGOGIKA · AI CHALLENGE GENERATOR</p>
-              <h2>Mustahkamlovchi (Remedial) topshiriqlar generatori</h2>
-            </div>
-            <span className="level-badge">AI Viva & Kod sandbox</span>
-          </div>
-          <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "20px", maxWidth: "800px", lineHeight: "1.6" }}>
-            Guruhda bo‘shliq aniqlangan ko‘nikmalar bo‘yicha har bir talabaga sun’iy intellekt orqali alohida parametrlar va test keyslar bilan mustahkamlovchi topshiriqlar generatsiya qiling.
-          </p>
+                  {/* Action buttons */}
+                  <div className="candidate-actions-row">
+                    <button
+                      type="button"
+                      className="candidate-evidence-btn"
+                      onClick={() => {
+                        setInspectedViva(v);
+                        setPlayingVivaAudio(false);
+                      }}
+                    >
+                      <Icon name="file" size={16} />
+                      <span>Audio dialog & Transkript</span>
+                    </button>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: "20px",
-            }}
-          >
-            <div
-              style={{
-                padding: "24px",
-                borderRadius: "14px",
-                border: "1px solid #bfdbfe",
-                background: "linear-gradient(145deg, #f0f7ff, #e0f2fe)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "12px", fontWeight: 800, color: "#1d4ed8", letterSpacing: "0.08em" }}>
-                  TAVSIYA ETILGAN PAKET #1
-                </span>
-                <h3 style={{ fontSize: "18px", color: "var(--navy)", margin: "8px 0" }}>
-                  DevOps & CI/CD bo‘yicha 12 nafar talabaga
-                </h3>
-                <p style={{ fontSize: "13.5px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
-                  Dockerfile optimallash, GitHub Actions matrix build va Docker compose konfiguratsiyasi. Har bir talabaga individual sintaktik cheklov beriladi.
-                </p>
-              </div>
-              <button
-                className="primary-button"
-                style={{ width: "100%", fontSize: "13.5px" }}
-                onClick={() => {
-                  setRemedialSkill("DevOps va CI/CD");
-                  setRemedialModalOpen(true);
-                  setGeneratedSuccess(false);
-                }}
-              >
-                <Icon name="play" size={16} /> Ushbu paketni generatsiya qilish
-              </button>
-            </div>
-
-            <div
-              style={{
-                padding: "24px",
-                borderRadius: "14px",
-                border: "1px solid #e2e8f0",
-                background: "#f8fafc",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "12px", fontWeight: 800, color: "#475569", letterSpacing: "0.08em" }}>
-                  TAVSIYA ETILGAN PAKET #2
-                </span>
-                <h3 style={{ fontSize: "18px", color: "var(--navy)", margin: "8px 0" }}>
-                  DSA (Graf va Daraxtlar) bo‘yicha 8 nafar talabaga
-                </h3>
-                <p style={{ fontSize: "13.5px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
-                  Dijkstra, BFS/DFS va binary search bo‘yicha parametrli algoritmik chellinjlar va avtomatik sandbox tekshiruvi.
-                </p>
-              </div>
-              <button
-                className="dark-outline"
-                style={{ width: "100%", fontSize: "13.5px" }}
-                onClick={() => {
-                  setRemedialSkill("Ma’lumotlar tuzilmasi (DSA)");
-                  setRemedialModalOpen(true);
-                  setGeneratedSuccess(false);
-                }}
-              >
-                <Icon name="play" size={16} /> Ushbu paketni generatsiya qilish
-              </button>
-            </div>
+                    <button
+                      type="button"
+                      className="candidate-invite-btn"
+                      onClick={() => showToast(`${v.studentName}ning Viva natijasi tasdiqlandi!`)}
+                    >
+                      <Icon name="checkCircle" size={16} />
+                      <span>Bahoni tasdiqlash</span>
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {/* INSPECT STUDENT MODAL */}
+      {/* =========================================================================
+          MODALS
+         ========================================================================= */}
+
+      {/* 1. INSPECT STUDENT MODAL */}
       {inspectedStudent && (
-        <div className="modal-backdrop" onClick={() => setInspectedStudent(null)}>
-          <div className="modal" style={{ width: "min(620px, 100%)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop employer-modal-backdrop" onClick={() => setInspectedStudent(null)}>
+          <div className="modal employer-modal" style={{ width: "min(620px, 100%)" }} onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setInspectedStudent(null)}>
               <Icon name="close" />
             </button>
@@ -1238,26 +1885,115 @@ export default function TeacherPortal() {
         </div>
       )}
 
-      {/* REMEDIAL CHALLENGE GENERATOR WIZARD MODAL */}
+      {/* 2. PROVE INSPECTION & RUBRIC MODAL */}
+      {inspectedProveItem && (
+        <div className="modal-backdrop employer-modal-backdrop" onClick={() => setInspectedProveItem(null)}>
+          <div className="modal employer-modal" style={{ maxWidth: "640px", borderRadius: "20px", padding: "28px" }} onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setInspectedProveItem(null)}>
+              <Icon name="close" />
+            </button>
+
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #1e3a8a, #2563eb)", color: "white" }}>
+              <Icon name="shieldCheck" size={28} />
+            </div>
+
+            <p className="eyebrow">DALIL EKSPERTIZASI VA RUBRIKA BAHOLASH</p>
+            <h2 style={{ fontSize: "20px", margin: "4px 0" }}>{inspectedProveItem.studentName} · {inspectedProveItem.title}</h2>
+            <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "18px" }}>
+              Ko‘nikma: <strong>{inspectedProveItem.skillName}</strong> · Talab darajasi: <strong>{inspectedProveItem.targetLevel || "L4"}</strong>
+            </p>
+
+            {/* Rubrics table */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left", marginBottom: "20px" }}>
+              <div style={{ padding: "14px", borderRadius: "12px", background: "#f8fafc", border: "1px solid var(--border)" }}>
+                <strong style={{ fontSize: "13.5px", color: "var(--navy)", display: "block", marginBottom: "10px" }}>
+                  Baholash rubrikalari mezonlari:
+                </strong>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "12.5px" }}>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                    <div style={{ color: "var(--muted)" }}>Kod sifati & Clean Code</div>
+                    <strong style={{ color: "#2563eb", fontSize: "15px" }}>{inspectedProveItem.rubrics?.codeQuality || 90} / 100</strong>
+                  </div>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                    <div style={{ color: "var(--muted)" }}>Arxitektura & Patternlar</div>
+                    <strong style={{ color: "#059669", fontSize: "15px" }}>{inspectedProveItem.rubrics?.architecture || 88} / 100</strong>
+                  </div>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                    <div style={{ color: "var(--muted)" }}>Avtomatlashgan Unit Testlar</div>
+                    <strong style={{ color: "#7c3aed", fontSize: "15px" }}>{inspectedProveItem.rubrics?.unitTests || 94} / 100</strong>
+                  </div>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                    <div style={{ color: "var(--muted)" }}>Hujjatlar & Readme</div>
+                    <strong style={{ color: "#d97706", fontSize: "15px" }}>{inspectedProveItem.rubrics?.docs || 85} / 100</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--muted)", marginBottom: "6px" }}>
+                  O‘QITUVCHI XULOSASI VA TAVSIYASI:
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Loyiha sifati bo‘yicha talabaga rasmiy izoh qoldiring..."
+                  value={teacherReviewNote}
+                  onChange={(e) => setTeacherReviewNote(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    border: "1.5px solid var(--border)",
+                    fontSize: "12.5px",
+                    outline: "none",
+                    fontFamily: "inherit",
+                    resize: "none",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                className="candidate-evidence-btn"
+                onClick={() => handleRejectProve(inspectedProveItem.id, inspectedProveItem.studentName)}
+              >
+                Qayta ishlashga qaytarish
+              </button>
+              <button
+                type="button"
+                className="candidate-invite-btn"
+                style={{ flex: 1.5 }}
+                onClick={() => handleApproveProve(inspectedProveItem.id, inspectedProveItem.studentName, inspectedProveItem.skillName)}
+              >
+                <Icon name="checkCircle" size={16} />
+                <span>Tasdiqlash & L4 berish</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. REMEDIAL CHALLENGE GENERATOR WIZARD MODAL */}
       {remedialModalOpen && (
-        <div className="modal-backdrop" onClick={() => setRemedialModalOpen(false)}>
-          <div className="modal" style={{ width: "min(540px, 100%)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-backdrop employer-modal-backdrop" onClick={() => setRemedialModalOpen(false)}>
+          <div className="modal employer-modal" style={{ width: "min(560px, 100%)", borderRadius: "20px", padding: "28px" }} onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setRemedialModalOpen(false)}>
               <Icon name="close" />
             </button>
 
-            <div className="modal-symbol">
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #1e3a8a, #2563eb)", color: "white" }}>
               <Icon name="code" size={28} />
             </div>
 
             <h2>AI Remedial Topshiriq Generatori</h2>
-            <p>
+            <p style={{ fontSize: "13px", color: "var(--muted)" }}>
               Guruhdagi bo‘shliq aniqlangan talabalar uchun parametrli, plagiatdan himoyalangan amaliy topshiriqlarni avtomatik shakllantirish.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px", margin: "20px 0" }}>
               <div>
-                <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
+                <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
                   Mavzu yoki Bo‘shliq fani:
                 </label>
                 <select
@@ -1266,8 +2002,8 @@ export default function TeacherPortal() {
                   style={{
                     width: "100%",
                     padding: "10px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
+                    borderRadius: "10px",
+                    border: "1.5px solid var(--border)",
                     fontSize: "13.5px",
                     color: "var(--navy)",
                   }}
@@ -1281,7 +2017,7 @@ export default function TeacherPortal() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
                     Qiyinlik darajasi:
                   </label>
                   <select
@@ -1290,9 +2026,9 @@ export default function TeacherPortal() {
                     style={{
                       width: "100%",
                       padding: "10px 12px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      fontSize: "13.5px",
+                      borderRadius: "10px",
+                      border: "1.5px solid var(--border)",
+                      fontSize: "13px",
                     }}
                   >
                     <option value="L2">L2 · Boshlang‘ich / Asosiy</option>
@@ -1302,8 +2038,8 @@ export default function TeacherPortal() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
-                    AI Yordami:
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
+                    AI Yordami rejimi:
                   </label>
                   <select
                     value={remedialAiMode}
@@ -1311,9 +2047,9 @@ export default function TeacherPortal() {
                     style={{
                       width: "100%",
                       padding: "10px 12px",
-                      borderRadius: "8px",
-                      border: "1px solid var(--border)",
-                      fontSize: "13.5px",
+                      borderRadius: "10px",
+                      border: "1.5px solid var(--border)",
+                      fontSize: "13px",
                     }}
                   >
                     <option value="AI-assisted">AI-assisted (Tavsiya etiladi)</option>
@@ -1324,12 +2060,14 @@ export default function TeacherPortal() {
             </div>
 
             {generating ? (
-              <div style={{ padding: "20px 0", textAlign: "center" }}>
+              <div style={{ padding: "16px 0", textAlign: "center" }}>
                 <div className="progress-track" style={{ height: "8px", marginBottom: "12px" }}>
-                  <div className="progress-fill" style={{ width: "85%" }} />
+                  <div className="progress-fill" style={{ width: `${generationStep * 33}%`, transition: "width 0.4s ease" }} />
                 </div>
-                <span style={{ fontSize: "13px", color: "var(--muted)", fontWeight: 600 }}>
-                  Sun’iy intellekt 12 nafar talaba profili uchun individual parametrlar yaratmoqda...
+                <span style={{ fontSize: "13px", color: "var(--navy)", fontWeight: 700 }}>
+                  {generationStep === 1 && "1/3: Guruh ontologiyasi va bo‘shliqlari tahlil qilinmoqda..."}
+                  {generationStep === 2 && "2/3: Har bir talaba uchun individual testlar shakllanmoqda..."}
+                  {generationStep === 3 && "3/3: Baholash rubrikalari va sandbox paketi tayyorlanmoqda..."}
                 </span>
               </div>
             ) : generatedSuccess ? (
@@ -1345,6 +2083,7 @@ export default function TeacherPortal() {
 
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <button
+                type="button"
                 className="primary-button full"
                 onClick={handleGenerateRemedial}
                 disabled={generating}
@@ -1352,9 +2091,122 @@ export default function TeacherPortal() {
                 {generating ? "Generatsiya qilinmoqda..." : "AI bilan generatsiya qilish va tarqatish"}
               </button>
             </div>
-            <button className="cancel-button" onClick={() => setRemedialModalOpen(false)}>
+            <button type="button" className="cancel-button" onClick={() => setRemedialModalOpen(false)}>
               Bekor qilish
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 4. VIVA TRANSCRIPT AUDIO & DIALOGUE MODAL */}
+      {inspectedViva && (
+        <div className="modal-backdrop employer-modal-backdrop" onClick={() => setInspectedViva(null)}>
+          <div className="modal employer-modal" style={{ maxWidth: "660px", borderRadius: "20px", padding: "28px" }} onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setInspectedViva(null)}>
+              <Icon name="close" />
+            </button>
+
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #0f2744, #1e3a5f)", color: "white" }}>
+              <Icon name="file" size={28} />
+            </div>
+
+            <p className="eyebrow" style={{ color: "var(--royal)" }}>AI VIVA OG‘ZAKI HIMOYA DIALOGI</p>
+            <h2 style={{ fontSize: "20px", margin: "4px 0" }}>{inspectedViva.studentName} · {inspectedViva.taskTitle}</h2>
+            <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px" }}>
+              Baho: <strong>{inspectedViva.vivaScore} / 100</strong> · Nutq ishonchliligi: <strong>{inspectedViva.confidence}%</strong> ({inspectedViva.duration})
+            </p>
+
+            {/* Audio Wave Player Simulation */}
+            <div
+              style={{
+                padding: "12px 18px",
+                borderRadius: "12px",
+                background: "#0f2744",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                marginBottom: "18px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setPlayingVivaAudio(!playingVivaAudio)}
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  border: "none",
+                  background: playingVivaAudio ? "#ef4444" : "#2563eb",
+                  color: "#ffffff",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <Icon name={playingVivaAudio ? "close" : "play"} size={16} />
+              </button>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                  {playingVivaAudio ? "Audio yozuv ijro etilmoqda..." : "Viva audio yozuvi"}
+                </div>
+                <div style={{ height: "6px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
+                  <div style={{ width: playingVivaAudio ? "65%" : "30%", height: "100%", background: "#38bdf8", transition: "width 0.3s ease" }} />
+                </div>
+              </div>
+
+              <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                05:12 / {inspectedViva.duration}
+              </span>
+            </div>
+
+            {/* Dialogue Exchanges */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left", maxHeight: "240px", overflowY: "auto", marginBottom: "20px" }}>
+              {inspectedViva.dialogue?.map((d: any, idx: number) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    background: d.speaker.includes("AI") ? "#eff6ff" : "#f8fafc",
+                    border: d.speaker.includes("AI") ? "1px solid #bfdbfe" : "1px solid #e2e8f0",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <strong style={{ fontSize: "12.5px", color: "var(--navy)" }}>{d.speaker}:</strong>
+                    {d.score && (
+                      <span style={{ fontSize: "11px", color: "var(--royal)", fontWeight: 700 }}>
+                        Baho: {d.score}/100
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: "13px", color: "#334155" }}>"{d.text}"</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                type="button"
+                className="candidate-evidence-btn"
+                onClick={() => setInspectedViva(null)}
+              >
+                Yopish
+              </button>
+              <button
+                type="button"
+                className="candidate-invite-btn"
+                style={{ flex: 1.5 }}
+                onClick={() => {
+                  setInspectedViva(null);
+                  showToast(`${inspectedViva.studentName}ning himoya natijasi tasdiqlandi!`);
+                }}
+              >
+                <Icon name="checkCircle" size={16} />
+                <span>AI bahosini tasdiqlash</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
