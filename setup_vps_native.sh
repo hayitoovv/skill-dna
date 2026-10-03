@@ -117,6 +117,7 @@ echo -e "\n${BLUE}5/5. Frontend yig'ilmoqda (Base path: /skilldna/)...${NC}"
 cd "$PROJECT_DIR"
 npm install
 npm run build
+chmod -R 755 "$PROJECT_DIR"
 echo -e "${GREEN}✓ Frontend muvaffaqiyatli build qilindi!${NC}"
 
 # 6. Nginx Snippet faylini yaratish
