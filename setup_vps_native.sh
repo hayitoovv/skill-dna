@@ -29,8 +29,9 @@ CURRENT_DIR=$(pwd)
 # 1. Tizimni yangilash va kerakli paketlarni o'rnatish
 echo -e "\n${BLUE}1/5. Tizim paketlari tekshirilmoqda...${NC}"
 apt update -y
-apt install -y curl git ufw nginx postgresql postgresql-contrib \
+apt install -y curl git git-lfs ufw nginx postgresql postgresql-contrib \
     python3 python3-pip python3-venv build-essential libpq-dev
+git lfs install 2>/dev/null || true
 
 if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | tr -d 'v')" -lt 18 ]; then
     echo "Node.js 20 LTS o'rnatilmoqda..."

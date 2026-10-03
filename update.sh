@@ -9,6 +9,9 @@ echo "=========================================================="
 echo "🔄 GitHub dan yangi o'zgarishlar tortilmoqda..."
 echo "=========================================================="
 git pull origin main || git pull
+if command -v git-lfs &> /dev/null; then
+    git lfs pull || true
+fi
 
 echo -e "\n📦 1. Frontend kutubxonalari tekshirilmoqda va build qilinmoqda..."
 npm install
