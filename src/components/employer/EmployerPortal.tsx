@@ -50,24 +50,6 @@ export default function EmployerPortal() {
             Rezyumega emas, 5 qatlamli tekshirilgan dalillar (Evidence Graph)ga asoslangan ishonchli saralash.
           </p>
         </div>
-        <div
-          className="national-badge"
-          style={{
-            padding: "9px 16px",
-            fontSize: "12.5px",
-            fontWeight: 700,
-            borderRadius: "30px",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "7px",
-            background: "#ecfdf5",
-            color: "#059669",
-            border: "1px solid #a7f3d0",
-            boxShadow: "0 2px 8px rgba(5, 150, 105, 0.08)",
-          }}
-        >
-          <Icon name="checkCircle" size={16} /> Faqat rozilik (Consent) berilgan profillar
-        </div>
       </section>
 
       {/* Quick Summary Stats Bar */}
@@ -419,7 +401,7 @@ export default function EmployerPortal() {
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "5px",
+                      gap: "7px",
                       padding: "6px 13px",
                       borderRadius: "20px",
                       background: "#ecfdf5",
@@ -430,7 +412,8 @@ export default function EmployerPortal() {
                       boxShadow: "0 2px 6px rgba(5, 150, 105, 0.1)",
                     }}
                   >
-                    <Icon name="check" size={14} /> {cand.matchScore}% moslik
+                    <span className="live-pulse-indicator" />
+                    <span>{cand.matchScore}% moslik</span>
                   </div>
                   <div className="progress-track" style={{ height: "6px", margin: "7px 0 0", background: "#e2e8f0", borderRadius: "10px" }}>
                     <div
@@ -439,6 +422,7 @@ export default function EmployerPortal() {
                         height: "100%",
                         borderRadius: "10px",
                         background: "linear-gradient(90deg, #059669, #10b981)",
+                        transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
                       }}
                     />
                   </div>
@@ -546,9 +530,9 @@ export default function EmployerPortal() {
 
       {/* Modal for viewing Candidate Evidence Graph */}
       {selectedCandidate && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelectedCandidate(null)}>
+        <div className="modal-backdrop employer-modal-backdrop" role="presentation" onMouseDown={() => setSelectedCandidate(null)}>
           <div
-            className="modal"
+            className="modal employer-modal"
             style={{ maxWidth: "620px", borderRadius: "20px", padding: "28px" }}
             role="dialog"
             onMouseDown={(e) => e.stopPropagation()}
