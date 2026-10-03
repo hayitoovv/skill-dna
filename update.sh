@@ -13,6 +13,8 @@ git pull origin main || git pull
 echo -e "\n📦 1. Frontend kutubxonalari tekshirilmoqda va build qilinmoqda..."
 npm install
 npm run build
+ln -sfn dist skilldna
+chmod -R 755 .
 
 echo -e "\n🐍 2. Backend paketlari va bazasi yangilanmoqda..."
 cd backend

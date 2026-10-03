@@ -99,7 +99,7 @@ Type=simple
 User=root
 WorkingDirectory=/var/www/skill-dna/backend
 EnvironmentFile=/var/www/skill-dna/backend/.env
-ExecStart=/var/www/skill-dna/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 4 --proxy-headers --forwarded-allow-ips='*'
+ExecStart=/var/www/skill-dna/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8001 --workers 4 --proxy-headers --forwarded-allow-ips='*'
 Restart=always
 RestartSec=5
 
@@ -110,13 +110,14 @@ EOF
 systemctl daemon-reload
 systemctl enable skilldna-backend
 systemctl restart skilldna-backend
-echo -e "${GREEN}✓ Backend xizmati muvaffaqiyatli ishga tushirildi (Port 8000 da faol)!${NC}"
+echo -e "${GREEN}✓ Backend xizmati muvaffaqiyatli ishga tushirildi (Port 8001 da faol)!${NC}"
 
 # 5. Frontend (React 19 + Vite 8) ni yig'ish (Subpath /skilldna/ uchun)
 echo -e "\n${BLUE}5/5. Frontend yig'ilmoqda (Base path: /skilldna/)...${NC}"
 cd "$PROJECT_DIR"
 npm install
 npm run build
+ln -sfn "$PROJECT_DIR/dist" "$PROJECT_DIR/skilldna"
 chmod -R 755 "$PROJECT_DIR"
 echo -e "${GREEN}✓ Frontend muvaffaqiyatli build qilindi!${NC}"
 
@@ -128,18 +129,14 @@ cat << 'EOF' > /etc/nginx/snippets/skilldna-subpath.conf
 # SKILL DNA Subpath: /skilldna
 # ==========================================
 
-location = /skilldna {
-    return 301 /skilldna/;
-}
-
-location ^~ /skilldna/ {
-    alias /var/www/skill-dna/dist/;
+location /skilldna {
+    root /var/www/skill-dna;
     index index.html;
     try_files $uri $uri/ /skilldna/index.html;
 }
 
 location ^~ /skilldna/api/ {
-    proxy_pass http://127.0.0.1:8000/api/;
+    proxy_pass http://127.0.0.1:8001/api/;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -150,12 +147,17 @@ location ^~ /skilldna/api/ {
 }
 
 location ^~ /skilldna/docs {
-    proxy_pass http://127.0.0.1:8000/docs;
+    proxy_pass http://127.0.0.1:8001/docs;
     proxy_set_header Host $host;
 }
 
 location ^~ /skilldna/openapi.json {
-    proxy_pass http://127.0.0.1:8000/openapi.json;
+    proxy_pass http://127.0.0.1:8001/api/v1/openapi.json;
+    proxy_set_header Host $host;
+}
+
+location ^~ /skilldna/health {
+    proxy_pass http://127.0.0.1:8001/health;
     proxy_set_header Host $host;
 }
 EOF
@@ -165,24 +167,20 @@ NGINX_TARGET=$(grep -rl "english.ultrasoft.uz" /etc/nginx/ 2>/dev/null | grep -v
 
 if [ -n "$NGINX_TARGET" ] && [ -f "$NGINX_TARGET" ]; then
     echo -e "${YELLOW}Topildi: $NGINX_TARGET${NC}"
-    if ! grep -q "skilldna-subpath.conf" "$NGINX_TARGET"; then
-        cp "$NGINX_TARGET" "${NGINX_TARGET}.skilldna.bak"
-        # server { ... } blokining SSL listen qiluvchi joyiga include qo'shish
-        sed -i '/ssl_certificate/i \    include /etc/nginx/snippets/skilldna-subpath.conf;' "$NGINX_TARGET" 2>/dev/null || \
-        sed -i 's|server_name english.ultrasoft.uz;|server_name english.ultrasoft.uz;\n    include /etc/nginx/snippets/skilldna-subpath.conf;|' "$NGINX_TARGET"
-        echo "Nginx konfiguratsiyasi tekshirilmoqda..."
-        if nginx -t; then
-            systemctl reload nginx
-            echo -e "${GREEN}✓ english.ultrasoft.uz ga /skilldna avtomatik ulandi va Nginx reload qilindi!${NC}"
-        else
-            echo -e "${RED}Xatolik yuz berdi, avvalgi konfiguratsiya tiklanmoqda...${NC}"
-            cp "${NGINX_TARGET}.skilldna.bak" "$NGINX_TARGET"
-            nginx -t && systemctl reload nginx
-        fi
-    else
-        echo -e "${GREEN}✓ skilldna-subpath.conf allaqachon kiritilgan!${NC}"
+    cp "$NGINX_TARGET" "${NGINX_TARGET}.skilldna.bak"
+    # Tozalash va yagona to'g'ri include qo'shish
+    sed -i '/skilldna-subpath.conf/d' "$NGINX_TARGET"
+    sed -i '/server_name english.ultrasoft.uz;/a \    include /etc/nginx/snippets/skilldna-subpath.conf;' "$NGINX_TARGET"
+    echo "Nginx konfiguratsiyasi tekshirilmoqda..."
+    if nginx -t; then
         systemctl reload nginx
+        echo -e "${GREEN}✓ english.ultrasoft.uz ga /skilldna muvaffaqiyatli ulandi va Nginx reload qilindi!${NC}"
+    else
+        echo -e "${RED}Xatolik yuz berdi, avvalgi konfiguratsiya tiklanmoqda...${NC}"
+        cp "${NGINX_TARGET}.skilldna.bak" "$NGINX_TARGET"
+        nginx -t && systemctl reload nginx
     fi
+
 else
     echo -e "${YELLOW}ℹ️ english.ultrasoft.uz fayli avtomatik topilmadi.${NC}"
     echo -e "${YELLOW}Mavjud Nginx konfiguratsiyangizga quyidagi qatorni qo'shib qo'ying:${NC}"
