@@ -57,13 +57,65 @@ export interface EvidenceItem {
 
 export interface IntegrityFlag {
   id: string;
-  type: "CROSS_LAYER_GAP" | "VIVA_DISAGREEMENT" | "SIMILARITY_HIGH" | "PASTE_BURST";
+  type: "CROSS_LAYER_GAP" | "VIVA_DISAGREEMENT" | "SIMILARITY_HIGH" | "PASTE_BURST" | "LATENCY_ANOMALY" | "PROXY_SUBMISSION";
   studentName: string;
+  studentGroup?: string;
   skillName: string;
   severity: "high" | "medium" | "low";
   reason: string;
   status: "open" | "resolved" | "appealed";
   timestamp: string;
+  metrics?: {
+    doScore?: number;
+    defendScore?: number;
+    discrepancy?: number;
+    model1Score?: number;
+    model2Score?: number;
+    similarityPct?: number;
+    pasteLines?: number;
+    latencySeconds?: number;
+  };
+  transcriptExcerpt?: {
+    question: string;
+    answer: string;
+    aiVerdict: string;
+    confidence: number;
+  };
+}
+
+export interface VivaTranscriptItem {
+  id: string;
+  studentName: string;
+  studentGroup: string;
+  direction: DirectionCode;
+  taskTitle: string;
+  date: string;
+  overallScore: number;
+  integrityScore: number;
+  status: "verified" | "flagged" | "review_needed";
+  duration: string;
+  audioDurationSec: number;
+  qaPairs: {
+    question: string;
+    answer: string;
+    evaluatorScore: number;
+    audioConfidence: number;
+    flagRaised?: boolean;
+  }[];
+}
+
+export interface IntegrityRuleItem {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  category: "cross_layer" | "inter_rater" | "similarity" | "keystroke" | "latency";
+  threshold: number;
+  unit: string;
+  severity: "high" | "medium" | "low";
+  isActive: boolean;
+  triggeredCount: number;
+  explanation: string;
 }
 
 export interface EmployerCandidate {

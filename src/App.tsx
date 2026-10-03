@@ -93,6 +93,24 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const [moderatorTab, setModeratorTab] = useState<"flags" | "transcripts" | "rules">(() => {
+    try {
+      const saved = localStorage.getItem("skill_dna_moderator_tab");
+      if (saved && ["flags", "transcripts", "rules"].includes(saved)) {
+        return saved as "flags" | "transcripts" | "rules";
+      }
+    } catch {}
+    return "flags";
+  });
+
+  const handleModeratorTabChange = (tab: "flags" | "transcripts" | "rules") => {
+    setModeratorTab(tab);
+    try {
+      localStorage.setItem("skill_dna_moderator_tab", tab);
+    } catch {}
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const [assessmentOpen, setAssessmentOpen] = useState(false);
   const [assessmentScoreVersion, setAssessmentScoreVersion] = useState(0);
 
@@ -406,13 +424,22 @@ export default function App() {
         {role === "moderator" && (
           <nav className="main-nav" aria-label="Moderator navigatsiyasi" style={{ marginTop: "12px" }}>
             <div className="nav-label">HALOLLIK NAZORATI</div>
-            <button className="nav-item active">
+            <button
+              className={`nav-item ${moderatorTab === "flags" ? "active" : ""}`}
+              onClick={() => handleModeratorTabChange("flags")}
+            >
               <Icon name="shield" /> Bayroqlar navbati (Flags)
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${moderatorTab === "transcripts" ? "active" : ""}`}
+              onClick={() => handleModeratorTabChange("transcripts")}
+            >
               <Icon name="file" /> Viva Transkript tekshiruvi
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${moderatorTab === "rules" ? "active" : ""}`}
+              onClick={() => handleModeratorTabChange("rules")}
+            >
               <Icon name="settings" /> Ontologiya & Rubrikalar
             </button>
           </nav>
@@ -610,7 +637,12 @@ export default function App() {
           <UniversityDashboard activeTab={univTab as any} onTabChange={handleUnivTabChange} />
         )}
 
-        {role === "moderator" && <ModeratorQueue />}
+        {role === "moderator" && (
+          <ModeratorQueue
+            activeTab={moderatorTab}
+            onTabChange={handleModeratorTabChange}
+          />
+        )}
       </main>
 
       {/* Interactive Assessment & AI Viva Modal */}
