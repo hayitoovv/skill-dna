@@ -1,0 +1,46 @@
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+*-debug.log*
+logs/
+*.log
+.claude-replay.*
+.tmp-*
+/.figma/design-context/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+!.env.production.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/.venv/
+.venv/
+env/
+venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Platform-managed agentplat state
+/.plugins/
+/.opencode-skills/
+

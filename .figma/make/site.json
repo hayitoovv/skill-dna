@@ -1,0 +1,10 @@
+{
+  "description": "Connect with friends and family through instant messaging, sharing updates, and creating memorable conversations in a user-friendly platform.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
