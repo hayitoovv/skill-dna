@@ -162,11 +162,21 @@ location ^~ /skilldna/health {
 }
 EOF
 
-# Mavjud english.ultrasoft.uz Nginx faylini qidirish
-NGINX_TARGET=$(grep -rl "english.ultrasoft.uz" /etc/nginx/ 2>/dev/null | grep -v "skilldna" | head -n 1 || true)
+# Faol (enabled) english.ultrasoft.uz Nginx faylini qidirish
+ENABLED_FILE=$(grep -rl "english.ultrasoft.uz" /etc/nginx/sites-enabled/ 2>/dev/null | head -n 1 || true)
+if [ -n "$ENABLED_FILE" ] && [ -L "$ENABLED_FILE" ]; then
+    NGINX_TARGET=$(readlink -f "$ENABLED_FILE")
+elif [ -n "$ENABLED_FILE" ] && [ -f "$ENABLED_FILE" ]; then
+    NGINX_TARGET="$ENABLED_FILE"
+else
+    NGINX_TARGET="/etc/nginx/sites-available/smartsavdo-english"
+fi
+
+# Eski food-delivery dan tozalash
+sed -i '/skilldna-subpath.conf/d' /etc/nginx/sites-available/food-delivery 2>/dev/null || true
 
 if [ -n "$NGINX_TARGET" ] && [ -f "$NGINX_TARGET" ]; then
-    echo -e "${YELLOW}Topildi: $NGINX_TARGET${NC}"
+    echo -e "${YELLOW}Haqiqiy faol Nginx fayli topildi: $NGINX_TARGET${NC}"
     cp "$NGINX_TARGET" "${NGINX_TARGET}.skilldna.bak"
     # Tozalash va yagona to'g'ri include qo'shish
     sed -i '/skilldna-subpath.conf/d' "$NGINX_TARGET"
