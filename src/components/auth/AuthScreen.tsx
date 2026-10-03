@@ -191,7 +191,7 @@ export default function AuthScreen({
           <div
             className="auth-bg-art"
             style={{
-              backgroundImage: `url('/auth-bg.png')`,
+              backgroundImage: `url('${(import.meta.env.BASE_URL || "/").replace(/\/{2,}/g, "/")}auth-bg.png')`,
             }}
           />
 
@@ -199,7 +199,11 @@ export default function AuthScreen({
             {/* Logo */}
             <div className="auth-logo-row">
               <div className="auth-logo-badge">
-                <img src="/logo.png" alt="Skill DNA" className="auth-logo-img" />
+                <img
+                  src={`${(import.meta.env.BASE_URL || "/").replace(/\/{2,}/g, "/")}logo.png`}
+                  alt="Skill DNA"
+                  className="auth-logo-img"
+                />
               </div>
               <div className="auth-logo-text-block">
                 <div className="auth-logo-text">

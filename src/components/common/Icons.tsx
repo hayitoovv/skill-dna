@@ -427,10 +427,11 @@ export function Logo({
   showTagline?: boolean;
   className?: string;
 } = {}) {
+  const logoSrc = `${import.meta.env.BASE_URL || "/"}logo.png`.replace(/\/{2,}/g, "/");
   return (
     <div className={`logo-wrap logo-${size} ${className}`.trim()}>
       <div className="logo-mark">
-        <img src="/logo.png" alt="Skill DNA" className="logo-img" />
+        <img src={logoSrc} alt="Skill DNA" className="logo-img" />
       </div>
       <div className="logo-text-block">
         <div className="logo-word">

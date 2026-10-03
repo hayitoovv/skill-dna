@@ -3,7 +3,11 @@
  * Connects frontend React components to Python FastAPI + PostgreSQL backend.
  */
 
-const API_BASE = "/api/v1";
+const SUBPATH =
+  import.meta.env.BASE_URL && import.meta.env.BASE_URL !== "/"
+    ? import.meta.env.BASE_URL.replace(/\/$/, "")
+    : "";
+const API_BASE = `${SUBPATH}/api/v1`;
 const DIRECT_API_BASE = "http://127.0.0.1:8000/api/v1";
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

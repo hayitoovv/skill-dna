@@ -1,22 +1,22 @@
 #!/bin/bash
 # ====================================================================
-# SKILL DNA — Ubuntu 22.04 / 24.04 Klassik O'rnatish Skripti
-# Stack: PostgreSQL + Python 3 FastAPI (Systemd) + Nginx + React 19
+# SKILL DNA — Ubuntu 22.04 / 24.04 Subpath O'rnatish Skripti
+# Domen: https://english.ultrasoft.uz/skilldna
+# Stack: PostgreSQL + Python 3 FastAPI (Systemd) + Nginx Subpath
 # ====================================================================
 
 set -e
 
-# Ranglar
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 echo -e "${BLUE}==================================================================${NC}"
-echo -e "${GREEN}🚀 SKILL DNA platformasini Ubuntu VPS ga o'rnatish boshlanmoqda...${NC}"
+echo -e "${GREEN}🚀 SKILL DNA platformasini VPS ga o'rnatish (Subpath: /skilldna)${NC}"
 echo -e "${BLUE}==================================================================${NC}"
 
-# Root huquqini tekshirish
 if [ "$EUID" -ne 0 ]; then
   echo -e "${RED}Iltimos, ushbu skriptni root yoki sudo bilan ishga tushiring!${NC}"
   echo "Misol: sudo bash setup_vps_native.sh"
@@ -27,12 +27,11 @@ PROJECT_DIR="/var/www/skill-dna"
 CURRENT_DIR=$(pwd)
 
 # 1. Tizimni yangilash va kerakli paketlarni o'rnatish
-echo -e "\n${BLUE}1/6. Tizim yangilanmoqda va zarur kutubxonalar o'rnatilmoqda...${NC}"
+echo -e "\n${BLUE}1/5. Tizim paketlari tekshirilmoqda...${NC}"
 apt update -y
 apt install -y curl git ufw nginx postgresql postgresql-contrib \
     python3 python3-pip python3-venv build-essential libpq-dev
 
-# Node.js 20 LTS o'rnatish (agar o'rnatilmagan yoki eskirgan bo'lsa)
 if ! command -v node &> /dev/null || [ "$(node -v | cut -d'.' -f1 | tr -d 'v')" -lt 18 ]; then
     echo "Node.js 20 LTS o'rnatilmoqda..."
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -41,17 +40,17 @@ fi
 echo -e "${GREEN}✓ Node.js versiyasi: $(node -v)${NC}"
 echo -e "${GREEN}✓ Python versiyasi: $(python3 --version)${NC}"
 
-# 2. Loyiha papkasini /var/www/skill-dna ga ko'chirish / joylash
-echo -e "\n${BLUE}2/6. Loyiha fayllari sozlanmoqda...${NC}"
+# 2. Loyiha papkasini sozlash
+echo -e "\n${BLUE}2/5. Loyiha papkasi sozlanmoqda...${NC}"
 mkdir -p "$PROJECT_DIR"
 if [ "$CURRENT_DIR" != "$PROJECT_DIR" ]; then
-    echo "Fayllar $PROJECT_DIR ga nusxalanmoqda..."
+    echo "Fayllar $PROJECT_DIR ga ko'chirilmoqda..."
     cp -r "$CURRENT_DIR"/* "$PROJECT_DIR"/
 fi
 cd "$PROJECT_DIR"
 
 # 3. PostgreSQL ma'lumotlar bazasini sozlash
-echo -e "\n${BLUE}3/6. PostgreSQL ma'lumotlar bazasi sozlanmoqda...${NC}"
+echo -e "\n${BLUE}3/5. PostgreSQL ma'lumotlar bazasi sozlanmoqda...${NC}"
 systemctl enable postgresql
 systemctl start postgresql
 
@@ -60,7 +59,7 @@ sudo -u postgres psql -c "CREATE DATABASE skill_dna OWNER postgres;" 2>/dev/null
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE skill_dna TO postgres;" || true
 
 # 4. Backend (Python FastAPI) ni sozlash
-echo -e "\n${BLUE}4/6. Python virtual muhiti va backend kutubxonalari o'rnatilmoqda...${NC}"
+echo -e "\n${BLUE}4/5. Python virtual muhiti va backend kutubxonalari sozlanmoqda...${NC}"
 cd "$PROJECT_DIR/backend"
 python3 -m venv .venv
 source .venv/bin/activate
@@ -81,15 +80,15 @@ DATABASE_URL="postgresql+asyncpg://postgres:root123@127.0.0.1:5432/skill_dna"
 SYNC_DATABASE_URL="postgresql://postgres:root123@127.0.0.1:5432/skill_dna"
 EOF
 
-# Baza sxemasini initsializatsiya qilish va boshlang'ich ma'lumotlarni yozish
-echo "PostgreSQL jadvallari va dastlabki ma'lumotlar kiritilmoqda..."
+# Baza sxemasini initsializatsiya qilish
+echo "PostgreSQL jadvallari yaratilmoqda..."
 python3 -c "
 import asyncio
 from app.db.init_db import init_database
 asyncio.run(init_database())
 " || echo "Baza allaqachon initsializatsiya qilingan."
 
-# Systemd xizmatini yaratish (Backend avtomatik 24/7 ishlashi uchun)
+# Systemd xizmatini yaratish (Backend port 8000 da ishlaydi)
 cat << 'EOF' > /etc/systemd/system/skilldna-backend.service
 [Unit]
 Description=SKILL DNA FastAPI Backend Service
@@ -111,85 +110,88 @@ EOF
 systemctl daemon-reload
 systemctl enable skilldna-backend
 systemctl restart skilldna-backend
-echo -e "${GREEN}✓ Backend xizmati muvaffaqiyatli ishga tushirildi (Port 8000)!${NC}"
+echo -e "${GREEN}✓ Backend xizmati muvaffaqiyatli ishga tushirildi (Port 8000 da faol)!${NC}"
 
-# 5. Frontend (React 19 + Vite 8) ni yig'ish (Build)
-echo -e "\n${BLUE}5/6. Frontend komponentlari yig'ilmoqda (Build)...${NC}"
+# 5. Frontend (React 19 + Vite 8) ni yig'ish (Subpath /skilldna/ uchun)
+echo -e "\n${BLUE}5/5. Frontend yig'ilmoqda (Base path: /skilldna/)...${NC}"
 cd "$PROJECT_DIR"
 npm install
 npm run build
-echo -e "${GREEN}✓ Frontend muvaffaqiyatli build qilindi (dist papkasi tayyor)!${NC}"
+echo -e "${GREEN}✓ Frontend muvaffaqiyatli build qilindi!${NC}"
 
-# 6. Nginx veb-serverini sozlash
-echo -e "\n${BLUE}6/6. Nginx konfiguratsiyasi sozlanmoqda...${NC}"
-cat << 'EOF' > /etc/nginx/sites-available/skilldna
-server {
-    listen 80;
-    server_name _;
+# 6. Nginx Snippet faylini yaratish
+echo -e "\n${BLUE}Nginx subpath konfiguratsiyasi tayyorlanmoqda...${NC}"
+mkdir -p /etc/nginx/snippets
+cat << 'EOF' > /etc/nginx/snippets/skilldna-subpath.conf
+# ==========================================
+# SKILL DNA Subpath: /skilldna
+# ==========================================
 
-    root /var/www/skill-dna/dist;
+location = /skilldna {
+    return 301 /skilldna/;
+}
+
+location ^~ /skilldna/ {
+    alias /var/www/skill-dna/dist/;
     index index.html;
+    try_files $uri $uri/ /skilldna/index.html;
+}
 
-    # Gzip siqish
-    gzip on;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript image/svg+xml;
+location ^~ /skilldna/api/ {
+    proxy_pass http://127.0.0.1:8000/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120s;
+    proxy_connect_timeout 60s;
+}
 
-    # Statik fayllar keshi
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
-    }
+location ^~ /skilldna/docs {
+    proxy_pass http://127.0.0.1:8000/docs;
+    proxy_set_header Host $host;
+}
 
-    # React SPA yo'naltirish (Sahifa yangilanganda 404 bermasligi uchun)
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # API so'rovlarni FastAPI backendiga yo'naltirish
-    location /api/ {
-        proxy_pass http://127.0.0.1:8000/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Swagger Docs
-    location /docs {
-        proxy_pass http://127.0.0.1:8000/docs;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-    location /openapi.json {
-        proxy_pass http://127.0.0.1:8000/openapi.json;
-        proxy_set_header Host $host;
-    }
+location ^~ /skilldna/openapi.json {
+    proxy_pass http://127.0.0.1:8000/openapi.json;
+    proxy_set_header Host $host;
 }
 EOF
 
-# Nginx saytini faollashtirish
-rm -f /etc/nginx/sites-enabled/default
-ln -sf /etc/nginx/sites-available/skilldna /etc/nginx/sites-enabled/skilldna
-nginx -t
-systemctl restart nginx
+# Mavjud english.ultrasoft.uz Nginx faylini qidirish
+NGINX_TARGET=$(grep -rl "english.ultrasoft.uz" /etc/nginx/ 2>/dev/null | grep -v "skilldna" | head -n 1 || true)
 
-# Firewall portlarini ochish
-ufw allow 22/tcp || true
-ufw allow 80/tcp || true
-ufw allow 443/tcp || true
-ufw --force enable || true
-
-SERVER_IP=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
+if [ -n "$NGINX_TARGET" ] && [ -f "$NGINX_TARGET" ]; then
+    echo -e "${YELLOW}Topildi: $NGINX_TARGET${NC}"
+    if ! grep -q "skilldna-subpath.conf" "$NGINX_TARGET"; then
+        cp "$NGINX_TARGET" "${NGINX_TARGET}.skilldna.bak"
+        # server { ... } blokining SSL listen qiluvchi joyiga include qo'shish
+        sed -i '/ssl_certificate/i \    include /etc/nginx/snippets/skilldna-subpath.conf;' "$NGINX_TARGET" 2>/dev/null || \
+        sed -i 's|server_name english.ultrasoft.uz;|server_name english.ultrasoft.uz;\n    include /etc/nginx/snippets/skilldna-subpath.conf;|' "$NGINX_TARGET"
+        echo "Nginx konfiguratsiyasi tekshirilmoqda..."
+        if nginx -t; then
+            systemctl reload nginx
+            echo -e "${GREEN}✓ english.ultrasoft.uz ga /skilldna avtomatik ulandi va Nginx reload qilindi!${NC}"
+        else
+            echo -e "${RED}Xatolik yuz berdi, avvalgi konfiguratsiya tiklanmoqda...${NC}"
+            cp "${NGINX_TARGET}.skilldna.bak" "$NGINX_TARGET"
+            nginx -t && systemctl reload nginx
+        fi
+    else
+        echo -e "${GREEN}✓ skilldna-subpath.conf allaqachon kiritilgan!${NC}"
+        systemctl reload nginx
+    fi
+else
+    echo -e "${YELLOW}ℹ️ english.ultrasoft.uz fayli avtomatik topilmadi.${NC}"
+    echo -e "${YELLOW}Mavjud Nginx konfiguratsiyangizga quyidagi qatorni qo'shib qo'ying:${NC}"
+    echo -e "${GREEN}    include /etc/nginx/snippets/skilldna-subpath.conf;${NC}"
+fi
 
 echo -e "\n${GREEN}==================================================================${NC}"
-echo -e "${GREEN}🎉 TABRIKLAYMIZ! SKILL DNA PLATFORMASI VPS DA ISHGA TUSHDI!${NC}"
+echo -e "${GREEN}🎉 TAYYOR! SKILL DNA ISHGA TUSHIRILDI!${NC}"
 echo -e "${GREEN}==================================================================${NC}"
-echo -e "🌐 Veb-saytga kirish: ${BLUE}http://${SERVER_IP}${NC}"
-echo -e "📚 API Hujjatlari (Swagger): ${BLUE}http://${SERVER_IP}/docs${NC}"
-echo -e "🔍 Backend holatini tekshirish: ${BLUE}systemctl status skilldna-backend${NC}"
-echo -e "📜 Backend loglarini ko'rish: ${BLUE}journalctl -u skilldna-backend -f${NC}"
+echo -e "🌐 Platforma havolasi: ${BLUE}https://english.ultrasoft.uz/skilldna${NC}"
+echo -e "📚 API Swagger Docs:   ${BLUE}https://english.ultrasoft.uz/skilldna/docs${NC}"
+echo -e "🔍 Backend holati:     ${BLUE}systemctl status skilldna-backend${NC}"
 echo -e "${GREEN}==================================================================${NC}"
