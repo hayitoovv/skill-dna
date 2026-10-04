@@ -321,6 +321,13 @@ async def viva_socket(websocket: WebSocket, session_id: uuid.UUID):
         await websocket.send_json({"type": "error", "detail": "Avtorizatsiyadan o‘tilmagan"})
         await websocket.close(code=4401)
         return
+    async with AsyncSessionLocal() as db:
+        try:
+            await _load_session(db, session_id, user)
+        except HTTPException as e:
+            await websocket.send_json({"type": "error", "detail": e.detail, "status": e.status_code})
+            await websocket.close(code=4404 if e.status_code == 404 else 4403)
+            return
     await websocket.send_json({"type": "ready"})
 
     try:
