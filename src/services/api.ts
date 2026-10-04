@@ -1,6 +1,6 @@
 /**
- * SKILL DNA — Frontend API Service Client
- * Connects frontend React components to Python FastAPI + PostgreSQL backend.
+ * SKILL DNA — API client for the FastAPI backend (architecture document v2.0, section 12).
+ * Auth is Bearer-only: short-lived access token + refresh token (section 13.1).
  */
 
 const SUBPATH =
@@ -8,79 +8,125 @@ const SUBPATH =
     ? import.meta.env.BASE_URL.replace(/\/$/, "")
     : "";
 const API_BASE = `${SUBPATH}/api/v1`;
-const DIRECT_API_BASE = "http://127.0.0.1:8000/api/v1";
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem("skill_dna_token");
+const TOKEN_KEY = "skill_dna_token";
+const REFRESH_KEY = "skill_dna_refresh";
+
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function storeTokens(data: { access_token?: string; refresh_token?: string }) {
+  try {
+    if (data.access_token) localStorage.setItem(TOKEN_KEY, data.access_token);
+    if (data.refresh_token) localStorage.setItem(REFRESH_KEY, data.refresh_token);
+  } catch {}
+}
+
+export function clearTokens() {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+  } catch {}
+}
+
+export function hasSession(): boolean {
+  try {
+    return !!localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return false;
+  }
+}
+
+let refreshing: Promise<boolean> | null = null;
+
+async function refreshAccessToken(): Promise<boolean> {
+  let refreshToken: string | null = null;
+  try {
+    refreshToken = localStorage.getItem(REFRESH_KEY);
+  } catch {}
+  if (!refreshToken) return false;
+  refreshing ??= fetch(`${API_BASE}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  })
+    .then(async (r) => {
+      if (!r.ok) return false;
+      storeTokens(await r.json());
+      return true;
+    })
+    .catch(() => false)
+    .finally(() => {
+      refreshing = null;
+    });
+  return refreshing;
+}
+
+async function request<T>(endpoint: string, options: RequestInit = {}, retry = true): Promise<T> {
+  let token: string | null = null;
+  try {
+    token = localStorage.getItem(TOKEN_KEY);
+  } catch {}
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const response = await fetch(url, { ...options, headers });
+
+  if (response.status === 401 && retry && (await refreshAccessToken())) {
+    return request<T>(endpoint, options, false);
   }
-
-  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  let primaryUrl = endpoint.startsWith("http") ? endpoint : `${API_BASE}${cleanEndpoint}`;
-
-  try {
-    let response = await fetch(primaryUrl, {
-      ...options,
-      headers,
-    });
-
-    // If 404/network issue with proxy, fallback to direct port 8000
-    if (!response.ok && !endpoint.startsWith("http")) {
-      try {
-        const directResp = await fetch(`${DIRECT_API_BASE}${cleanEndpoint}`, {
-          ...options,
-          headers,
-        });
-        if (directResp.ok) {
-          return await directResp.json();
-        }
-      } catch {}
-    }
-
-    if (!response.ok) {
-      let errorMsg = `Server error: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        if (errorData.detail) errorMsg = errorData.detail;
-      } catch {}
-      throw new Error(errorMsg);
-    }
-
-    return await response.json();
-  } catch (err: any) {
-    console.warn(`[API] Request to ${endpoint} failed:`, err.message);
-    throw err;
+  if (!response.ok) {
+    let message = `Server xatosi: ${response.status}`;
+    try {
+      const data = await response.json();
+      if (typeof data.detail === "string") message = data.detail;
+    } catch {}
+    throw new ApiError(message, response.status);
   }
+  return (await response.json()) as T;
 }
 
+const post = <T>(endpoint: string, body?: unknown) =>
+  request<T>(endpoint, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+
+export type Layer = "KNOW" | "DO" | "ADAPT" | "DEFEND" | "PROVE";
+
 export const api = {
-  // System Health
   async checkHealth() {
     try {
-      const res = await fetch("http://127.0.0.1:8000/health");
+      const res = await fetch(`${SUBPATH}/health`);
       return await res.json();
     } catch {
       return { status: "offline" };
     }
   },
 
-  // Auth & Profile
+  // ---------- Auth, profile, consent ----------
+  /** Returns tokens, or `{ mfa_required, mfa_token }` when the account has two-factor auth enabled. */
   async login(identifier: string, password: string) {
-    const data = await request<{ access_token: string; user: any }>("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ identifier, password }),
-    });
-    if (data.access_token) {
-      localStorage.setItem("skill_dna_token", data.access_token);
-    }
+    const data = await post<any>("/auth/login", { identifier, password });
+    if (!data.mfa_required) storeTokens(data);
+    return data as { access_token?: string; refresh_token?: string; user: any; mfa_required?: boolean; mfa_token?: string };
+  },
+
+  async verifyMfa(mfaToken: string, code: string) {
+    const data = await post<{ access_token: string; refresh_token: string; user: any }>("/auth/mfa/verify", { mfa_token: mfaToken, code });
+    storeTokens(data);
     return data;
   },
+  getMfaStatus: () => request<{ enabled: boolean; required: boolean; recommended: boolean; session_verified: boolean; recovery_codes_left: number }>("/auth/mfa"),
+  setupMfa: () => post<{ secret: string; otpauth_uri: string }>("/auth/mfa/setup"),
+  enableMfa: (code: string) => post<{ enabled: boolean; recovery_codes: string[] }>("/auth/mfa/enable", { code }),
+  disableMfa: (code: string) => post<{ enabled: boolean }>("/auth/mfa/disable", { code }),
 
   async register(payload: {
     full_name: string;
@@ -91,100 +137,158 @@ export const api = {
     direction_code?: string;
     course?: string;
   }) {
-    const data = await request<{ access_token: string; user: any }>("/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    if (data.access_token) {
-      localStorage.setItem("skill_dna_token", data.access_token);
-    }
+    const data = await post<{ access_token: string; refresh_token: string; user: any }>("/auth/register", payload);
+    storeTokens(data);
     return data;
   },
 
-  async getMe(userId?: string) {
-    const q = userId ? `?user_id=${encodeURIComponent(userId)}` : "";
-    return await request<any>(`/auth/me${q}`);
+  logout() {
+    clearTokens();
   },
 
-  async updateMe(
-    userId: string,
-    data: { full_name?: string; email?: string; phone?: string; bio?: string; role?: string }
-  ) {
-    const q = userId ? `?user_id=${encodeURIComponent(userId)}` : "";
-    return await request<any>(`/auth/me${q}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
+  getMe: () => request<any>("/auth/me"),
+  updateMe: (data: { full_name?: string; phone?: string; bio?: string }) =>
+    request<any>("/auth/me", { method: "PUT", body: JSON.stringify(data) }),
+  getConsents: () => request<{ type: string; granted: boolean; granted_at: string | null }[]>("/auth/consents"),
+  setConsent: (type: string, granted: boolean) => post<any>("/auth/consents", { type, granted }),
+
+  // ---------- Ontology ----------
+  getDirections: () => request<any[]>("/directions"),
+  getSkills: (direction?: string) => request<any[]>(`/skills${direction ? `?direction=${direction}` : ""}`),
+  getSkillDetail: (skillId: string) => request<any>(`/skills/${skillId}`),
+
+  // ---------- Skill DNA & Evidence Graph ----------
+  getDnaProfile: (userId?: string) => request<any>(`/profile/skill-dna${userId ? `?user_id=${userId}` : ""}`),
+  getSkillScore: (skillId: string, userId?: string) =>
+    request<any>(`/skills/${skillId}/score${userId ? `?user_id=${userId}` : ""}`),
+  getEvidenceGraph: (skillId?: string) =>
+    request<{ nodes: any[]; edges: any[] }>(`/profile/evidence-graph${skillId ? `?skill_id=${skillId}` : ""}`),
+
+  // ---------- Assessment ----------
+  getTasks: (layer?: Layer, skill?: string) => {
+    const q = new URLSearchParams();
+    if (layer) q.set("layer", layer);
+    if (skill) q.set("skill", skill);
+    const qs = q.toString();
+    return request<any[]>(`/tasks${qs ? `?${qs}` : ""}`);
+  },
+  startAttempt: (taskId: string) => post<any>("/tasks/attempts", { task_id: taskId }),
+  submitAttempt: (
+    attemptId: string,
+    payload: {
+      code_content?: string;
+      answers?: Record<string, unknown>;
+      repo_url?: string;
+      ai_prompts_count?: number;
+      self_declared_contribution?: number;
+      telemetry?: Record<string, number>;
+    }
+  ) => post<any>(`/tasks/attempts/${attemptId}/submit`, payload),
+  getAttemptResult: (attemptId: string) => request<any>(`/tasks/attempts/${attemptId}/result`),
+  requestChallenge: (taskId: string) => post<any>("/challenges/request", { task_id: taskId }),
+
+  // ---------- AI Viva ----------
+  startVivaSession: (attemptId: string, language = "uz") => post<any>("/viva/sessions", { attempt_id: attemptId, language }),
+  sendVivaMessage: (sessionId: string, content: string) => post<any>(`/viva/sessions/${sessionId}/messages`, { content }),
+  getVivaTranscript: (sessionId: string) => request<any>(`/viva/sessions/${sessionId}/transcript`),
+
+  /**
+   * Opens the viva WebSocket (section 12). Resolves once the server accepted the token sent as the
+   * first message; rejects if the socket can't be established so callers fall back to REST.
+   */
+  openVivaSocket(sessionId: string, onEvent: (event: any) => void): Promise<{ answer: (text: string) => void; close: () => void }> {
+    return new Promise((resolve, reject) => {
+      let token: string | null = null;
+      try {
+        token = localStorage.getItem(TOKEN_KEY);
+      } catch {}
+      if (!token || typeof WebSocket === "undefined") return reject(new Error("WebSocket mavjud emas"));
+      const proto = window.location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${window.location.host}${API_BASE}/viva/sessions/${sessionId}/ws`);
+      let ready = false;
+      const timer = window.setTimeout(() => {
+        if (!ready) {
+          ws.close();
+          reject(new Error("WebSocket javob bermadi"));
+        }
+      }, 5000);
+      ws.onopen = () => ws.send(JSON.stringify({ type: "auth", token }));
+      ws.onmessage = (m) => {
+        let data: any;
+        try {
+          data = JSON.parse(m.data);
+        } catch {
+          return;
+        }
+        if (!ready && data.type === "ready") {
+          ready = true;
+          window.clearTimeout(timer);
+          resolve({ answer: (text) => ws.send(JSON.stringify({ type: "answer", content: text })), close: () => ws.close() });
+          return;
+        }
+        onEvent(data);
+      };
+      ws.onerror = () => {
+        if (!ready) {
+          window.clearTimeout(timer);
+          reject(new Error("WebSocket ulanmadi"));
+        }
+      };
+      ws.onclose = () => {
+        if (ready) onEvent({ type: "closed" });
+      };
     });
   },
 
-  // Competency Ontology
-  async getDirections() {
-    return await request<any[]>("/directions");
-  },
+  // ---------- AI assistant (AI-assisted tasks, section 5.2) ----------
+  getAssistantState: (attemptId: string) => request<any>(`/assistant/${attemptId}`),
+  askAssistant: (attemptId: string, content: string, code: string) =>
+    post<any>(`/assistant/${attemptId}/messages`, { content, code }),
+  decideSuggestion: (attemptId: string, suggestionId: string, accepted: boolean) =>
+    post<any>(`/assistant/${attemptId}/decisions`, { suggestion_id: suggestionId, accepted }),
 
-  async getSkillDetail(skillId: string) {
-    return await request<any>(`/skills/${skillId}`);
-  },
+  // ---------- Career ----------
+  getCareers: () => request<any[]>("/careers"),
+  getCareerMatch: (careerId: string) => request<any>(`/careers/${careerId}/match`),
+  getCareerTarget: () => request<any>("/career/target"),
+  chatWithCoach: (message: string, careerId?: string) => post<any>("/career/coach-chat", { message, career_id: careerId }),
 
-  // Student DNA Profile & Evidence Graph
-  async getDnaProfile(userId?: string) {
-    const q = userId ? `?user_id=${encodeURIComponent(userId)}` : "";
-    return await request<any>(`/profile/dna${q}`);
-  },
+  // ---------- Credentials ----------
+  getCredentials: () => request<any[]>("/credentials"),
+  issueCredential: (skillId: string) => post<any>("/credentials/issue", { skill_id: skillId }),
+  verifyCredential: (id: string) => request<any>(`/verify/${id}`),
 
-  async getEvidenceGraph(userId?: string) {
-    const q = userId ? `?user_id=${encodeURIComponent(userId)}` : "";
-    return await request<{ nodes: any[]; edges: any[] }>(`/profile/evidence-graph${q}`);
-  },
+  // ---------- Appeals ----------
+  createAppeal: (attemptId: string, reason: string) => post<any>("/appeals", { attempt_id: attemptId, reason }),
+  getAppeals: () => request<any[]>("/appeals"),
+  resolveAppeal: (id: string, decision: "approved" | "rejected", notes: string, newScore?: number) =>
+    post<any>(`/appeals/${id}/resolve`, { decision, notes, new_score: newScore }),
 
-  // Assessment Tasks & Sandbox
-  async getTasks(layer?: string) {
-    const q = layer && layer !== "Barchasi" ? `?layer=${layer}` : "";
-    return await request<any[]>(`/tasks${q}`);
-  },
+  // ---------- Teacher ----------
+  getTeacherGroups: () => request<any[]>("/teacher/groups"),
+  getGroupGaps: (groupId: string) => request<any>(`/teacher/groups/${encodeURIComponent(groupId)}/gaps`),
+  getProveQueue: () => request<any[]>("/teacher/prove-queue"),
+  getVivaResults: (groupId?: string) =>
+    request<any[]>(`/teacher/viva-results${groupId ? `?group_id=${encodeURIComponent(groupId)}` : ""}`),
+  verifyEvidence: (evidenceId: string, approved: boolean, score: number, notes?: string) =>
+    post<any>(`/teacher/evidence/${evidenceId}/verify`, { approved, score, notes }),
+  createRemedial: (skillId: string, groupId?: string) => post<any>("/teacher/remedial", { skill_id: skillId, group_id: groupId }),
 
-  async startAttempt(taskId: string, userId: string, aiMode = "AI-assisted") {
-    return await request<any>(`/tasks/attempt/start?user_id=${userId}`, {
-      method: "POST",
-      body: JSON.stringify({ task_id: taskId, ai_mode: aiMode }),
-    });
-  },
+  // ---------- Moderation ----------
+  getModerationQueue: (status = "open") => request<any[]>(`/moderation/queue?status=${status}`),
+  resolveFlag: (flagId: string, decision: "dismissed" | "confirmed", notes?: string, humanScore?: number) =>
+    post<any>(`/moderation/${flagId}/resolve`, { decision, notes, human_score: humanScore }),
 
-  async submitAttempt(payload: {
-    attempt_id: string;
-    code_content?: string;
-    answers?: any;
-    ai_used?: boolean;
-  }) {
-    return await request<any>("/tasks/attempt/submit", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
+  // ---------- Employer ----------
+  createCriteria: (payload: {
+    job_title: string;
+    min_confidence: number;
+    skills: { skill_code: string; min_score: number; importance?: number; must?: boolean }[];
+  }) => post<any>("/employer/criteria", payload),
+  getCriteriaMatches: (criteriaId: string) => request<any[]>(`/employer/criteria/${criteriaId}/matches`),
+  getCandidate: (candidateId: string) => request<any>(`/employer/candidates/${candidateId}`),
+  inviteCandidate: (candidateId: string) => post<any>(`/employer/candidates/${candidateId}/invite`),
 
-  // AI Viva (DEFEND)
-  async startVivaSession(attemptId: string) {
-    return await request<any>(`/viva/session/start?attempt_id=${attemptId}`, {
-      method: "POST",
-    });
-  },
-
-  async sendVivaMessage(sessionId: string, content: string) {
-    return await request<any>("/viva/message", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId, content }),
-    });
-  },
-
-  // Career DNA & AI Coach
-  async getCareerTarget() {
-    return await request<any>("/career/target");
-  },
-
-  async chatWithCoach(message: string, targetRole = "Senior Python Backend Injinir") {
-    return await request<any>("/career/coach-chat", {
-      method: "POST",
-      body: JSON.stringify({ message, target_role: targetRole }),
-    });
-  },
+  // ---------- University ----------
+  getUniversityAnalytics: () => request<any>("/university/analytics"),
 };

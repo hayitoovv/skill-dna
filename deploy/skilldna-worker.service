@@ -1,0 +1,18 @@
+# SKILL DNA background worker (section 3.1: sandbox runs, viva grading, recomputation)
+# Install: sudo cp deploy/skilldna-worker.service /etc/systemd/system/ && sudo systemctl enable --now skilldna-worker
+# Requires: redis-server, and REDIS_URL=redis://127.0.0.1:6379/0 in backend/.env (the API then uses the queue too).
+# For the code sandbox, run this worker on a separate host with Docker (SANDBOX_ENABLED=true there).
+[Unit]
+Description=SKILL DNA arq worker
+After=network.target redis-server.service postgresql.service
+
+[Service]
+WorkingDirectory=/var/www/skill-dna/backend
+EnvironmentFile=/var/www/skill-dna/backend/.env
+ExecStart=/var/www/skill-dna/backend/.venv/bin/arq app.worker.main.WorkerSettings
+Restart=always
+RestartSec=5
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

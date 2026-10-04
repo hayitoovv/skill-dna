@@ -10,7 +10,6 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
-/.figma/design-context/
 
 # Environment files
 .env
@@ -44,3 +43,7 @@ htmlcov/
 /.plugins/
 /.opencode-skills/
 
+
+# Credential signing key (OB 3.0 issuer)
+backend/credential_signing_key.pem
+*.pem

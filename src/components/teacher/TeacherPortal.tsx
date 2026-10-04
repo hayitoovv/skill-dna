@@ -1,6 +1,199 @@
 import { useState, useEffect, useMemo } from "react";
 import { Icon } from "../common/Icons";
 import { teacherGroupData } from "../../data/ontology";
+import { api, hasSession } from "../../services/api";
+
+type LayerKey = "KNOW" | "DO" | "ADAPT" | "DEFEND" | "PROVE";
+const LAYER_KEYS: LayerKey[] = ["KNOW", "DO", "ADAPT", "DEFEND", "PROVE"];
+
+// Live backend shapes (backend/app/api/v1/endpoints/staff.py)
+interface LiveGroup {
+  group_id: string;
+  students: number;
+}
+interface LiveSkillGap {
+  skill: { id: string; code: string; name: string };
+  students_scored: number;
+  avg_score: number;
+  below_70: number;
+  gap_pct: number;
+  layers: Record<LayerKey, number | null>;
+}
+interface LiveGroupGaps {
+  group_id: string;
+  students_total: number;
+  skills: LiveSkillGap[];
+  students: { id: string; name: string; email: string; level: string; score: number; skills_scored: number }[];
+}
+interface LiveProveItem {
+  id: string;
+  student: { id: string; name: string };
+  skill: string | null;
+  title: string;
+  source_ref: string | null;
+  submitted_at: string;
+}
+interface ProveRow {
+  id: string;
+  studentName: string;
+  studentAvatar?: string;
+  studentGroup?: string;
+  skillName: string;
+  title: string;
+  submittedAt?: string;
+  type?: string;
+  links?: string | null;
+  targetLevel?: string;
+  description?: string;
+  testsPassed?: string;
+  commitsCount?: number;
+  plagiarismScore?: string;
+  rubrics?: { codeQuality?: number; architecture?: number; unitTests?: number; docs?: number };
+  live?: boolean;
+}
+interface RemedialTaskRow {
+  id: string;
+  skill: string;
+  title: string;
+  assignedStudentsCount: number | string;
+  difficulty: string;
+  aiMode: string;
+  progress: string;
+  status: string;
+  scoreBoost: string;
+  deadline: string;
+}
+
+// Unified student matrix row (demo rows carry full data; live rows only what the API returns)
+interface MatrixRow {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  overallScore: number | null;
+  level: string;
+  confidence: number | null;
+  evidenceCount: number | null;
+  skillsScored: number | null;
+  status: string;
+  layers: Record<LayerKey, number> | null;
+}
+
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleString("uz-UZ", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+};
+
+const heatmapStatus = (avg: number) =>
+  avg >= 75 ? "Yaxshi" : avg >= 65 ? "O‘rtacha" : avg >= 55 ? "Bo‘shliq (Diqqat)" : "Katta bo‘shliq";
+
+const liveStudentStatus = (score: number, skillsScored: number) => {
+  if (skillsScored === 0) return "Baholanmagan";
+  if (score >= 80) return "Bozorga tayyor";
+  if (score >= 70) return "Faol rivojlanmoqda";
+  if (score >= 60) return "Bo‘shliq aniqlangan";
+  return "Remedial kerak";
+};
+
+const DEMO_PACKAGES = [
+  {
+    skill: "DevOps va CI/CD",
+    skillId: "",
+    title: "DevOps & CI/CD bo‘yicha 12 nafar talabaga",
+    desc: "Dockerfile optimallash, GitHub Actions matrix build va Docker compose konfiguratsiyasi. Har bir talabaga individual sintaktik cheklov beriladi.",
+  },
+  {
+    skill: "Ma’lumotlar tuzilmasi (DSA)",
+    skillId: "",
+    title: "DSA (Graf va Daraxtlar) bo‘yicha 8 nafar talabaga",
+    desc: "Dijkstra, BFS/DFS va binary search bo‘yicha parametrli algoritmik chellinjlar va avtomatik sandbox tekshiruvi.",
+  },
+  {
+    skill: "SQL va ma’lumotlar bazasi",
+    skillId: "",
+    title: "SQL Tranzaksiyalar & Indekslar (8 talaba)",
+    desc: "Deadlock simulyatsiyasi, EXPLAIN ANALYZE hisoboti va MVCC izolatsiya sinovi bo‘yicha vazifalar to‘plami.",
+  },
+];
+
+const VIVA_CRITERIA_LABELS: Record<string, string> = {
+  ownership: "Yechimni tushuntirish va egalik",
+  what_if: "Yangi shartga moslashish",
+  find_bug: "Xatoni topish va tuzatish",
+  trade_off: "Trade-off’larni asoslash",
+  ai_usage: "AI’dan shaffof foydalanish",
+};
+
+// Maps a /teacher/viva-results row onto the card shape this page already renders
+function liveVivaRow(r: any, groupId: string | null) {
+  const criteria: Record<string, number> = r.criteria || {};
+  const openFlag = (r.flags || []).some(
+    (f: any) => ["pending", "under_review"].includes(f.status) && f.type !== "VIVA_SAMPLE_REVIEW"
+  );
+  const notes = [r.panel_note, r.human_score != null ? `Inson bahosi: ${r.human_score}` : null].filter(Boolean);
+  return {
+    id: r.session_id,
+    sessionId: r.session_id,
+    live: true,
+    studentName: r.student.name,
+    studentAvatar: r.student.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase(),
+    studentGroup: groupId ?? "—",
+    taskTitle: String(r.task).replace(/^(DO|ADAPT):\s*/, ""),
+    date: new Date(r.ended_at).toLocaleString("uz-UZ", { dateStyle: "medium", timeStyle: "short" }),
+    vivaScore: r.score != null ? Math.round(r.score) : "—",
+    confidence: null,
+    duration: `${r.questions} savol`,
+    status: openFlag ? "flagged" : "passed",
+    strengths: Object.entries(criteria).filter(([, v]) => v >= 75).map(([k]) => VIVA_CRITERIA_LABELS[k] ?? k),
+    weaknesses: Object.entries(criteria).filter(([, v]) => v < 60).map(([k]) => VIVA_CRITERIA_LABELS[k] ?? k),
+    teacherNote: notes.join(" · ") || "—",
+    humanScore: r.human_score,
+    dialogue: null,
+  };
+}
+
+function DataSourceBadge({ mode }: { mode: "loading" | "live" | "demo" }) {
+  const live = mode === "live";
+  const loading = mode === "loading";
+  return (
+    <span
+      title={live ? "Ma’lumotlar backenddan olindi" : loading ? "Ma’lumotlar yuklanmoqda" : "Backend mavjud emas yoki ruxsat yo‘q — namunaviy ma’lumotlar ko‘rsatilmoqda"}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        padding: "4px 10px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        background: live ? "var(--success-soft)" : loading ? "var(--surface-2)" : "var(--warning-soft)",
+        color: live ? "var(--success)" : loading ? "var(--muted)" : "var(--warning)",
+        border: "1px solid var(--border)",
+      }}
+    >
+      <span
+        style={{
+          width: "7px",
+          height: "7px",
+          borderRadius: "50%",
+          background: live ? "var(--success)" : loading ? "var(--muted)" : "var(--warning)",
+        }}
+      />
+      {live ? "Jonli ma’lumot" : loading ? "Yuklanmoqda…" : "Demo ma’lumot"}
+    </span>
+  );
+}
 
 // 5-Layer Group Competency Definitions
 interface LayerMetric {
@@ -217,9 +410,91 @@ export default function TeacherPortal({
   };
 
   // State for PROVE Queue
-  const [proveQueue, setProveQueue] = useState(teacherGroupData.proveQueue);
+  const [proveQueue, setProveQueue] = useState<ProveRow[]>(teacherGroupData.proveQueue);
+  const [proveScore, setProveScore] = useState<number>(80);
+  const [proveBusy, setProveBusy] = useState(false);
+
+  // ---------------- Live backend data ----------------
+  const [dataMode, setDataMode] = useState<"loading" | "live" | "demo">(hasSession() ? "loading" : "demo");
+  const isLive = dataMode === "live";
+  const [liveGroups, setLiveGroups] = useState<LiveGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [liveGaps, setLiveGaps] = useState<LiveGroupGaps | null>(null);
+  const [remedialSkillId, setRemedialSkillId] = useState<string>("");
+  const [lastRemedial, setLastRemedial] = useState<{ target_students: number; template: string; status: string } | null>(null);
+
+  const mapProve = (rows: LiveProveItem[]): ProveRow[] =>
+    rows.map((r) => ({
+      id: r.id,
+      studentName: r.student?.name || "—",
+      studentAvatar: initialsOf(r.student?.name || ""),
+      skillName: r.skill || "—",
+      title: r.title || "—",
+      submittedAt: r.submitted_at ? formatDate(r.submitted_at) : "—",
+      links: r.source_ref,
+      live: true,
+    }));
+
+  const fallbackToDemo = () => {
+    setDataMode("demo");
+    setLiveGroups([]);
+    setLiveGaps(null);
+    setSelectedGroupId(null);
+    setProveQueue(teacherGroupData.proveQueue);
+    setRemedialTasks(teacherGroupData.remedialTasks);
+  };
+
+  // Initial load: groups -> gaps for first group, plus the PROVE queue.
+  // Any failure (401/403/network) keeps the portal on demo data.
+  useEffect(() => {
+    if (!hasSession()) {
+      setDataMode("demo");
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [groups, queue] = await Promise.all([api.getTeacherGroups(), api.getProveQueue()]);
+        const list: LiveGroup[] = Array.isArray(groups) ? groups : [];
+        const first = list[0]?.group_id ?? null;
+        const gaps: LiveGroupGaps | null = first ? await api.getGroupGaps(first) : null;
+        if (cancelled) return;
+        setLiveGroups(list);
+        setSelectedGroupId(first);
+        setLiveGaps(gaps);
+        setProveQueue(mapProve(Array.isArray(queue) ? queue : []));
+        setRemedialTasks([]);
+        setDataMode("live");
+      } catch {
+        if (!cancelled) fallbackToDemo();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadGroup = async (groupId: string) => {
+    setSelectedGroupId(groupId);
+    try {
+      const gaps: LiveGroupGaps = await api.getGroupGaps(groupId);
+      setLiveGaps(gaps);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Guruh ma’lumotlarini yuklab bo‘lmadi");
+    }
+  };
+
+  const refreshProveQueue = async () => {
+    try {
+      const queue = await api.getProveQueue();
+      setProveQueue(mapProve(Array.isArray(queue) ? queue : []));
+    } catch {
+      /* keep current list */
+    }
+  };
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
-  const [inspectedProveItem, setInspectedProveItem] = useState<any | null>(null);
+  const [inspectedProveItem, setInspectedProveItem] = useState<ProveRow | null>(null);
   const [proveSearch, setProveSearch] = useState<string>("");
   const [proveTypeFilter, setProveTypeFilter] = useState<string>("all");
   const [teacherReviewNote, setTeacherReviewNote] = useState<string>("");
@@ -230,10 +505,10 @@ export default function TeacherPortal({
   // State for Student Matrix
   const [matrixSearch, setMatrixSearch] = useState("");
   const [matrixFilter, setMatrixFilter] = useState("Barchasi");
-  const [inspectedStudent, setInspectedStudent] = useState<GroupStudent | null>(null);
+  const [inspectedStudent, setInspectedStudent] = useState<MatrixRow | null>(null);
 
   // State for Remedial Challenge Generator
-  const [remedialTasks, setRemedialTasks] = useState(teacherGroupData.remedialTasks);
+  const [remedialTasks, setRemedialTasks] = useState<RemedialTaskRow[]>(teacherGroupData.remedialTasks);
   const [remedialModalOpen, setRemedialModalOpen] = useState(false);
   const [remedialSkill, setRemedialSkill] = useState("DevOps va CI/CD");
   const [remedialDifficulty, setRemedialDifficulty] = useState("L3");
@@ -243,7 +518,8 @@ export default function TeacherPortal({
   const [generationStep, setGenerationStep] = useState(1);
 
   // State for AI Viva Results
-  const [vivaResults, setVivaResults] = useState(teacherGroupData.vivaResults);
+  const [vivaResults, setVivaResults] = useState<any[]>(teacherGroupData.vivaResults);
+  const [vivaSource, setVivaSource] = useState<"loading" | "live" | "demo">("demo");
   const [vivaSearch, setVivaSearch] = useState("");
   const [vivaFilter, setVivaFilter] = useState("all");
   const [inspectedViva, setInspectedViva] = useState<any | null>(null);
@@ -275,20 +551,130 @@ export default function TeacherPortal({
     return () => cancelAnimationFrame(animId);
   }, []);
 
+  // ---------------- Derived values (live or demo) ----------------
+  const liveSkills = useMemo(() => liveGaps?.skills ?? [], [liveGaps]);
+
+  const liveLayerStats = useMemo(() => {
+    const out = {} as Record<LayerKey, { score: number | null; skills: number }>;
+    for (const key of LAYER_KEYS) {
+      let sum = 0;
+      let weight = 0;
+      let skills = 0;
+      for (const s of liveSkills) {
+        const v = s.layers?.[key];
+        if (v === null || v === undefined) continue;
+        const w = Math.max(1, s.students_scored);
+        sum += v * w;
+        weight += w;
+        skills += 1;
+      }
+      out[key] = { score: weight ? Math.round(sum / weight) : null, skills };
+    }
+    return out;
+  }, [liveSkills]);
+
+  const liveOverall = useMemo(() => {
+    let sum = 0;
+    let weight = 0;
+    for (const s of liveSkills) {
+      const w = Math.max(1, s.students_scored);
+      sum += s.avg_score * w;
+      weight += w;
+    }
+    return weight ? Math.round(sum / weight) : null;
+  }, [liveSkills]);
+
+  const layerScoreOf = (key: LayerKey): number | null =>
+    isLive ? liveLayerStats[key].score : groupLayers.find((l) => l.key === key)?.score ?? null;
+  const overallScore: number | null = isLive ? liveOverall : teacherGroupData.avgScore;
+  const totalStudents = isLive ? liveGaps?.students_total ?? 0 : teacherGroupData.totalStudents;
+  const groupLabel = isLive ? selectedGroupId ?? "—" : teacherGroupData.groupCode;
+
+  const weakSkillsSorted = useMemo(
+    () => [...liveSkills].sort((a, b) => b.gap_pct - a.gap_pct || a.avg_score - b.avg_score),
+    [liveSkills]
+  );
+  const weakestSkill = weakSkillsSorted[0] ?? null;
+
+  // Keep the live remedial skill selection valid for the current group
+  useEffect(() => {
+    if (!isLive) return;
+    if (!liveSkills.some((s) => s.skill.id === remedialSkillId)) {
+      setRemedialSkillId(weakSkillsSorted[0]?.skill.id ?? "");
+    }
+  }, [isLive, liveSkills, weakSkillsSorted, remedialSkillId]);
+
+  const heatmapRows = isLive
+    ? liveSkills.map((s) => ({
+        skill: s.skill.name,
+        skillId: s.skill.id,
+        avgScore: s.avg_score,
+        gapPct: s.gap_pct,
+        status: heatmapStatus(s.avg_score),
+      }))
+    : teacherGroupData.skillHeatmap.map((h) => ({ ...h, skillId: "" }));
+
+  const matrixRows: MatrixRow[] = useMemo(() => {
+    if (isLive) {
+      return (liveGaps?.students ?? []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        avatar: initialsOf(s.name),
+        overallScore: s.skills_scored > 0 ? s.score : null,
+        level: s.level,
+        confidence: null,
+        evidenceCount: null,
+        skillsScored: s.skills_scored,
+        status: liveStudentStatus(s.score, s.skills_scored),
+        layers: null,
+      }));
+    }
+    return initialStudents.map((s) => ({
+      id: s.id,
+      name: s.name,
+      email: s.email,
+      avatar: s.avatar,
+      overallScore: s.overallScore,
+      level: s.level,
+      confidence: s.confidence,
+      evidenceCount: s.evidenceCount,
+      skillsScored: null,
+      status: s.status,
+      layers: s.layers,
+    }));
+  }, [isLive, liveGaps]);
+
+  const remedialPackages = isLive
+    ? weakSkillsSorted.slice(0, 3).map((s) => ({
+        skill: s.skill.name,
+        skillId: s.skill.id,
+        title: `${s.skill.name} bo‘yicha ${s.below_70} nafar talabaga`,
+        desc: `O‘rtacha ball: ${s.avg_score} · Bo‘shliq: ${s.gap_pct}% · Baholangan: ${s.students_scored} nafar talaba.`,
+      }))
+    : DEMO_PACKAGES;
+
+  const openRemedialFor = (skillName: string, skillId: string) => {
+    setRemedialSkill(skillName);
+    if (skillId) setRemedialSkillId(skillId);
+    setRemedialModalOpen(true);
+    setGeneratedSuccess(false);
+  };
+
   // Radar Polygon Points Calculation
   const radarPoints = useMemo(() => {
-    const calcPoint = (targetX: number, targetY: number, score: number) => {
-      const frac = (score / 100) * ease;
+    const calcPoint = (targetX: number, targetY: number, score: number | null) => {
+      const frac = ((score ?? 0) / 100) * ease;
       const x = Math.round(150 + frac * (targetX - 150));
       const y = Math.round(132 + frac * (targetY - 132));
       return `${x},${y}`;
     };
 
-    const pKnow = calcPoint(150, 29, 82);
-    const pDo = calcPoint(260, 109, 74);
-    const pAdapt = calcPoint(218, 238, 68);
-    const pDefend = calcPoint(82, 238, 76);
-    const pProve = calcPoint(40, 109, 62);
+    const pKnow = calcPoint(150, 29, layerScoreOf("KNOW"));
+    const pDo = calcPoint(260, 109, layerScoreOf("DO"));
+    const pAdapt = calcPoint(218, 238, layerScoreOf("ADAPT"));
+    const pDefend = calcPoint(82, 238, layerScoreOf("DEFEND"));
+    const pProve = calcPoint(40, 109, layerScoreOf("PROVE"));
 
     return {
       polygon: `${pKnow} ${pDo} ${pAdapt} ${pDefend} ${pProve}`,
@@ -298,14 +684,21 @@ export default function TeacherPortal({
       pDefend,
       pProve,
     };
-  }, [ease]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ease, isLive, liveLayerStats]);
 
   // Selected layer metric
   const selectedLayer = groupLayers.find((l) => l.key === selectedLayerKey) || groupLayers[1];
+  const selectedLayerScore = layerScoreOf(selectedLayer.key);
+  const selectedLayerDesc = isLive
+    ? selectedLayerScore === null
+      ? "Bu qatlam bo‘yicha guruhda hali baholar yo‘q."
+      : `Guruh bo‘yicha o‘rtacha ${selectedLayerScore} ball — ${liveLayerStats[selectedLayer.key].skills} ta ko‘nikma ma’lumotlari asosida.`
+    : selectedLayer.desc;
 
   // Filtered Students in Matrix
   const filteredStudents = useMemo(() => {
-    return initialStudents.filter((st) => {
+    return matrixRows.filter((st) => {
       const matchSearch =
         st.name.toLowerCase().includes(matrixSearch.toLowerCase()) ||
         st.email.toLowerCase().includes(matrixSearch.toLowerCase());
@@ -318,7 +711,7 @@ export default function TeacherPortal({
       if (matrixFilter === "Bo‘shliqdagilar") return st.status.includes("Bo‘shliq") || st.status.includes("Remedial");
       return true;
     });
-  }, [matrixSearch, matrixFilter]);
+  }, [matrixRows, matrixSearch, matrixFilter]);
 
   // Filtered PROVE Queue
   const filteredProveQueue = useMemo(() => {
@@ -330,11 +723,54 @@ export default function TeacherPortal({
         item.title.toLowerCase().includes(proveSearch.toLowerCase());
 
       const matchType =
-        proveTypeFilter === "all" || item.type === proveTypeFilter;
+        isLive || proveTypeFilter === "all" || item.type === proveTypeFilter;
 
       return matchSearch && matchType;
     });
-  }, [proveQueue, proveSearch, proveTypeFilter]);
+  }, [proveQueue, proveSearch, proveTypeFilter, isLive]);
+
+  // Live AI Viva results for the selected group (GET /teacher/viva-results)
+  useEffect(() => {
+    if (!isLive) {
+      setVivaSource("demo");
+      setVivaResults(teacherGroupData.vivaResults);
+      return;
+    }
+    let cancelled = false;
+    setVivaSource("loading");
+    api
+      .getVivaResults(selectedGroupId ?? undefined)
+      .then((rows) => {
+        if (cancelled) return;
+        setVivaResults(rows.map((r) => liveVivaRow(r, selectedGroupId)));
+        setVivaSource("live");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setVivaResults(teacherGroupData.vivaResults);
+        setVivaSource("demo");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isLive, selectedGroupId]);
+
+  const openViva = async (v: any) => {
+    setInspectedViva(v);
+    setPlayingVivaAudio(false);
+    if (!v.live || v.dialogue) return;
+    try {
+      const t = await api.getVivaTranscript(v.sessionId);
+      const dialogue = t.turns.map((turn: any) => ({
+        speaker: turn.role === "examiner" ? "AI Examiner" : `Talaba (${v.studentName.split(" ")[0]})`,
+        text: turn.content,
+      }));
+      setInspectedViva((cur: any) => (cur && cur.id === v.id ? { ...cur, dialogue } : cur));
+      setVivaResults((rows) => rows.map((row) => (row.id === v.id ? { ...row, dialogue } : row)));
+    } catch {
+      setInspectedViva((cur: any) => (cur && cur.id === v.id ? { ...cur, dialogue: [], transcriptError: true } : cur));
+    }
+  };
 
   // Filtered Viva Results
   const filteredVivaResults = useMemo(() => {
@@ -352,7 +788,26 @@ export default function TeacherPortal({
   }, [vivaResults, vivaSearch, vivaFilter]);
 
   // Handle Prove Approval
-  const handleApproveProve = (id: string, studentName: string, skill: string) => {
+  const handleApproveProve = async (id: string, studentName: string, skill: string) => {
+    if (isLive) {
+      setProveBusy(true);
+      try {
+        const res = await api.verifyEvidence(id, true, proveScore, teacherReviewNote || undefined);
+        setConfirmedId(id);
+        setInspectedProveItem(null);
+        setTeacherReviewNote("");
+        const lvl = res?.skill?.level ? ` Yangi daraja: ${res.skill.level}.` : "";
+        showToast(`${studentName}ning ${skill} bo‘yicha dalili tasdiqlandi.${lvl}`);
+        await refreshProveQueue();
+        if (selectedGroupId) void loadGroup(selectedGroupId);
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Tasdiqlashda xatolik yuz berdi");
+      } finally {
+        setConfirmedId(null);
+        setProveBusy(false);
+      }
+      return;
+    }
     setConfirmedId(id);
     setTimeout(() => {
       setProveQueue((prev) => prev.filter((item) => item.id !== id));
@@ -363,14 +818,69 @@ export default function TeacherPortal({
   };
 
   // Handle Prove Rejection
-  const handleRejectProve = (id: string, studentName: string) => {
+  const handleRejectProve = async (id: string, studentName: string) => {
+    if (isLive) {
+      setProveBusy(true);
+      try {
+        await api.verifyEvidence(id, false, 0, teacherReviewNote || undefined);
+        setInspectedProveItem(null);
+        setTeacherReviewNote("");
+        showToast(`${studentName}ning dalili rad etildi va qayta ishlashga qaytarildi.`);
+        await refreshProveQueue();
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Rad etishda xatolik yuz berdi");
+      } finally {
+        setProveBusy(false);
+      }
+      return;
+    }
     setProveQueue((prev) => prev.filter((item) => item.id !== id));
     setInspectedProveItem(null);
     showToast(`${studentName}ga qayta ishlash uchun izoh yuborildi.`);
   };
 
   // Handle AI Remedial Generation Simulation
-  const handleGenerateRemedial = () => {
+  const handleGenerateRemedial = async () => {
+    if (isLive) {
+      const skill = liveSkills.find((s) => s.skill.id === remedialSkillId);
+      if (!skill) {
+        showToast("Avval ko‘nikmani tanlang");
+        return;
+      }
+      setGenerating(true);
+      setGeneratedSuccess(false);
+      setGenerationStep(1);
+      const t1 = setTimeout(() => setGenerationStep(2), 500);
+      const t2 = setTimeout(() => setGenerationStep(3), 1000);
+      try {
+        const res = await api.createRemedial(skill.skill.id, selectedGroupId ?? undefined);
+        setLastRemedial({ target_students: res.target_students, template: res.template, status: res.status });
+        setRemedialTasks((prev) => [
+          {
+            id: res.task_id,
+            skill: skill.skill.name,
+            title: `Remedial challenge: ${skill.skill.name}`,
+            assignedStudentsCount: res.target_students,
+            difficulty: "L3",
+            aiMode: "AI-free",
+            progress: res.status === "draft" ? "Qoralama · tasdiq kutilmoqda" : res.status,
+            status: res.status,
+            scoreBoost: "—",
+            deadline: "—",
+          },
+          ...prev,
+        ]);
+        setGeneratedSuccess(true);
+        showToast(`${skill.skill.name} bo‘yicha remedial topshiriq qoralamasi yaratildi (${res.target_students} nafar talaba).`);
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Topshiriq yaratishda xatolik yuz berdi");
+      } finally {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        setGenerating(false);
+      }
+      return;
+    }
     setGenerating(true);
     setGenerationStep(1);
 
@@ -408,11 +918,44 @@ export default function TeacherPortal({
       {/* Top Welcome Row */}
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">AKADEMIK NAZORAT · O‘QITUVCHI BOSHQARUV PANELI</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <p className="eyebrow" style={{ margin: 0 }}>AKADEMIK NAZORAT · O‘QITUVCHI BOSHQARUV PANELI</p>
+            <DataSourceBadge mode={dataMode} />
+          </div>
           <h1>Guruh kompetensiya tahlili & AI Monitoring</h1>
-          <p className="subtitle">
-            Guruh: <strong>{teacherGroupData.groupCode}</strong> · Yo‘nalish: <strong>{teacherGroupData.directionName}</strong> (28 nafar talaba) · <strong>BSTU</strong>
-          </p>
+          {isLive ? (
+            <p className="subtitle">
+              Guruh:{" "}
+              {liveGroups.length > 1 ? (
+                <select
+                  value={selectedGroupId ?? ""}
+                  onChange={(e) => void loadGroup(e.target.value)}
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    background: "#ffffff",
+                  }}
+                >
+                  {liveGroups.map((g) => (
+                    <option key={g.group_id} value={g.group_id}>
+                      {g.group_id} ({g.students})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <strong>{groupLabel}</strong>
+              )}{" "}
+              ({totalStudents} nafar talaba)
+            </p>
+          ) : (
+            <p className="subtitle">
+              Guruh: <strong>{teacherGroupData.groupCode}</strong> · Yo‘nalish: <strong>{teacherGroupData.directionName}</strong> (28 nafar talaba) · <strong>BSTU</strong>
+            </p>
+          )}
         </div>
         <div className="top-actions">
           <button
@@ -448,7 +991,7 @@ export default function TeacherPortal({
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
               Jami talabalar
             </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{Math.round(28 * ease)} nafar</strong>
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{Math.round(totalStudents * ease)} nafar</strong>
           </div>
         </div>
 
@@ -470,7 +1013,9 @@ export default function TeacherPortal({
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
               O‘rtacha Skill Score
             </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{Math.round(73 * ease)} / 100</strong>
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>
+              {overallScore === null ? "—" : `${Math.round(overallScore * ease)} / 100`}
+            </strong>
           </div>
         </div>
 
@@ -514,7 +1059,9 @@ export default function TeacherPortal({
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
               AI Viva natijalari
             </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{vivaResults.length} ta himoya</strong>
+            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>
+              {isLive && vivaSource !== "live" ? "—" : `${vivaResults.length} ta himoya`}
+            </strong>
           </div>
         </div>
       </section>
@@ -673,7 +1220,11 @@ export default function TeacherPortal({
                   <p className="card-kicker">GURUH MALAKA RADARI</p>
                   <h2>5 qatlamli o‘rtacha guruh profili</h2>
                 </div>
-                <span className="level-badge">Bozorga moslik: {Math.round(74 * ease)}%</span>
+                {isLive ? (
+                  <span className="level-badge">Guruh: {groupLabel}</span>
+                ) : (
+                  <span className="level-badge">Bozorga moslik: {Math.round(74 * ease)}%</span>
+                )}
               </div>
 
               <div className="dna-body">
@@ -723,21 +1274,30 @@ export default function TeacherPortal({
                     </g>
                   </svg>
                   <div className="chart-score">
-                    <strong>{Math.round(73 * ease)}</strong>
+                    <strong>{overallScore === null ? "—" : Math.round(overallScore * ease)}</strong>
                     <span>/100</span>
                     <small>Guruh bali</small>
                   </div>
                 </div>
 
                 <div className="score-summary">
-                  <div className="confidence-head">
-                    <span>Guruh ishonch darajasi</span>
-                    <strong>{Math.round(71 * ease)}%</strong>
-                  </div>
-                  <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${(71 * ease).toFixed(1)}%` }} />
-                  </div>
-                  <p>Yuqori ishonchlilik · 28 ta talabaning 142 ta tekshirilgan dalillari asosida</p>
+                  {isLive ? (
+                    <p>
+                      {totalStudents} nafar talaba · {liveSkills.length} ta ko‘nikma bo‘yicha baholar asosida
+                      {liveSkills.length === 0 ? " — guruhda hali baholangan ko‘nikmalar yo‘q." : ""}
+                    </p>
+                  ) : (
+                    <>
+                      <div className="confidence-head">
+                        <span>Guruh ishonch darajasi</span>
+                        <strong>{Math.round(71 * ease)}%</strong>
+                      </div>
+                      <div className="progress-track">
+                        <div className="progress-fill" style={{ width: `${(71 * ease).toFixed(1)}%` }} />
+                      </div>
+                      <p>Yuqori ishonchlilik · 28 ta talabaning 142 ta tekshirilgan dalillari asosida</p>
+                    </>
+                  )}
 
                   {/* Selected Layer Details */}
                   <div className="selected-layer">
@@ -746,11 +1306,13 @@ export default function TeacherPortal({
                     </div>
                     <div>
                       <span>Tanlangan qatlam tahlili</span>
-                      <strong>{selectedLayer.key} · {selectedLayer.label} ({selectedLayer.score} ball)</strong>
+                      <strong>
+                        {selectedLayer.key} · {selectedLayer.label} ({selectedLayerScore === null ? "—" : selectedLayerScore} ball)
+                      </strong>
                     </div>
                   </div>
                   <p style={{ fontSize: "12px", color: "var(--muted)", margin: "4px 0 0" }}>
-                    {selectedLayer.desc}
+                    {selectedLayerDesc}
                   </p>
                 </div>
               </div>
@@ -760,41 +1322,70 @@ export default function TeacherPortal({
             <article className="card task-highlight">
               <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                 <p className="task-type">REMEDIAL CHELLINJ · AVTOMATIK TAVSIYA</p>
-                <span
-                  style={{
-                    fontSize: "11px",
-                    padding: "3px 8px",
-                    borderRadius: "4px",
-                    background: "var(--success-400)",
-                    color: "white",
-                    fontWeight: 700,
-                  }}
-                >
-                  12 talaba
-                </span>
+                {(!isLive || weakestSkill) && (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      padding: "3px 8px",
+                      borderRadius: "4px",
+                      background: "var(--success-400)",
+                      color: "white",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {isLive && weakestSkill ? `${weakestSkill.below_70} talaba` : "12 talaba"}
+                  </span>
+                )}
               </div>
 
-              <h2>DevOps & CI/CD bo‘yicha 46% bo‘shliq aniqlandi</h2>
-              <p>
-                Guruhning 12 nafar talabasida Docker va avtomatlashtirishda yetishmovchilik mavjud. Sun’iy intellekt individual parametrli kod topshiriqlari paketini tayyorladi.
-              </p>
+              {isLive ? (
+                weakestSkill ? (
+                  <>
+                    <h2>
+                      {weakestSkill.skill.name} bo‘yicha {weakestSkill.gap_pct}% bo‘shliq aniqlandi
+                    </h2>
+                    <p>
+                      Guruhda ushbu ko‘nikma bo‘yicha baholangan {weakestSkill.students_scored} nafar talabadan {weakestSkill.below_70} nafari 70 balldan past natija ko‘rsatgan.
+                    </p>
+                    <div className="task-meta">
+                      <span>
+                        <Icon name="users" size={16} /> {weakestSkill.students_scored} nafar baholangan
+                      </span>
+                      <span>
+                        <Icon name="award" size={16} /> O‘rtacha {weakestSkill.avg_score} ball
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2>Bo‘shliqlar hali aniqlanmagan</h2>
+                    <p>Ushbu guruhda baholangan ko‘nikmalar yo‘q — talabalar topshiriq bajargach tavsiyalar shu yerda paydo bo‘ladi.</p>
+                  </>
+                )
+              ) : (
+                <>
+                  <h2>DevOps & CI/CD bo‘yicha 46% bo‘shliq aniqlandi</h2>
+                  <p>
+                    Guruhning 12 nafar talabasida Docker va avtomatlashtirishda yetishmovchilik mavjud. Sun’iy intellekt individual parametrli kod topshiriqlari paketini tayyorladi.
+                  </p>
 
-              <div className="task-meta">
-                <span>
-                  <Icon name="file" size={16} /> 12 ta unikal variant
-                </span>
-                <span>
-                  <Icon name="award" size={16} /> +14 ballgacha o‘sish
-                </span>
-              </div>
+                  <div className="task-meta">
+                    <span>
+                      <Icon name="file" size={16} /> 12 ta unikal variant
+                    </span>
+                    <span>
+                      <Icon name="award" size={16} /> +14 ballgacha o‘sish
+                    </span>
+                  </div>
+                </>
+              )}
 
               <button
                 className="dark-button"
                 onClick={() => {
                   setTab("remedial");
-                  setRemedialSkill("DevOps va CI/CD");
-                  setRemedialModalOpen(true);
-                  setGeneratedSuccess(false);
+                  if (isLive && weakestSkill) openRemedialFor(weakestSkill.skill.name, weakestSkill.skill.id);
+                  else if (!isLive) openRemedialFor("DevOps va CI/CD", "");
                 }}
               >
                 Remedial generatoriga o‘tish <Icon name="arrow" size={17} />
@@ -809,13 +1400,21 @@ export default function TeacherPortal({
                 <h2>5 qatlamli kompetensiya modeli (Guruh natijasi)</h2>
                 <p>Har bir qatlam bo‘yicha guruhning o‘zlashtirishi va vazn ko‘rsatkichi.</p>
               </div>
-              <span>
-                Umumiy tayyorlik <strong>{Math.round(74 * ease)}%</strong>
-              </span>
+              {isLive ? (
+                <span>
+                  Guruh bali <strong>{overallScore === null ? "—" : Math.round(overallScore * ease)}</strong>
+                </span>
+              ) : (
+                <span>
+                  Umumiy tayyorlik <strong>{Math.round(74 * ease)}%</strong>
+                </span>
+              )}
             </div>
 
             <div className="layer-grid">
-              {groupLayers.map((layer) => (
+              {groupLayers.map((layer) => {
+                const score = layerScoreOf(layer.key);
+                return (
                 <div
                   key={layer.key}
                   className={`layer-card ${selectedLayerKey === layer.key ? "selected" : ""}`}
@@ -829,14 +1428,15 @@ export default function TeacherPortal({
                     <span>{layer.weight} vazn</span>
                   </div>
                   <div className="layer-score">
-                    <strong>{Math.round(layer.score * ease)}</strong>
+                    <strong>{score === null ? "—" : Math.round(score * ease)}</strong>
                     <span>/ 100</span>
                   </div>
                   <div className="mini-track">
-                    <span style={{ width: `${(layer.score * ease).toFixed(1)}%` }} />
+                    <span style={{ width: `${((score ?? 0) * ease).toFixed(1)}%` }} />
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
@@ -847,11 +1447,16 @@ export default function TeacherPortal({
                 <p className="card-kicker">KOMPETENSIYA VA BO‘SHLIQLAR XARITASI</p>
                 <h2>Fan va ko‘nikmalar bo‘yicha guruh holati</h2>
               </div>
-              <span className="level-badge">2026-yil Bahor semestri</span>
+              <span className="level-badge">{isLive ? `Guruh: ${groupLabel}` : "2026-yil Bahor semestri"}</span>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              {teacherGroupData.skillHeatmap.map((item) => (
+              {isLive && heatmapRows.length === 0 && (
+                <div style={{ padding: "18px", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>
+                  Bu guruhda hali baholangan ko‘nikmalar yo‘q.
+                </div>
+              )}
+              {heatmapRows.map((item) => (
                 <div
                   key={item.skill}
                   style={{
@@ -935,6 +1540,7 @@ export default function TeacherPortal({
                     onClick={() => {
                       setTab("remedial");
                       setRemedialSkill(item.skill);
+                      if (item.skillId) setRemedialSkillId(item.skillId);
                     }}
                   >
                     Topshiriq tuzish →
@@ -996,6 +1602,13 @@ export default function TeacherPortal({
                   </tr>
                 </thead>
                 <tbody>
+                  {filteredStudents.length === 0 && (
+                    <tr>
+                      <td colSpan={6} style={{ padding: "18px 10px", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>
+                        Talabalar topilmadi.
+                      </td>
+                    </tr>
+                  )}
                   {filteredStudents.map((st) => (
                     <tr key={st.id} style={{ borderBottom: "1px solid var(--surface-3)" }}>
                       <td style={{ padding: "14px 10px" }}>
@@ -1036,17 +1649,21 @@ export default function TeacherPortal({
                         </span>
                       </td>
                       <td style={{ padding: "14px 10px" }}>
-                        <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{st.overallScore}</strong>
+                        <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{st.overallScore ?? "—"}</strong>
                         <span style={{ fontSize: "12px", color: "var(--muted)" }}>/100</span>
                       </td>
                       <td style={{ padding: "14px 10px" }}>
-                        <div style={{ display: "flex", gap: "6px", fontSize: "11.5px", fontWeight: 700 }}>
-                          <span style={{ color: "var(--accent)" }}>K:{st.layers.KNOW}</span>
-                          <span style={{ color: "var(--success)" }}>D:{st.layers.DO}</span>
-                          <span style={{ color: "var(--violet)" }}>A:{st.layers.ADAPT}</span>
-                          <span style={{ color: "var(--warning)" }}>DF:{st.layers.DEFEND}</span>
-                          <span style={{ color: "var(--rose)" }}>P:{st.layers.PROVE}</span>
-                        </div>
+                        {st.layers ? (
+                          <div style={{ display: "flex", gap: "6px", fontSize: "11.5px", fontWeight: 700 }}>
+                            <span style={{ color: "var(--accent)" }}>K:{st.layers.KNOW}</span>
+                            <span style={{ color: "var(--success)" }}>D:{st.layers.DO}</span>
+                            <span style={{ color: "var(--violet)" }}>A:{st.layers.ADAPT}</span>
+                            <span style={{ color: "var(--warning)" }}>DF:{st.layers.DEFEND}</span>
+                            <span style={{ color: "var(--rose)" }}>P:{st.layers.PROVE}</span>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: "12px", color: "var(--muted)" }}>—</span>
+                        )}
                       </td>
                       <td style={{ padding: "14px 10px" }}>
                         <span
@@ -1152,7 +1769,8 @@ export default function TeacherPortal({
               </div>
             </div>
 
-            {/* Type Filter Chips */}
+            {/* Type Filter Chips (demo only — live evidence has no type field) */}
+            {!isLive && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", minWidth: "90px" }}>
                 DALIL TURI:
@@ -1183,6 +1801,7 @@ export default function TeacherPortal({
                 </button>
               ))}
             </div>
+            )}
           </section>
 
           {/* Heading */}
@@ -1253,8 +1872,12 @@ export default function TeacherPortal({
                       <div>
                         <h3 style={{ margin: 0, fontSize: "16.5px", color: "var(--navy)" }}>{item.studentName}</h3>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                          <span style={{ fontSize: "12px", color: "var(--muted)" }}>{item.studentGroup || "DI-2023-4A"}</span>
-                          <span>•</span>
+                          {!item.live && (
+                            <>
+                              <span style={{ fontSize: "12px", color: "var(--muted)" }}>{item.studentGroup || "DI-2023-4A"}</span>
+                              <span>•</span>
+                            </>
+                          )}
                           <span
                             style={{
                               padding: "2px 7px",
@@ -1291,10 +1914,13 @@ export default function TeacherPortal({
                     {item.title}
                   </h4>
                   <p style={{ margin: "0 0 14px", fontSize: "13px", color: "var(--text-3)", lineHeight: "1.5" }}>
-                    {item.description || "Talaba tomonidan tayyorlangan amaliy loyiha va test qamrovi."}
+                    {item.live
+                      ? `Yuborilgan: ${item.submittedAt || "—"}`
+                      : item.description || "Talaba tomonidan tayyorlangan amaliy loyiha va test qamrovi."}
                   </p>
 
-                  {/* Automated Badges */}
+                  {/* Automated Badges (demo only — not provided by the live queue) */}
+                  {!item.live && (
                   <div
                     style={{
                       display: "flex",
@@ -1322,11 +1948,13 @@ export default function TeacherPortal({
                       Plagiat: {item.plagiarismScore || "0%"}
                     </span>
                   </div>
+                  )}
 
                   {/* Direct Link */}
+                  {item.links ? (
                   <div style={{ marginBottom: "16px", fontSize: "13px" }}>
                     <a
-                      href={`https://${item.links}`}
+                      href={/^https?:\/\//i.test(item.links) ? item.links : `https://${item.links}`}
                       target="_blank"
                       rel="noreferrer"
                       style={{
@@ -1342,6 +1970,9 @@ export default function TeacherPortal({
                       {item.links}
                     </a>
                   </div>
+                  ) : (
+                    <div style={{ marginBottom: "16px", fontSize: "13px", color: "var(--muted)" }}>Havola: —</div>
+                  )}
 
                   {/* Action Buttons Row */}
                   <div className="candidate-actions-row">
@@ -1356,10 +1987,15 @@ export default function TeacherPortal({
                     <button
                       type="button"
                       className="candidate-invite-btn"
-                      onClick={() => handleApproveProve(item.id, item.studentName, item.skillName)}
+                      disabled={proveBusy}
+                      onClick={() => {
+                        // Live: approval needs a teacher-set score, so open the rubric modal first
+                        if (item.live) setInspectedProveItem(item);
+                        else void handleApproveProve(item.id, item.studentName, item.skillName);
+                      }}
                     >
                       <Icon name="checkCircle" size={16} />
-                      <span>Tasdiqlash & L4 berish</span>
+                      <span>{item.live ? "Baholash & tasdiqlash" : "Tasdiqlash & L4 berish"}</span>
                     </button>
                   </div>
                 </article>
@@ -1387,115 +2023,48 @@ export default function TeacherPortal({
           </p>
 
           {/* Recommended AI Remedial Packages */}
+          {isLive && remedialPackages.length === 0 && (
+            <div style={{ padding: "18px", marginBottom: "28px", borderRadius: "14px", border: "1.5px dashed var(--border)", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>
+              Bu guruhda hali baholangan ko‘nikmalar yo‘q — tavsiya etiladigan paketlar baholar paydo bo‘lgach shakllanadi.
+            </div>
+          )}
+          {remedialPackages.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "18px", marginBottom: "28px" }}>
-            <div
-              style={{
-                padding: "22px",
-                borderRadius: "14px",
-                border: "1.5px solid var(--accent-ring)",
-                background: "linear-gradient(145deg, var(--accent-soft), var(--accent-soft))",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--accent-hover)", letterSpacing: "0.08em" }}>
-                  TAVSIYA ETILGAN PAKET #1
-                </span>
-                <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
-                  DevOps & CI/CD bo‘yicha 12 nafar talabaga
-                </h3>
-                <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>
-                  Dockerfile optimallash, GitHub Actions matrix build va Docker compose konfiguratsiyasi. Har bir talabaga individual sintaktik cheklov beriladi.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="primary-button"
-                style={{ width: "100%", fontSize: "13px" }}
-                onClick={() => {
-                  setRemedialSkill("DevOps va CI/CD");
-                  setRemedialModalOpen(true);
-                  setGeneratedSuccess(false);
-                }}
-              >
-                <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
-              </button>
-            </div>
-
-            <div
-              style={{
-                padding: "22px",
-                borderRadius: "14px",
-                border: "1.5px solid var(--border)",
-                background: "var(--surface-2)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-3)", letterSpacing: "0.08em" }}>
-                  TAVSIYA ETILGAN PAKET #2
-                </span>
-                <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
-                  DSA (Graf va Daraxtlar) bo‘yicha 8 nafar talabaga
-                </h3>
-                <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>
-                  Dijkstra, BFS/DFS va binary search bo‘yicha parametrli algoritmik chellinjlar va avtomatik sandbox tekshiruvi.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="candidate-evidence-btn"
-                style={{ width: "100%", fontSize: "13px" }}
-                onClick={() => {
-                  setRemedialSkill("Ma’lumotlar tuzilmasi (DSA)");
-                  setRemedialModalOpen(true);
-                  setGeneratedSuccess(false);
-                }}
-              >
-                <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
-              </button>
-            </div>
-
-            <div
-              style={{
-                padding: "22px",
-                borderRadius: "14px",
-                border: "1.5px solid var(--border)",
-                background: "var(--surface-2)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-3)", letterSpacing: "0.08em" }}>
-                  TAVSIYA ETILGAN PAKET #3
-                </span>
-                <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
-                  SQL Tranzaksiyalar & Indekslar (8 talaba)
-                </h3>
-                <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>
-                  Deadlock simulyatsiyasi, EXPLAIN ANALYZE hisoboti va MVCC izolatsiya sinovi bo‘yicha vazifalar to‘plami.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="candidate-evidence-btn"
-                style={{ width: "100%", fontSize: "13px" }}
-                onClick={() => {
-                  setRemedialSkill("SQL va ma’lumotlar bazasi");
-                  setRemedialModalOpen(true);
-                  setGeneratedSuccess(false);
-                }}
-              >
-                <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
-              </button>
-            </div>
+            {remedialPackages.map((pkg, idx) => {
+              const primary = idx === 0;
+              return (
+                <div
+                  key={pkg.skillId || pkg.skill}
+                  style={{
+                    padding: "22px",
+                    borderRadius: "14px",
+                    border: primary ? "1.5px solid var(--accent-ring)" : "1.5px solid var(--border)",
+                    background: primary ? "linear-gradient(145deg, var(--accent-soft), var(--accent-soft))" : "var(--surface-2)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <span style={{ fontSize: "11px", fontWeight: 800, color: primary ? "var(--accent-hover)" : "var(--text-3)", letterSpacing: "0.08em" }}>
+                      TAVSIYA ETILGAN PAKET #{idx + 1}
+                    </span>
+                    <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>{pkg.title}</h3>
+                    <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>{pkg.desc}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className={primary ? "primary-button" : "candidate-evidence-btn"}
+                    style={{ width: "100%", fontSize: "13px" }}
+                    onClick={() => openRemedialFor(pkg.skill, pkg.skillId)}
+                  >
+                    <Icon name="code" size={16} /> Ushbu paketni generatsiya qilish
+                  </button>
+                </div>
+              );
+            })}
           </div>
+          )}
 
           {/* Active Remedial Tasks List */}
           <div className="section-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "16px" }}>
@@ -1517,6 +2086,11 @@ export default function TeacherPortal({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {isLive && remedialTasks.length === 0 && (
+              <div style={{ padding: "18px", borderRadius: "12px", border: "1px solid var(--border)", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>
+                Bu sessiyada hali remedial topshiriq yaratilmagan.
+              </div>
+            )}
             {remedialTasks.map((task) => (
               <div
                 key={task.id}
@@ -1564,14 +2138,16 @@ export default function TeacherPortal({
                     <strong style={{ fontSize: "14px", color: "var(--navy)" }}>{task.progress}</strong>
                   </div>
 
-                  <button
-                    type="button"
-                    className="candidate-evidence-btn"
-                    style={{ padding: "8px 14px", fontSize: "12.5px" }}
-                    onClick={() => showToast(`"${task.title}" bo‘yicha talabalar natijalari yangilandi!`)}
-                  >
-                    Natijalarni ko‘rish
-                  </button>
+                  {!isLive && (
+                    <button
+                      type="button"
+                      className="candidate-evidence-btn"
+                      style={{ padding: "8px 14px", fontSize: "12.5px" }}
+                      onClick={() => showToast(`"${task.title}" bo‘yicha talabalar natijalari yangilandi!`)}
+                    >
+                      Natijalarni ko‘rish
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -1589,7 +2165,10 @@ export default function TeacherPortal({
               <p className="card-kicker">OG‘ZAKI HIMOYA VA AI EXAMINER NATIJALARI</p>
               <h2>Guruh talabalarining AI Viva natijalari ({filteredVivaResults.length})</h2>
             </div>
-            <span className="level-badge">DEFEND Qatlami tekshiruvi</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <DataSourceBadge mode={vivaSource} />
+              <span className="level-badge">DEFEND Qatlami tekshiruvi</span>
+            </div>
           </div>
 
           <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "20px", maxWidth: "800px" }}>
@@ -1701,7 +2280,7 @@ export default function TeacherPortal({
                       <div>
                         <h3 style={{ margin: 0, fontSize: "16.5px", color: "var(--navy)" }}>{v.studentName}</h3>
                         <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
-                          {v.studentGroup} · {v.date} ({v.duration})
+                          {v.studentGroup} · {v.date}{v.duration ? ` (${v.duration})` : ""}
                         </div>
                       </div>
                     </div>
@@ -1718,7 +2297,7 @@ export default function TeacherPortal({
                           color: isFlagged ? "var(--danger)" : "var(--success)",
                         }}
                       >
-                        {v.vivaScore} ball ({v.confidence}% ishonch)
+                        {v.vivaScore} ball{v.confidence != null ? ` (${v.confidence}% ishonch)` : ""}
                       </span>
                     </div>
                   </div>
@@ -1762,10 +2341,7 @@ export default function TeacherPortal({
                     <button
                       type="button"
                       className="candidate-evidence-btn"
-                      onClick={() => {
-                        setInspectedViva(v);
-                        setPlayingVivaAudio(false);
-                      }}
+                      onClick={() => openViva(v)}
                     >
                       <Icon name="file" size={16} />
                       <span>Audio dialog & Transkript</span>
@@ -1818,7 +2394,7 @@ export default function TeacherPortal({
               <div>
                 <h2 style={{ fontSize: "22px", margin: 0 }}>{inspectedStudent.name}</h2>
                 <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-                  {inspectedStudent.email} · Guruh: {teacherGroupData.groupCode}
+                  {inspectedStudent.email} · Guruh: {groupLabel}
                 </span>
               </div>
               <span
@@ -1839,44 +2415,67 @@ export default function TeacherPortal({
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", padding: "14px", background: "var(--surface-2)", borderRadius: "10px", marginBottom: "20px" }}>
               <div>
                 <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>UMUMIY BALL</span>
-                <strong style={{ fontSize: "20px", color: "var(--navy)" }}>{inspectedStudent.overallScore} / 100</strong>
+                <strong style={{ fontSize: "20px", color: "var(--navy)" }}>
+                  {inspectedStudent.overallScore === null ? "—" : `${inspectedStudent.overallScore} / 100`}
+                </strong>
               </div>
-              <div>
-                <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>ISHONCHLILIK</span>
-                <strong style={{ fontSize: "20px", color: "var(--emerald)" }}>{inspectedStudent.confidence}%</strong>
-              </div>
+              {inspectedStudent.skillsScored !== null ? (
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>BAHOLANGAN KO‘NIKMA</span>
+                  <strong style={{ fontSize: "20px", color: "var(--royal)" }}>{inspectedStudent.skillsScored} ta</strong>
+                </div>
+              ) : (
+                <div>
+                  <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>ISHONCHLILIK</span>
+                  <strong style={{ fontSize: "20px", color: "var(--emerald)" }}>
+                    {inspectedStudent.confidence === null ? "—" : `${inspectedStudent.confidence}%`}
+                  </strong>
+                </div>
+              )}
               <div>
                 <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>TASDIQLANGAN DALIL</span>
-                <strong style={{ fontSize: "20px", color: "var(--royal)" }}>{inspectedStudent.evidenceCount} ta</strong>
+                <strong style={{ fontSize: "20px", color: "var(--royal)" }}>
+                  {inspectedStudent.evidenceCount === null ? "—" : `${inspectedStudent.evidenceCount} ta`}
+                </strong>
               </div>
             </div>
 
-            <h3 style={{ fontSize: "15px", color: "var(--navy)", marginBottom: "12px" }}>5 qatlamli ko‘nikma profili:</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
-              {(["KNOW", "DO", "ADAPT", "DEFEND", "PROVE"] as const).map((layerKey) => (
-                <div key={layerKey}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", marginBottom: "4px" }}>
-                    <strong>{layerKey}</strong>
-                    <span style={{ color: "var(--navy)", fontWeight: 700 }}>{inspectedStudent.layers[layerKey]} ball</span>
-                  </div>
-                  <div className="progress-track" style={{ height: "6px", margin: 0 }}>
-                    <div style={{ width: `${inspectedStudent.layers[layerKey]}%`, height: "100%", background: "var(--accent)", borderRadius: "10px" }} />
-                  </div>
+            {inspectedStudent.layers ? (
+              <>
+                <h3 style={{ fontSize: "15px", color: "var(--navy)", marginBottom: "12px" }}>5 qatlamli ko‘nikma profili:</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
+                  {LAYER_KEYS.map((layerKey) => (
+                    <div key={layerKey}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", marginBottom: "4px" }}>
+                        <strong>{layerKey}</strong>
+                        <span style={{ color: "var(--navy)", fontWeight: 700 }}>{inspectedStudent.layers![layerKey]} ball</span>
+                      </div>
+                      <div className="progress-track" style={{ height: "6px", margin: 0 }}>
+                        <div style={{ width: `${inspectedStudent.layers![layerKey]}%`, height: "100%", background: "var(--accent)", borderRadius: "10px" }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <p style={{ fontSize: "12.5px", color: "var(--muted)", marginBottom: "24px" }}>
+                Qatlamlar bo‘yicha batafsil profil guruh hisobotida mavjud emas.
+              </p>
+            )}
 
             <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                className="primary-button"
-                style={{ flex: 1 }}
-                onClick={() => {
-                  setInspectedStudent(null);
-                  showToast(`${inspectedStudent.name}ga tavsiya va rag‘bat yuborildi!`);
-                }}
-              >
-                Rag‘batlantirish / Tavsiya yozish
-              </button>
+              {!isLive && (
+                <button
+                  className="primary-button"
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    setInspectedStudent(null);
+                    showToast(`${inspectedStudent.name}ga tavsiya va rag‘bat yuborildi!`);
+                  }}
+                >
+                  Rag‘batlantirish / Tavsiya yozish
+                </button>
+              )}
               <button className="dark-outline" style={{ width: "auto" }} onClick={() => setInspectedStudent(null)}>
                 Yopish
               </button>
@@ -1900,11 +2499,49 @@ export default function TeacherPortal({
             <p className="eyebrow">DALIL EKSPERTIZASI VA RUBRIKA BAHOLASH</p>
             <h2 style={{ fontSize: "20px", margin: "4px 0" }}>{inspectedProveItem.studentName} · {inspectedProveItem.title}</h2>
             <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "18px" }}>
-              Ko‘nikma: <strong>{inspectedProveItem.skillName}</strong> · Talab darajasi: <strong>{inspectedProveItem.targetLevel || "L4"}</strong>
+              Ko‘nikma: <strong>{inspectedProveItem.skillName}</strong>
+              {inspectedProveItem.live ? (
+                <> · Yuborilgan: <strong>{inspectedProveItem.submittedAt || "—"}</strong></>
+              ) : (
+                <> · Talab darajasi: <strong>{inspectedProveItem.targetLevel || "L4"}</strong></>
+              )}
             </p>
 
             {/* Rubrics table */}
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left", marginBottom: "20px" }}>
+              {inspectedProveItem.live ? (
+                <div style={{ padding: "14px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+                  <label style={{ display: "block", fontSize: "13.5px", fontWeight: 700, color: "var(--navy)", marginBottom: "10px" }}>
+                    Dalil bahosi (0–100):
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={proveScore}
+                      onChange={(e) => setProveScore(Number(e.target.value))}
+                      style={{ flex: 1, accentColor: "var(--accent)" }}
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={proveScore}
+                      onChange={(e) => setProveScore(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                      style={{
+                        width: "72px",
+                        padding: "6px 8px",
+                        borderRadius: "8px",
+                        border: "1.5px solid var(--border)",
+                        fontSize: "13px",
+                        color: "var(--navy)",
+                        fontWeight: 700,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
               <div style={{ padding: "14px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
                 <strong style={{ fontSize: "13.5px", color: "var(--navy)", display: "block", marginBottom: "10px" }}>
                   Baholash rubrikalari mezonlari:
@@ -1928,6 +2565,7 @@ export default function TeacherPortal({
                   </div>
                 </div>
               </div>
+              )}
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--muted)", marginBottom: "6px" }}>
@@ -1956,7 +2594,8 @@ export default function TeacherPortal({
               <button
                 type="button"
                 className="candidate-evidence-btn"
-                onClick={() => handleRejectProve(inspectedProveItem.id, inspectedProveItem.studentName)}
+                disabled={proveBusy}
+                onClick={() => void handleRejectProve(inspectedProveItem.id, inspectedProveItem.studentName)}
               >
                 Qayta ishlashga qaytarish
               </button>
@@ -1964,10 +2603,11 @@ export default function TeacherPortal({
                 type="button"
                 className="candidate-invite-btn"
                 style={{ flex: 1.5 }}
-                onClick={() => handleApproveProve(inspectedProveItem.id, inspectedProveItem.studentName, inspectedProveItem.skillName)}
+                disabled={proveBusy}
+                onClick={() => void handleApproveProve(inspectedProveItem.id, inspectedProveItem.studentName, inspectedProveItem.skillName)}
               >
                 <Icon name="checkCircle" size={16} />
-                <span>Tasdiqlash & L4 berish</span>
+                <span>{proveBusy ? "Yuborilmoqda..." : inspectedProveItem.live ? "Tasdiqlash" : "Tasdiqlash & L4 berish"}</span>
               </button>
             </div>
           </div>
@@ -1996,25 +2636,62 @@ export default function TeacherPortal({
                 <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: "6px" }}>
                   Mavzu yoki Bo‘shliq fani:
                 </label>
-                <select
-                  value={remedialSkill}
-                  onChange={(e) => setRemedialSkill(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    borderRadius: "10px",
-                    border: "1.5px solid var(--border)",
-                    fontSize: "13.5px",
-                    color: "var(--navy)",
-                  }}
-                >
-                  <option value="DevOps va CI/CD">DevOps va CI/CD (46% bo‘shliq)</option>
-                  <option value="Ma’lumotlar tuzilmasi (DSA)">Ma’lumotlar tuzilmasi (DSA) (38% bo‘shliq)</option>
-                  <option value="SQL va ma’lumotlar bazasi">SQL va indekslarni optimallash (22% bo‘shliq)</option>
-                  <option value="OOP va dizayn pattern’lari">OOP va Clean Architecture (18% bo‘shliq)</option>
-                </select>
+                {isLive ? (
+                  liveSkills.length === 0 ? (
+                    <div style={{ fontSize: "13px", color: "var(--muted)" }}>
+                      Ushbu guruhda baholangan ko‘nikmalar yo‘q — remedial topshiriq yaratib bo‘lmaydi.
+                    </div>
+                  ) : (
+                    <select
+                      value={remedialSkillId}
+                      onChange={(e) => {
+                        setRemedialSkillId(e.target.value);
+                        setGeneratedSuccess(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        border: "1.5px solid var(--border)",
+                        fontSize: "13.5px",
+                        color: "var(--navy)",
+                      }}
+                    >
+                      {weakSkillsSorted.map((s) => (
+                        <option key={s.skill.id} value={s.skill.id}>
+                          {s.skill.name} ({s.gap_pct}% bo‘shliq · {s.below_70} talaba)
+                        </option>
+                      ))}
+                    </select>
+                  )
+                ) : (
+                  <select
+                    value={remedialSkill}
+                    onChange={(e) => setRemedialSkill(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: "1.5px solid var(--border)",
+                      fontSize: "13.5px",
+                      color: "var(--navy)",
+                    }}
+                  >
+                    <option value="DevOps va CI/CD">DevOps va CI/CD (46% bo‘shliq)</option>
+                    <option value="Ma’lumotlar tuzilmasi (DSA)">Ma’lumotlar tuzilmasi (DSA) (38% bo‘shliq)</option>
+                    <option value="SQL va ma’lumotlar bazasi">SQL va indekslarni optimallash (22% bo‘shliq)</option>
+                    <option value="OOP va dizayn pattern’lari">OOP va Clean Architecture (18% bo‘shliq)</option>
+                  </select>
+                )}
               </div>
 
+              {isLive && (
+                <p style={{ fontSize: "12px", color: "var(--muted)", margin: 0 }}>
+                  Topshiriq L3 · AI-free qoralama sifatida yaratiladi; e’lon qilishdan oldin ikkinchi ko‘rib chiquvchi tasdiqlaydi.
+                </p>
+              )}
+
+              {!isLive && (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: "6px" }}>
@@ -2057,6 +2734,7 @@ export default function TeacherPortal({
                   </select>
                 </div>
               </div>
+              )}
             </div>
 
             {generating ? (
@@ -2069,6 +2747,17 @@ export default function TeacherPortal({
                   {generationStep === 2 && "2/3: Har bir talaba uchun individual testlar shakllanmoqda..."}
                   {generationStep === 3 && "3/3: Baholash rubrikalari va sandbox paketi tayyorlanmoqda..."}
                 </span>
+              </div>
+            ) : generatedSuccess && isLive ? (
+              <div style={{ padding: "16px", borderRadius: "10px", background: "var(--success-soft)", border: "1px solid var(--success-ring)", marginBottom: "16px" }}>
+                <strong style={{ color: "var(--success-fg)", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <Icon name="checkCircle" size={16} /> Remedial topshiriq qoralamasi yaratildi!
+                </strong>
+                <p style={{ color: "var(--success-fg)", fontSize: "12.5px", margin: 0 }}>
+                  {lastRemedial
+                    ? `${groupLabel} guruhidagi ${lastRemedial.target_students} nafar talabaga mo‘ljallangan · Shablon: ${lastRemedial.template} · Holat: ${lastRemedial.status}`
+                    : "—"}
+                </p>
               </div>
             ) : generatedSuccess ? (
               <div style={{ padding: "16px", borderRadius: "10px", background: "var(--success-soft)", border: "1px solid var(--success-ring)", marginBottom: "16px" }}>
@@ -2085,10 +2774,14 @@ export default function TeacherPortal({
               <button
                 type="button"
                 className="primary-button full"
-                onClick={handleGenerateRemedial}
-                disabled={generating}
+                onClick={() => void handleGenerateRemedial()}
+                disabled={generating || (isLive && !remedialSkillId)}
               >
-                {generating ? "Generatsiya qilinmoqda..." : "AI bilan generatsiya qilish va tarqatish"}
+                {generating
+                  ? "Generatsiya qilinmoqda..."
+                  : isLive
+                  ? "Remedial topshiriq qoralamasini yaratish"
+                  : "AI bilan generatsiya qilish va tarqatish"}
               </button>
             </div>
             <button type="button" className="cancel-button" onClick={() => setRemedialModalOpen(false)}>
@@ -2106,17 +2799,21 @@ export default function TeacherPortal({
               <Icon name="close" />
             </button>
 
-            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, var(--ink), var(--ink-2))", color: "white" }}>
+            <div className="modal-symbol" style={{ background: "linear-gradient(160deg, #2b4fa8, #1e3a8a 45%, #0f2744)", color: "white" }}>
               <Icon name="file" size={28} />
             </div>
 
             <p className="eyebrow" style={{ color: "var(--royal)" }}>AI VIVA OG‘ZAKI HIMOYA DIALOGI</p>
             <h2 style={{ fontSize: "20px", margin: "4px 0" }}>{inspectedViva.studentName} · {inspectedViva.taskTitle}</h2>
             <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "16px" }}>
-              Baho: <strong>{inspectedViva.vivaScore} / 100</strong> · Nutq ishonchliligi: <strong>{inspectedViva.confidence}%</strong> ({inspectedViva.duration})
+              Baho: <strong>{inspectedViva.vivaScore} / 100</strong>
+              {inspectedViva.live
+                ? <> · {inspectedViva.duration} · matnli viva{inspectedViva.humanScore != null ? <> · inson bahosi: <strong>{inspectedViva.humanScore}</strong></> : null}</>
+                : <> · Nutq ishonchliligi: <strong>{inspectedViva.confidence}%</strong> ({inspectedViva.duration})</>}
             </p>
 
-            {/* Audio Wave Player Simulation */}
+            {/* Audio Wave Player Simulation (demo only: live vivas are text-based, section 5.4) */}
+            {!inspectedViva.live && (
             <div
               style={{
                 padding: "12px 18px",
@@ -2160,6 +2857,14 @@ export default function TeacherPortal({
                 05:12 / {inspectedViva.duration}
               </span>
             </div>
+            )}
+
+            {inspectedViva.live && !inspectedViva.dialogue && (
+              <p style={{ fontSize: "12.5px", color: "var(--muted)", marginBottom: "12px" }}>Transkript yuklanmoqda...</p>
+            )}
+            {inspectedViva.transcriptError && (
+              <p style={{ fontSize: "12.5px", color: "var(--danger-fg)", marginBottom: "12px" }}>Transkriptni yuklab bo‘lmadi.</p>
+            )}
 
             {/* Dialogue Exchanges */}
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left", maxHeight: "240px", overflowY: "auto", marginBottom: "20px" }}>

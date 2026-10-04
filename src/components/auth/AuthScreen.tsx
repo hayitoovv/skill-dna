@@ -5,6 +5,7 @@ import type { User, Role, DirectionCode } from "../../types";
 import { api } from "../../services/api";
 import logoImg from "@/assets/logo.png";
 import "./auth.css";
+import { LanguageSwitcher, useI18n } from "../../i18n";
 
 const HELIX_RUNGS = 14;
 const helixIcons = ["code", "database", "cpu", "search", "gitBranch"] as const;
@@ -37,10 +38,10 @@ function Tilt({ className, tip, children }: { className?: string; tip?: string; 
   );
 }
 
-const roleOptions: { key: Role; label: string; icon: "student" | "teacher" | "briefcase" }[] = [
-  { key: "student", label: "Talaba", icon: "student" },
-  { key: "teacher", label: "O‘qituvchi", icon: "teacher" },
-  { key: "employer", label: "Ish beruvchi", icon: "briefcase" },
+const roleOptions: { key: Role; label: "auth.roleStudent" | "auth.roleTeacher" | "auth.roleEmployer"; icon: "student" | "teacher" | "briefcase" }[] = [
+  { key: "student", label: "auth.roleStudent", icon: "student" },
+  { key: "teacher", label: "auth.roleTeacher", icon: "teacher" },
+  { key: "employer", label: "auth.roleEmployer", icon: "briefcase" },
 ];
 
 const directionOptions: { key: DirectionCode; label: string; hint: string; icon: "code" | "cpu" | "sparkles" }[] = [
@@ -174,7 +175,6 @@ function passwordStrength(pw: string) {
   return Math.max(score, 1);
 }
 
-const strengthLabels = ["", "Zaif", "O‘rtacha", "Yaxshi", "Kuchli"];
 
 function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
@@ -239,6 +239,7 @@ export default function AuthScreen({
 }: {
   onLogin: (user: User) => void;
 }) {
+  const { t } = useI18n();
   const [tab, setTab] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
   const sceneRef = useRef<HTMLDivElement>(null);
@@ -249,6 +250,8 @@ export default function AuthScreen({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState("");
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
   const [loginInfo, setLoginInfo] = useState("");
 
   // Register form state
@@ -305,6 +308,12 @@ export default function AuthScreen({
     try {
       // 1. Attempt real backend login via PostgreSQL + JWT
       const res = await api.login(loginIdentifier.trim(), loginPassword.trim());
+      if (res && res.mfa_required && res.mfa_token) {
+        // Password accepted; ask for the authenticator code (section 13.1)
+        setMfaToken(res.mfa_token);
+        setMfaCode("");
+        return;
+      }
       if (res && res.user) {
         onLogin({
           id: res.user.id,
@@ -351,6 +360,32 @@ export default function AuthScreen({
         avatar: loginIdentifier.slice(0, 2).toUpperCase(),
       };
       onLogin(customUser);
+    }
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaToken || !mfaCode.trim()) return;
+    setLoading(true);
+    setLoginError("");
+    try {
+      const res = await api.verifyMfa(mfaToken, mfaCode.trim());
+      onLogin({
+        id: res.user.id,
+        name: res.user.full_name,
+        email: res.user.email,
+        phone: res.user.phone || "",
+        role: res.user.role as Role,
+        direction: (res.user.direction as DirectionCode) || "software",
+        organization: res.user.organization || "BSTU",
+        avatar: initialsOf(res.user.full_name),
+        bio: res.user.bio || "",
+      });
+    } catch (err: any) {
+      setLoginError(err.message || "Kod noto‘g‘ri");
+      if (/muddati tugadi/.test(err.message || "")) setMfaToken(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -516,15 +551,15 @@ export default function AuthScreen({
                 <Icon name="shieldCheck" size={16} />
               </span>
               <div>
-                <strong>PROVE tasdiqlandi</strong>
-                <small>18 ta dalil · AI Viva</small>
+                <strong>{t("auth.cardProve")}</strong>
+                <small>{t("auth.cardProveSub")}</small>
               </div>
             </div>
           </Tilt>
 
           <Tilt className="a3d-float f3" tip="KNOW · DO · ADAPT · DEFEND · PROVE">
             <div className="a3d-block bars">
-              <small>5 qatlamli model</small>
+              <small>{t("auth.cardModel")}</small>
               <div className="a3d-bars">
                 {[90, 85, 80, 78, 60].map((v, i) => (
                   <span key={i} style={{ "--h": `${v}%`, "--d": `${i * 0.12}s` } as React.CSSProperties} />
@@ -544,7 +579,7 @@ export default function AuthScreen({
             <div className="a3d-block compact">
               <span className="a3d-chip level">L4</span>
               <div>
-                <strong>Mutaxassis darajasi</strong>
+                <strong>{t("auth.cardLevel")}</strong>
                 <small>Open Badges 3.0</small>
               </div>
             </div>
@@ -553,9 +588,9 @@ export default function AuthScreen({
 
         <div className="a3d-copy">
           <h1>
-            <span className="metal">O‘z salohiyatingizni</span> <span className="metal emerald">oching</span>
+            <span className="metal">{t("auth.headline1")}</span> <span className="metal emerald">{t("auth.headline2")}</span>
           </h1>
-          <p>Bilimingizni sinang, mahoratingizni rivojlantiring va kelajagingizni quring.</p>
+          <p>{t("auth.lead")}</p>
 
           <div className="a3d-bubbles">
             {activityBubbles.map((b, i) => (
@@ -572,19 +607,19 @@ export default function AuthScreen({
               <b>1 240+</b>
             </span>
             <p>
-              talaba ko‘nikmalarini <strong>isbotlamoqda</strong>
+              {t("auth.activity")} <strong>{t("auth.activityStrong")}</strong>
             </p>
           </div>
 
           <ul className="a3d-perks">
             <li data-tip="5 qatlamli halollik nazorati">
-              <Icon name="shield" size={15} /> Ishonchli platforma
+              <Icon name="shield" size={15} /> {t("auth.perkTrusted")}
             </li>
             <li data-tip="Rezyume emas, real topshiriqlar">
-              <Icon name="chart" size={15} /> Real natijalar
+              <Icon name="chart" size={15} /> {t("auth.perkResults")}
             </li>
             <li data-tip="Tasdiqlangan nomzodlar ish beruvchilarga ko‘rinadi">
-              <Icon name="lightning" size={15} /> Kelajakka yo‘l
+              <Icon name="lightning" size={15} /> {t("auth.perkFuture")}
             </li>
           </ul>
         </div>
@@ -593,6 +628,9 @@ export default function AuthScreen({
       {/* ================= RIGHT: ROTATING 3D HUB ================= */}
       <section className="a3d-panel-wrap">
         <div className="a3d-panel">
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+            <LanguageSwitcher compact />
+          </div>
           <div className="a3d-mobile-brand">
             <div className="a3d-brand-mark">
               <img src={logoImg} alt="Skill DNA" />
@@ -605,27 +643,65 @@ export default function AuthScreen({
           <div className={`a3d-tabs ${pill}`} role="tablist">
             <span className="a3d-tab-pill" />
             <button type="button" role="tab" aria-selected={pill === "login"} onClick={() => switchTab("login")}>
-              Kirish
+              {t("auth.tabLogin")}
             </button>
             <button type="button" role="tab" aria-selected={pill === "register"} onClick={() => switchTab("register")}>
-              Ro‘yxatdan o‘tish
+              {t("auth.tabRegister")}
             </button>
           </div>
 
           <div className={`a3d-hub-face phase-${phase}`}>
-            {tab === "login" ? (
+            {tab === "login" && mfaToken ? (
+              /* ----- SECOND FACTOR (section 13.1) ----- */
+              <>
+                <div className="a3d-head">
+                  <h2>{t("auth.mfaTitle")}</h2>
+                  <p>{t("auth.mfaSub")}</p>
+                </div>
+                <form onSubmit={handleMfaSubmit} className="a3d-form">
+                  <label className="a3d-field">
+                    <span className="a3d-label">{t("auth.mfaCode")}</span>
+                    <span className="a3d-input">
+                      <Icon name="shieldCheck" size={17} />
+                      <input
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        autoFocus
+                        placeholder="123 456"
+                        value={mfaCode}
+                        onChange={(e) => {
+                          setMfaCode(e.target.value);
+                          setLoginError("");
+                        }}
+                      />
+                    </span>
+                  </label>
+                  {loginError && <div className="a3d-alert error">{loginError}</div>}
+                  <button type="submit" className="a3d-submit" disabled={loading || !mfaCode.trim()}>
+                    <span className="a3d-core-orb" aria-hidden="true" />
+                    <span>{loading ? t("auth.checking") : t("auth.mfaSubmit")}</span>
+                    {!loading && <Icon name="arrow" size={17} />}
+                  </button>
+                  <p className="a3d-switch">
+                    <button type="button" onClick={() => { setMfaToken(null); setLoginError(""); }}>
+                      {t("auth.mfaOther")}
+                    </button>
+                  </p>
+                </form>
+              </>
+            ) : tab === "login" ? (
               /* ----- LOGIN FORM ----- */
               <>
                 <div className="a3d-head">
-                  <h2>Xush kelibsiz 👋</h2>
-                  <p>Hisobingizga kiring va davom eting</p>
+                  <h2>{t("auth.welcome")}</h2>
+                  <p>{t("auth.welcomeSub")}</p>
                 </div>
 
                 <form onSubmit={handleLoginSubmit} className="a3d-form">
                   <Field
-                    label="Email yoki telefon raqami"
+                    label={t("auth.identifier")}
                     icon="mail"
-                    placeholder="example@mail.com yoki +998 90 123 45 67"
+                    placeholder={t("auth.identifierPh")}
                     value={loginIdentifier}
                     autoComplete="username"
                     onChange={(v) => {
@@ -634,10 +710,10 @@ export default function AuthScreen({
                     }}
                   />
                   <Field
-                    label="Parol"
+                    label={t("auth.password")}
                     icon="lock"
                     type="password"
-                    placeholder="Parolingizni kiriting"
+                    placeholder={t("auth.passwordPh")}
                     value={loginPassword}
                     autoComplete="current-password"
                     reveal={showLoginPassword}
@@ -650,14 +726,14 @@ export default function AuthScreen({
 
                   <div className="a3d-aux">
                     <Checkbox checked={rememberMe} onChange={setRememberMe}>
-                      Meni eslab qolish
+                      {t("auth.remember")}
                     </Checkbox>
                     <button
                       type="button"
                       className="a3d-link"
-                      onClick={() => setLoginInfo("Parolni tiklash havolasi emailingizga yuborildi.")}
+                      onClick={() => setLoginInfo(t("auth.forgotSent"))}
                     >
-                      Parolni unutdingizmi?
+                      {t("auth.forgot")}
                     </button>
                   </div>
 
@@ -666,23 +742,23 @@ export default function AuthScreen({
 
                   <button type="submit" className="a3d-submit" disabled={loading}>
                     <span className="a3d-core-orb" aria-hidden="true" />
-                    <span>{loading ? "Tekshirilmoqda..." : "Kirish"}</span>
+                    <span>{loading ? t("auth.checking") : t("auth.submitLogin")}</span>
                     {!loading && <Icon name="arrow" size={17} />}
                   </button>
 
                   <div className="a3d-divider">
-                    <span>yoki</span>
+                    <span>{t("auth.or")}</span>
                   </div>
 
                   <button type="button" className="a3d-google" onClick={() => onLogin(demoUsers.student)}>
                     <GoogleIcon size={18} />
-                    <span>Google orqali kirish</span>
+                    <span>{t("auth.google")}</span>
                   </button>
 
                   <p className="a3d-switch">
-                    Hisobingiz yo‘qmi?{" "}
+                    {t("auth.noAccount")}{" "}
                     <button type="button" onClick={() => switchTab("register")}>
-                      Ro‘yxatdan o‘ting
+                      {t("auth.goRegister")}
                     </button>
                   </p>
                 </form>
@@ -691,8 +767,8 @@ export default function AuthScreen({
               /* ----- REGISTER FORM ----- */
               <>
                 <div className="a3d-head">
-                  <h2>Hisob yarating</h2>
-                  <p>Imkoniyatlar dunyosiga birinchi qadam</p>
+                  <h2>{t("auth.createTitle")}</h2>
+                  <p>{t("auth.createSub")}</p>
                 </div>
 
                 <form onSubmit={handleRegisterSubmit} className="a3d-form">
@@ -705,19 +781,19 @@ export default function AuthScreen({
                         onClick={() => setRegRole(r.key)}
                       >
                         <Icon name={r.icon} size={18} />
-                        <span>{r.label}</span>
+                        <span>{t(r.label)}</span>
                       </button>
                     ))}
                   </div>
 
                   <div className="a3d-row">
-                    <Field label="Ism" icon="user" placeholder="Ismingiz" value={regFirstName} onChange={setRegFirstName} autoComplete="given-name" />
-                    <Field label="Familiya" icon="user" placeholder="Familiyangiz" value={regLastName} onChange={setRegLastName} autoComplete="family-name" />
+                    <Field label={t("auth.firstName")} icon="user" placeholder={t("auth.firstNamePh")} value={regFirstName} onChange={setRegFirstName} autoComplete="given-name" />
+                    <Field label={t("auth.lastName")} icon="user" placeholder={t("auth.lastNamePh")} value={regLastName} onChange={setRegLastName} autoComplete="family-name" />
                   </div>
 
                   <div className="a3d-row">
-                    <Field label="Email" icon="mail" type="email" placeholder="example@mail.com" value={regEmail} onChange={setRegEmail} autoComplete="email" />
-                    <Field label="Telefon" icon="phone" placeholder="+998 90 123 45 67" value={regPhone} onChange={setRegPhone} autoComplete="tel" />
+                    <Field label={t("auth.email")} icon="mail" type="email" placeholder="example@mail.com" value={regEmail} onChange={setRegEmail} autoComplete="email" />
+                    <Field label={t("auth.phone")} icon="phone" placeholder="+998 90 123 45 67" value={regPhone} onChange={setRegPhone} autoComplete="tel" />
                   </div>
 
                   {regRole === "student" && (
@@ -726,10 +802,10 @@ export default function AuthScreen({
 
                   <div className="a3d-row">
                     <Field
-                      label="Parol"
+                      label={t("auth.password")}
                       icon="lock"
                       type="password"
-                      placeholder="Parol"
+                      placeholder={t("auth.password")}
                       value={regPassword}
                       autoComplete="new-password"
                       reveal={showRegPassword}
@@ -737,10 +813,10 @@ export default function AuthScreen({
                       onChange={setRegPassword}
                     />
                     <Field
-                      label="Tasdiqlash"
+                      label={t("auth.confirm")}
                       icon="lock"
                       type="password"
-                      placeholder="Qayta kiriting"
+                      placeholder={t("auth.confirmPh")}
                       value={regConfirmPassword}
                       autoComplete="new-password"
                       reveal={showRegConfirmPassword}
@@ -756,38 +832,38 @@ export default function AuthScreen({
                           <i key={n} />
                         ))}
                       </div>
-                      <span>{strengthLabels[passwordStrength(regPassword)]}</span>
+                      <span>{t(`auth.strength.${passwordStrength(regPassword)}` as "auth.strength.1")}</span>
                     </div>
                   )}
 
                   <Checkbox checked={agreedTerms} onChange={setAgreedTerms}>
                     <a href="#terms" onClick={(e) => e.preventDefault()}>
-                      Foydalanish shartlari
+                      {t("auth.terms")}
                     </a>
-                    {" va "}
+                    {t("auth.and")}
                     <a href="#privacy" onClick={(e) => e.preventDefault()}>
-                      Maxfiylik siyosati
+                      {t("auth.privacy")}
                     </a>
-                    {" bilan tanishdim va roziman"}
+                    {t("auth.agree")}
                   </Checkbox>
 
                   {registerError && <div className="a3d-alert error">{registerError}</div>}
 
                   <button type="submit" className="a3d-submit" disabled={loading}>
                     <span className="a3d-core-orb" aria-hidden="true" />
-                    <span>{loading ? "Yaratilmoqda..." : "Ro‘yxatdan o‘tish"}</span>
+                    <span>{loading ? t("auth.creating") : t("auth.submitRegister")}</span>
                     {!loading && <Icon name="arrow" size={17} />}
                   </button>
 
                   <button type="button" className="a3d-google" onClick={() => onLogin(demoUsers.student)}>
                     <GoogleIcon size={18} />
-                    <span>Google orqali ro‘yxatdan o‘tish</span>
+                    <span>{t("auth.googleRegister")}</span>
                   </button>
 
                   <p className="a3d-switch">
-                    Hisobingiz bormi?{" "}
+                    {t("auth.haveAccount")}{" "}
                     <button type="button" onClick={() => switchTab("login")}>
-                      Kirish
+                      {t("auth.tabLogin")}
                     </button>
                   </p>
                 </form>

@@ -1,33 +1,58 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "../common/Icons";
 import { api } from "../../services/api";
 
 interface CareerCoachModalProps {
   isOpen: boolean;
   onClose: () => void;
-  targetRole?: string;
-  matchPct?: number;
+  targetRole?: string | null;
+  matchPct?: number | null;
+  careerId?: string;
+  /** true when targetRole/matchPct come from the live backend */
+  live?: boolean;
 }
+
+type ChatMessage = {
+  role: "coach" | "user";
+  content: string;
+  time: string;
+  action?: string;
+  demo?: boolean;
+};
+
+const nowTime = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
 export default function CareerCoachModal({
   isOpen,
   onClose,
-  targetRole = "Senior Python Backend Injinir",
-  matchPct = 85,
+  targetRole,
+  matchPct,
+  careerId,
+  live = false,
 }: CareerCoachModalProps) {
-  const [messages, setMessages] = useState<
-    { role: "coach" | "user"; content: string; time: string }[]
-  >([
-    {
-      role: "coach",
-      content: `Assalomu alaykum! Men sizning AI Karyera Murabbiyingizman. Siz hozir '${targetRole}' roliga ${matchPct}% mos kelasiz. Keyingi darajaga (L4 CREATE) chiqish bo‘yicha qanday maslahat kerak?`,
-      time: "Hozir",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Reset the conversation when the coached role changes
+  useEffect(() => {
+    setMessages([]);
+  }, [careerId]);
+
   if (!isOpen) return null;
+
+  const matchText = matchPct == null ? null : `${Math.round(matchPct * 10) / 10}%`;
+  const greeting: ChatMessage = {
+    role: "coach",
+    time: "Hozir",
+    demo: !live,
+    content: targetRole
+      ? matchText
+        ? `Assalomu alaykum! Men sizning AI Karyera Murabbiyingizman. Siz hozir “${targetRole}” roliga ${matchText} mos kelasiz. Qaysi bo‘shliqdan boshlash bo‘yicha maslahat kerak?`
+        : `Assalomu alaykum! Men sizning AI Karyera Murabbiyingizman. “${targetRole}” roli uchun majburiy ko‘nikmalardan biri hali yetishmaydi, shuning uchun moslik foizi hisoblanmagan. Qayerdan boshlashni birga aniqlaymiz.`
+      : "Assalomu alaykum! Men sizning AI Karyera Murabbiyingizman. Karyera maqsadingiz bo‘yicha savolingizni yozing.",
+  };
+  const shown = [greeting, ...messages];
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,20 +60,18 @@ export default function CareerCoachModal({
 
     const userText = input.trim();
     setInput("");
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: userText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
-    ]);
+    setMessages((prev) => [...prev, { role: "user", content: userText, time: nowTime() }]);
     setLoading(true);
 
     try {
-      const res = await api.chatWithCoach(userText, targetRole);
+      const res = await api.chatWithCoach(userText, careerId);
       setMessages((prev) => [
         ...prev,
         {
           role: "coach",
-          content: res.reply,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          content: res?.reply || "Javob olinmadi.",
+          action: res?.recommended_action || undefined,
+          time: nowTime(),
         },
       ]);
     } catch {
@@ -56,8 +79,9 @@ export default function CareerCoachModal({
         ...prev,
         {
           role: "coach",
-          content: "Hozirgi profilingiz tahliliga ko‘ra, sizda eng katta o‘sish nuqtasi — DevOps va CI/CD (61/100). Birinchi navbatda Docker multi-stage build va GitHub Actions bo‘yicha amaliy topshiriqlarni yakunlashni tavsiya qilaman.",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          demo: true,
+          content: "Server bilan aloqa yo‘q. Namuna javob: avval eng katta bo‘shliqqa ega ko‘nikma bo‘yicha KNOW testini, so‘ng DO amaliy topshirig‘ini yakunlashni tavsiya qilaman.",
+          time: nowTime(),
         },
       ]);
     } finally {
@@ -85,7 +109,20 @@ export default function CareerCoachModal({
           <div>
             <h2 style={{ fontSize: "20px", margin: 0 }}>AI Career Coach</h2>
             <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-              {targetRole} · {matchPct}% Moslik tahlili
+              {targetRole ? `${targetRole} · ${matchText ? `${matchText} moslik tahlili` : "moslik hisoblanmagan"}` : "Karyera maslahati"}
+            </span>
+            <span
+              style={{
+                marginLeft: "8px",
+                fontSize: "11px",
+                fontWeight: 800,
+                padding: "2px 8px",
+                borderRadius: "999px",
+                background: live ? "var(--success-soft)" : "var(--warning-soft)",
+                color: live ? "var(--success-fg)" : "var(--warning-fg)",
+              }}
+            >
+              {live ? "Jonli ma’lumot" : "Demo ma’lumot"}
             </span>
           </div>
         </div>
@@ -106,7 +143,7 @@ export default function CareerCoachModal({
             gap: "12px",
           }}
         >
-          {messages.map((m, idx) => (
+          {shown.map((m, idx) => (
             <div
               key={idx}
               style={{
@@ -127,6 +164,24 @@ export default function CareerCoachModal({
                 <span>{m.time}</span>
               </div>
               <div style={{ whiteSpace: "pre-line" }}>{m.content}</div>
+              {m.action && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    padding: "8px 10px",
+                    borderRadius: "8px",
+                    background: "var(--success-soft)",
+                    color: "var(--success-fg)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                  }}
+                >
+                  Tavsiya etilgan qadam: {m.action}
+                </div>
+              )}
+              {m.demo && m.role === "coach" && idx > 0 && (
+                <div style={{ marginTop: "6px", fontSize: "11px", fontWeight: 700, color: "var(--warning-fg)" }}>Demo javob</div>
+              )}
             </div>
           ))}
           {loading && (

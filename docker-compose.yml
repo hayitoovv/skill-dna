@@ -39,11 +39,52 @@ services:
       - SYNC_DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root123}@postgres:5432/${POSTGRES_DB:-skill_dna}
       - SECRET_KEY=${SECRET_KEY:-skilldna-super-secret-key-change-in-production-2026}
       - PROJECT_NAME=SKILL DNA — AI Talent Intelligence Platform
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - CHALLENGE_SALT=${CHALLENGE_SALT:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - CREDENTIAL_ISSUER_DID=${CREDENTIAL_ISSUER_DID:-did:web:skilldna.uz}
+      - CREDENTIAL_VERIFY_BASE_URL=${CREDENTIAL_VERIFY_BASE_URL:-https://skilldna.uz/api/v1/verify}
+      # The API container has no Docker access by design; run the code sandbox on a separate worker host
+      - SANDBOX_ENABLED=false
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "8000:8000"
+    networks:
+      - skill_dna_network
+
+  # Job queue (section 3.1): sandbox runs, viva grading, recomputation
+  redis:
+    image: redis:7-alpine
+    container_name: skill_dna_redis
+    restart: always
+    networks:
+      - skill_dna_network
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: skill_dna_worker
+    restart: always
+    command: ["arq", "app.worker.main.WorkerSettings"]
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-root123}@postgres:5432/${POSTGRES_DB:-skill_dna}
+      - SECRET_KEY=${SECRET_KEY:-skilldna-super-secret-key-change-in-production-2026}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - CHALLENGE_SALT=${CHALLENGE_SALT:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - REDIS_URL=redis://redis:6379/0
+      # Enable only on a dedicated sandbox host with an isolated Docker daemon (section 3.5);
+      # mounting the host docker.sock here would give student code a path to the host.
+      - SANDBOX_ENABLED=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - skill_dna_network
 

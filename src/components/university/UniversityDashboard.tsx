@@ -1,5 +1,6 @@
-import { useState, useId } from "react";
+import { useState, useId, useEffect } from "react";
 import { Icon } from "../common/Icons";
+import { api, hasSession } from "../../services/api";
 import { universityAnalyticsData } from "../../data/ontology";
 import type { DirectionCode } from "../../types";
 
@@ -237,6 +238,121 @@ const initialStudents: UniversityStudentItem[] = [
     status: "active",
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Live data wiring (GET /university/analytics, /teacher/groups, /teacher/groups/{id}/gaps)
+// ---------------------------------------------------------------------------
+
+type DataStatus = "loading" | "live" | "demo";
+
+interface LiveAnalytics {
+  students_total: number;
+  directions: {
+    code: string;
+    name: string;
+    students: number;
+    avg_score: number | null;
+    avg_confidence: number | null;
+    courses: Record<string, number>;
+  }[];
+  level_distribution: Record<string, number>;
+  curriculum_gaps: { skill: string; code: string; avg_score: number; students: number; below_70_pct: number }[];
+  open_flags: number;
+}
+
+interface LiveGroup {
+  group_id: string;
+  students: number;
+}
+
+interface LiveGroupGaps {
+  group_id: string;
+  students_total: number;
+  skills: {
+    skill: { id: string; code: string; name: string };
+    students_scored: number;
+    avg_score: number;
+    below_70: number;
+    gap_pct: number;
+  }[];
+  students: { id: string; name: string; email: string; level: string; score: number; skills_scored: number }[];
+}
+
+interface DirectionView {
+  key: string;
+  name: string;
+  students: number;
+  avgScore: number | null;
+  avgConfidence: number | null;
+  readinessPct: number | null;
+  courses: string | null;
+}
+
+interface LevelView {
+  level: string;
+  count: number;
+  pct: string;
+}
+
+interface GapView {
+  key: string;
+  direction: string;
+  skill: string;
+  badge: string;
+  recommendation: string | null;
+  meta: string | null;
+  severe: boolean;
+}
+
+const LEVEL_LABELS: Record<string, string> = {
+  L0: "L0 BOSHLANG‘ICH",
+  L1: "L1 KNOW",
+  L2: "L2 APPLY",
+  L3: "L3 ADAPT",
+  L4: "L4 CREATE",
+  L5: "L5 MASTER",
+};
+
+function formatPct(count: number, total: number): string {
+  if (!total) return "0%";
+  const v = (100 * count) / total;
+  return `${v < 10 && v % 1 !== 0 ? v.toFixed(1) : Math.round(v)}%`;
+}
+
+function DataBadge({ status }: { status: DataStatus }) {
+  const palette =
+    status === "live"
+      ? { color: "var(--success-400)", bg: "var(--success-soft)", label: "Jonli ma’lumot" }
+      : status === "loading"
+      ? { color: "var(--muted)", bg: "var(--surface-3)", label: "Yuklanmoqda…" }
+      : { color: "var(--warning-fg)", bg: "var(--warning-soft)", label: "Demo ma’lumot" };
+  return (
+    <span
+      title={
+        status === "demo"
+          ? "Server ma’lumotlari mavjud emas (kirish huquqi yoki tarmoq). Ko‘rsatilgan raqamlar namunaviy."
+          : status === "live"
+          ? "Ma’lumotlar serverdan real vaqtda olindi."
+          : undefined
+      }
+      style={{
+        fontSize: "11px",
+        fontWeight: 700,
+        color: palette.color,
+        background: palette.bg,
+        padding: "3px 8px",
+        borderRadius: "5px",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "5px",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: palette.color }} />
+      {palette.label}
+    </span>
+  );
+}
 
 export default function UniversityDashboard({
   activeTab: propActiveTab,
@@ -975,6 +1091,499 @@ export default function UniversityDashboard({
     return matchGroup && matchSearch;
   });
 
+  // ---------------------------------------------------------------------------
+  // Live data: analytics (KPIs, directions, levels, curriculum gaps) + groups
+  // ---------------------------------------------------------------------------
+  const [analytics, setAnalytics] = useState<LiveAnalytics | null>(null);
+  const [analyticsStatus, setAnalyticsStatus] = useState<DataStatus>(() => (hasSession() ? "loading" : "demo"));
+  const [orgName, setOrgName] = useState<string | null>(null);
+  const [liveGroups, setLiveGroups] = useState<LiveGroup[] | null>(null);
+  const [groupsStatus, setGroupsStatus] = useState<DataStatus>(() => (hasSession() ? "loading" : "demo"));
+  const [selectedLiveGroup, setSelectedLiveGroup] = useState<string | null>(null);
+  const [groupGaps, setGroupGaps] = useState<LiveGroupGaps | null>(null);
+  const [groupGapsLoading, setGroupGapsLoading] = useState(false);
+  const [groupGapsError, setGroupGapsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hasSession()) return;
+    let cancelled = false;
+    api
+      .getUniversityAnalytics()
+      .then((data: LiveAnalytics) => {
+        if (cancelled) return;
+        if (data && typeof data.students_total === "number" && Array.isArray(data.directions)) {
+          setAnalytics(data);
+          setAnalyticsStatus("live");
+        } else {
+          setAnalyticsStatus("demo");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAnalyticsStatus("demo");
+      });
+    api
+      .getTeacherGroups()
+      .then((data: LiveGroup[]) => {
+        if (cancelled) return;
+        if (Array.isArray(data)) {
+          setLiveGroups(data);
+          setGroupsStatus("live");
+        } else {
+          setGroupsStatus("demo");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setGroupsStatus("demo");
+      });
+    api
+      .getMe()
+      .then((me: any) => {
+        if (!cancelled && me && me.role === "university" && typeof me.organization === "string" && me.organization) {
+          setOrgName(me.organization);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const openLiveGroup = (groupId: string) => {
+    if (selectedLiveGroup === groupId) {
+      setSelectedLiveGroup(null);
+      setGroupGaps(null);
+      return;
+    }
+    setSelectedLiveGroup(groupId);
+    setGroupGaps(null);
+    setGroupGapsError(null);
+    setGroupGapsLoading(true);
+    api
+      .getGroupGaps(groupId)
+      .then((data: LiveGroupGaps) => setGroupGaps(data))
+      .catch((err: any) => setGroupGapsError(err?.message || "Guruh tahlilini yuklab bo‘lmadi."))
+      .finally(() => setGroupGapsLoading(false));
+  };
+
+  const isLive = analyticsStatus === "live" && analytics !== null;
+  const groupsLive = groupsStatus === "live" && liveGroups !== null;
+
+  // Normalised views (live -> API, demo -> bundled sample data)
+  const directionViews: DirectionView[] = isLive
+    ? analytics!.directions.map((d) => ({
+        key: d.code,
+        name: d.name,
+        students: d.students,
+        avgScore: d.avg_score,
+        avgConfidence: d.avg_confidence,
+        readinessPct: null,
+        courses:
+          Object.entries(d.courses || {})
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([c, n]) => `${c}: ${n}`)
+            .join(" · ") || null,
+      }))
+    : universityAnalyticsData.directionStats.map((d) => ({
+        key: d.name,
+        name: d.name,
+        students: d.students,
+        avgScore: d.avgScore,
+        avgConfidence: d.avgConfidence,
+        readinessPct: d.readinessPct,
+        courses: null,
+      }));
+
+  const levelTotal = isLive
+    ? Object.values(analytics!.level_distribution || {}).reduce((a, b) => a + (b || 0), 0)
+    : 0;
+  const levelViews: LevelView[] = isLive
+    ? ["L0", "L1", "L2", "L3", "L4", "L5"].map((k) => {
+        const count = analytics!.level_distribution?.[k] ?? 0;
+        return { level: LEVEL_LABELS[k], count, pct: formatPct(count, levelTotal) };
+      })
+    : universityAnalyticsData.levelDistribution;
+
+  const gapViews: GapView[] = isLive
+    ? analytics!.curriculum_gaps.map((g) => ({
+        key: g.code,
+        direction: g.code,
+        skill: g.skill,
+        badge: `${g.below_70_pct}% talaba 70 balldan past`,
+        recommendation: null,
+        meta: `O‘rtacha ball: ${g.avg_score} / 100 · Baholangan talabalar: ${g.students} nafar`,
+        severe: g.below_70_pct > 0 || g.avg_score < 70,
+      }))
+    : universityAnalyticsData.curriculumGaps.map((g) => ({
+        key: g.skill,
+        direction: g.direction,
+        skill: g.skill,
+        badge: `${g.shortfallPct} yetishmovchilik`,
+        recommendation: g.recommendation,
+        meta: null,
+        severe: true,
+      }));
+
+  // KPI values; "—" where the API provides nothing. Several scored directions -> student-weighted mean marked with "≈".
+  const weightedMean = (field: "avg_score" | "avg_confidence"): string | null => {
+    if (!isLive) return null;
+    const rows = analytics!.directions.filter((d) => d[field] !== null && d[field] !== undefined);
+    if (!rows.length) return null;
+    if (rows.length === 1) return String(rows[0][field]);
+    const w = rows.reduce((a, d) => a + d.students, 0);
+    if (!w) return null;
+    return `≈${(rows.reduce((a, d) => a + (d[field] as number) * d.students, 0) / w).toFixed(1)}`;
+  };
+  const liveScore = weightedMean("avg_score");
+  const liveConfidence = weightedMean("avg_confidence");
+  const kpiStudents = isLive
+    ? `${analytics!.students_total.toLocaleString()} nafar`
+    : `${universityAnalyticsData.activeStudents.toLocaleString()} nafar`;
+  const kpiScore = isLive ? (liveScore ? `${liveScore} / 100` : "—") : `${universityAnalyticsData.averageSkillScore} / 100`;
+  const kpiConfidence = isLive ? (liveConfidence ? `${liveConfidence}%` : "—") : `${universityAnalyticsData.averageConfidence}%`;
+
+  // Per-tab data provenance shown in the page header
+  const tabStatus: DataStatus =
+    activeTab === "dashboard" || activeTab === "analytics" || activeTab === "curriculum" || activeTab === "levels"
+      ? analyticsStatus
+      : activeTab === "groups"
+      ? groupsStatus
+      : "demo";
+
+  const renderDirectionsAndLevels = () => (
+    <div className="summary-grid" style={{ marginBottom: "26px" }}>
+      {/* Direction analytics */}
+      <section className="card" style={{ padding: "26px" }}>
+        <div className="card-heading" style={{ marginBottom: "16px" }}>
+          <div>
+            <p className="card-kicker">FAKULTETLAR VA PILOT YO‘NALISHLARI</p>
+            <h2>Yo‘nalishlar kesimida natijadorlik</h2>
+          </div>
+          <span className="level-badge">{isLive ? `${directionViews.length} ta yo‘nalish` : "3 ta pilot yo‘nalish"}</span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {directionViews.length === 0 && (
+            <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}>Hozircha talabalar ma’lumotlari yo‘q.</p>
+          )}
+          {directionViews.map((item) => (
+            <div
+              key={item.key}
+              style={{
+                padding: "16px",
+                borderRadius: "10px",
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  marginBottom: "8px",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{item.name}</strong>
+                  <span style={{ fontSize: "13px", color: "var(--muted)", marginLeft: "8px" }}>({item.students} talaba)</span>
+                </div>
+                <strong style={{ fontSize: "15.5px", color: "var(--royal)" }}>
+                  {item.avgScore ?? "—"} ball · {item.avgConfidence !== null ? `${item.avgConfidence}%` : "—"} ishonch
+                </strong>
+              </div>
+
+              {item.courses && (
+                <div style={{ fontSize: "12.5px", color: "var(--muted)", marginBottom: "8px" }}>Kurslar: {item.courses}</div>
+              )}
+
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div className="progress-track" style={{ flex: 1, height: "8px", margin: 0 }}>
+                  <div
+                    style={{
+                      width: `${item.readinessPct ?? item.avgScore ?? 0}%`,
+                      height: "100%",
+                      borderRadius: "10px",
+                      background: "linear-gradient(90deg, var(--accent), var(--accent-400))",
+                    }}
+                  />
+                </div>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--navy)", width: "135px", textAlign: "right" }}>
+                  {item.readinessPct !== null
+                    ? `Bozorga tayyorlik: ${item.readinessPct}%`
+                    : `O‘rtacha ball: ${item.avgScore ?? "—"}`}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Level Distribution */}
+      <aside className="card" style={{ padding: "26px" }}>
+        <div className="card-heading" style={{ marginBottom: "16px" }}>
+          <div>
+            <p className="card-kicker">MALAKA IYERARXIYASI</p>
+            <h2>{isLive ? "L0–L5 Darajalar taqsimoti" : "L1–L5 Darajalar taqsimoti"}</h2>
+          </div>
+        </div>
+        <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "16px" }}>
+          {isLive
+            ? `Talabalarning eng yuqori ko‘nikma darajasi bo‘yicha taqsimlanishi (${levelTotal} nafar):`
+            : "Talabalarning amaliy ko‘nikma darajalari bo‘yicha taqsimlanishi:"}
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {levelViews.map((lvl) => (
+            <div key={lvl.level}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "4px" }}>
+                <strong>{lvl.level}</strong>
+                <span>
+                  {lvl.count} nafar ({lvl.pct})
+                </span>
+              </div>
+              <div className="progress-track" style={{ height: "6px", margin: 0 }}>
+                <div
+                  style={{
+                    width: lvl.pct,
+                    height: "100%",
+                    borderRadius: "10px",
+                    background: lvl.level.includes("L5")
+                      ? "#ec4899"
+                      : lvl.level.includes("L4")
+                      ? "var(--success-400)"
+                      : lvl.level.includes("L3")
+                      ? "var(--accent-400)"
+                      : lvl.level.includes("L2")
+                      ? "var(--warning-400)"
+                      : "var(--subtle)",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </aside>
+    </div>
+  );
+
+  const renderGapGrid = (variant: "compact" | "full") => {
+    if (gapViews.length === 0) {
+      return (
+        <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}>
+          Hozircha baholangan ko‘nikmalar yo‘q — "oq dog‘lar" aniqlanmadi.
+        </p>
+      );
+    }
+    const full = variant === "full";
+    return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(auto-fit, minmax(${full ? 340 : 320}px, 1fr))`,
+          gap: "16px",
+        }}
+      >
+        {gapViews.map((gap) => (
+          <div
+            key={gap.key}
+            className={full ? "card" : undefined}
+            style={{
+              padding: full ? "22px" : "20px",
+              borderRadius: "12px",
+              border: full && gap.severe ? "1px solid var(--danger-ring)" : "1px solid var(--border)",
+              background: gap.severe ? "var(--danger-soft)" : "var(--surface-2)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: full ? "10px" : "8px",
+                gap: "8px",
+              }}
+            >
+              <span style={{ fontSize: "12px", fontWeight: 800, color: full && gap.severe ? "var(--danger-fg)" : "var(--muted)" }}>
+                {gap.direction}
+              </span>
+              <span
+                style={{
+                  padding: full ? "4px 10px" : "4px 9px",
+                  borderRadius: "12px",
+                  background: gap.severe ? "var(--danger-soft)" : "var(--surface-3)",
+                  color: gap.severe ? "var(--danger)" : "var(--text-3)",
+                  fontSize: "12.5px",
+                  fontWeight: 800,
+                }}
+              >
+                {gap.badge}
+              </span>
+            </div>
+            <h3 style={{ margin: "4px 0 8px", fontSize: full ? "18px" : "17px", color: "var(--navy)" }}>{gap.skill}</h3>
+            {gap.meta && (
+              <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: full ? "1.6" : "1.5" }}>{gap.meta}</p>
+            )}
+            {gap.recommendation && (
+              <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: full ? "1.6" : "1.5" }}>
+                <strong>{full ? "AI Tavsiyasi:" : "Tavsiya:"}</strong> {gap.recommendation}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderGapsSection = () => (
+    <section className="card" style={{ padding: "26px" }}>
+      <div className="card-heading" style={{ marginBottom: "18px" }}>
+        <div>
+          <p className="card-kicker">O‘QUV DASTURI TAVSIYALARI</p>
+          <h2>Aniqlangan "Oq dog‘lar" va o‘quv rejasi yangilanishlari</h2>
+        </div>
+        <span className="level-badge">{isLive ? "Eng past o‘rtacha ballli ko‘nikmalar" : "AI Tahlil natijasi"}</span>
+      </div>
+      {renderGapGrid("compact")}
+    </section>
+  );
+
+  const renderLiveGroupsPanel = () => {
+    if (!groupsLive) return null;
+    return (
+      <div className="card" style={{ padding: "22px", marginBottom: "22px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "14px",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          <div>
+            <p className="card-kicker">SERVERDAGI GURUHLAR · KO‘NIKMA TAHLILI</p>
+            <h3 style={{ margin: "4px 0 0", fontSize: "17px", color: "var(--navy)" }}>
+              Tashkilotingiz guruhlari ({liveGroups!.length} ta)
+            </h3>
+          </div>
+          <DataBadge status="live" />
+        </div>
+        {liveGroups!.length === 0 ? (
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}>Hozircha guruhlarga biriktirilgan talabalar yo‘q.</p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
+            {liveGroups!.map((g) => {
+              const active = selectedLiveGroup === g.group_id;
+              return (
+                <button
+                  key={g.group_id}
+                  onClick={() => openLiveGroup(g.group_id)}
+                  style={{
+                    textAlign: "left",
+                    padding: "14px",
+                    borderRadius: "10px",
+                    background: active ? "var(--accent-soft)" : "var(--surface-2)",
+                    border: active ? "1px solid var(--royal)" : "1px solid var(--border)",
+                    cursor: "pointer",
+                    font: "inherit",
+                  }}
+                >
+                  <strong style={{ fontSize: "15px", color: "var(--navy)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <Icon name="users" size={15} /> {g.group_id}
+                  </strong>
+                  <div style={{ fontSize: "12.5px", color: "var(--muted)", marginTop: "6px" }}>
+                    Talabalar: <strong style={{ color: "var(--navy)" }}>{g.students} nafar</strong>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--royal)", marginTop: "6px", fontWeight: 700 }}>
+                    {active ? "Tahlilni yopish ↑" : "Ko‘nikma tahlili →"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedLiveGroup && (
+          <div style={{ marginTop: "18px", borderTop: "1px solid var(--border)", paddingTop: "16px" }}>
+            {groupGapsLoading && <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}>Yuklanmoqda…</p>}
+            {groupGapsError && <p style={{ margin: 0, fontSize: "13.5px", color: "var(--danger)" }}>{groupGapsError}</p>}
+            {groupGaps && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "18px" }}>
+                <div>
+                  <h4 style={{ margin: "0 0 10px", fontSize: "14.5px", color: "var(--navy)" }}>
+                    Ko‘nikmalar bo‘yicha bo‘shliqlar ({groupGaps.group_id})
+                  </h4>
+                  {groupGaps.skills.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>Bu guruhda hali baholangan ko‘nikmalar yo‘q.</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {groupGaps.skills.map((sk) => (
+                        <div
+                          key={sk.skill.id}
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: "8px",
+                            background: sk.gap_pct > 0 ? "var(--danger-soft)" : "var(--surface-2)",
+                            border: "1px solid var(--border)",
+                            fontSize: "13px",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                            <strong style={{ color: "var(--navy)" }}>{sk.skill.name}</strong>
+                            <span style={{ fontWeight: 700, color: "var(--royal)" }}>{sk.avg_score} ball</span>
+                          </div>
+                          <div style={{ color: "var(--muted)", fontSize: "12px", marginTop: "3px" }}>
+                            {sk.skill.code} · {sk.students_scored} nafar baholangan · {sk.gap_pct}% 70 balldan past
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h4 style={{ margin: "0 0 10px", fontSize: "14.5px", color: "var(--navy)" }}>
+                    Talabalar ({groupGaps.students_total} nafar)
+                  </h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {groupGaps.students.map((st) => (
+                      <div
+                        key={st.id}
+                        style={{
+                          padding: "10px 12px",
+                          borderRadius: "8px",
+                          background: "var(--surface-2)",
+                          border: "1px solid var(--border)",
+                          fontSize: "13px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "8px",
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <strong style={{ color: "var(--navy)" }}>{st.name}</strong>
+                          <div style={{ color: "var(--muted)", fontSize: "12px", overflow: "hidden", textOverflow: "ellipsis" }}>{st.email}</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <span className="level-badge">{st.level}</span>
+                          <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "3px" }}>
+                            {st.skills_scored > 0 ? `${st.score} ball · ${st.skills_scored} ko‘nikma` : "Hali baholanmagan"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="page" style={{ maxWidth: "1280px", margin: "0 auto", paddingBottom: "60px" }}>
       {/* Page Header */}
@@ -986,7 +1595,7 @@ export default function UniversityDashboard({
                 fontSize: "11px",
                 fontWeight: 800,
                 color: "var(--royal)",
-                background: "rgba(79, 70, 229, 0.1)",
+                background: "rgba(30, 58, 138, 0.1)",
                 padding: "3px 8px",
                 borderRadius: "5px",
                 letterSpacing: "0.08em",
@@ -994,29 +1603,10 @@ export default function UniversityDashboard({
             >
               BSTU AKADEMIK DEKANATI · UNIVERSITY SUITE
             </span>
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "var(--success-400)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              <span
-                style={{
-                  width: "6px",
-                  height: "6px",
-                  borderRadius: "50%",
-                  background: "var(--success-400)",
-                }}
-              />
-              Baza sinxron
-            </span>
+            <DataBadge status={tabStatus} />
           </div>
           <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--navy)", margin: "0 0 6px" }}>
-            {universityAnalyticsData.universityName}
+            {orgName ?? universityAnalyticsData.universityName}
           </h1>
           <p className="subtitle" style={{ margin: 0, fontSize: "14.5px", color: "var(--muted)" }}>
             O‘qituvchilar, akademik guruhlar, talabalar kontingenti va ta’lim natijadorligini yagona markazdan boshqarish.
@@ -1062,7 +1652,7 @@ export default function UniversityDashboard({
             className="card"
             style={{
               padding: "26px",
-              background: "linear-gradient(135deg, var(--ink-2) 0%, var(--ink) 100%)",
+              background: "linear-gradient(160deg, #1e3a8a 0%, #0f2744 100%)",
               color: "var(--surface-2)",
               borderRadius: "14px",
               marginBottom: "24px",
@@ -1182,8 +1772,8 @@ export default function UniversityDashboard({
               {/* Step 3 */}
               <div
                 style={{
-                  background: "rgba(79, 70, 229, 0.12)",
-                  border: "1px solid rgba(99, 102, 241, 0.35)",
+                  background: "rgba(30, 58, 138, 0.12)",
+                  border: "1px solid rgba(30, 58, 138, 0.35)",
                   borderRadius: "10px",
                   padding: "16px",
                 }}
@@ -1253,7 +1843,7 @@ export default function UniversityDashboard({
 
             <div className="card" style={{ padding: "22px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(99, 102, 241, 0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(30, 58, 138, 0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon name="refresh" size={20} />
                 </div>
                 <div>
@@ -1409,11 +1999,11 @@ export default function UniversityDashboard({
                             style={{
                               padding: "3px 8px",
                               borderRadius: "6px",
-                              background: "rgba(79, 70, 229, 0.1)",
+                              background: "rgba(30, 58, 138, 0.1)",
                               color: "var(--royal)",
                               fontSize: "12px",
                               fontWeight: 700,
-                              border: "1px solid rgba(79, 70, 229, 0.2)",
+                              border: "1px solid rgba(30, 58, 138, 0.2)",
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "4px",
@@ -1479,6 +2069,15 @@ export default function UniversityDashboard({
               <Icon name="users" size={16} /> Yangi guruh ochish
             </button>
           </div>
+
+          {renderLiveGroupsPanel()}
+
+          {groupsLive && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 12px" }}>
+              <h3 style={{ margin: 0, fontSize: "15px", color: "var(--navy)" }}>Mahalliy guruhlar ro‘yxati (kurator biriktiruvi)</h3>
+              <DataBadge status="demo" />
+            </div>
+          )}
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
             {groups.map((g) => (
@@ -1959,7 +2558,7 @@ export default function UniversityDashboard({
               </div>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Faol talabalar</span>
-                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{universityAnalyticsData.activeStudents.toLocaleString()} nafar</strong>
+                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{kpiStudents}</strong>
               </div>
             </div>
             <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
@@ -1968,7 +2567,7 @@ export default function UniversityDashboard({
               </div>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>O‘rtacha ball</span>
-                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{universityAnalyticsData.averageSkillScore} / 100</strong>
+                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{kpiScore}</strong>
               </div>
             </div>
             <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
@@ -1977,7 +2576,7 @@ export default function UniversityDashboard({
               </div>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Ishonchlilik</span>
-                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{universityAnalyticsData.averageConfidence}%</strong>
+                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{kpiConfidence}</strong>
               </div>
             </div>
             <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
@@ -1985,8 +2584,8 @@ export default function UniversityDashboard({
                 <Icon name="award" />
               </div>
               <div style={{ minWidth: 0 }}>
-                <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>OB 3.0 Sertifikatlari</span>
-                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{universityAnalyticsData.verifiedCredentialsIssued} ta</strong>
+                <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{isLive ? "Ochiq shubhali holatlar" : "OB 3.0 Sertifikatlari"}</span>
+                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{isLive ? `${analytics!.open_flags} ta` : `${universityAnalyticsData.verifiedCredentialsIssued} ta`}</strong>
               </div>
             </div>
             <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
@@ -1995,7 +2594,7 @@ export default function UniversityDashboard({
               </div>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>O‘qituvchilar</span>
-                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{teachers.length} nafar (faol)</strong>
+                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{teachers.length} nafar{isLive ? " (demo)" : " (faol)"}</strong>
               </div>
             </div>
             <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
@@ -2004,16 +2603,20 @@ export default function UniversityDashboard({
               </div>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: "11.5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Akademik guruhlar</span>
-                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{groups.length} ta guruh</strong>
+                <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{groupsLive ? liveGroups!.length : groups.length} ta guruh</strong>
               </div>
             </div>
           </div>
 
-          {/* Live Academic Groups & Curators Status Overview */}
+          {groupsLive ? (
+            renderLiveGroupsPanel()
+          ) : (
+          <>
+          {/* Academic Groups & Curators Status Overview (demo / local data) */}
           <div className="card" style={{ padding: "22px", marginBottom: "26px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
               <div>
-                <p className="card-kicker">JONLI MONITORING · GURUHLAR VA BIRIKTIRUVLAR HOLATI</p>
+                <p className="card-kicker">GURUHLAR VA BIRIKTIRUVLAR HOLATI</p>
                 <h3 style={{ margin: "4px 0 0", fontSize: "17px", color: "var(--navy)" }}>
                   Akademik Guruhlar va Mas’ul O‘qituvchilar Holati
                 </h3>
@@ -2067,152 +2670,13 @@ export default function UniversityDashboard({
               ))}
             </div>
           </div>
+          </>
+          )}
 
           {/* Directions comparison & Level distribution */}
-          <div className="summary-grid" style={{ marginBottom: "26px" }}>
-            {/* Direction analytics */}
-            <section className="card" style={{ padding: "26px" }}>
-              <div className="card-heading" style={{ marginBottom: "16px" }}>
-                <div>
-                  <p className="card-kicker">FAKULTETLAR VA PILOT YO‘NALISHLARI</p>
-                  <h2>Yo‘nalishlar kesimida natijadorlik</h2>
-                </div>
-                <span className="level-badge">3 ta pilot yo‘nalish</span>
-              </div>
+          {renderDirectionsAndLevels()}
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {universityAnalyticsData.directionStats.map((item) => (
-                  <div
-                    key={item.name}
-                    style={{
-                      padding: "16px",
-                      borderRadius: "10px",
-                      background: "var(--surface-2)",
-                      border: "1px solid var(--border)",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
-                      <div>
-                        <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{item.name}</strong>
-                        <span style={{ fontSize: "13px", color: "var(--muted)", marginLeft: "8px" }}>
-                          ({item.students} talaba)
-                        </span>
-                      </div>
-                      <strong style={{ fontSize: "15.5px", color: "var(--royal)" }}>
-                        {item.avgScore} ball · {item.avgConfidence}% ishonch
-                      </strong>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div className="progress-track" style={{ flex: 1, height: "8px", margin: 0 }}>
-                        <div
-                          style={{
-                            width: `${item.readinessPct}%`,
-                            height: "100%",
-                            borderRadius: "10px",
-                            background: "linear-gradient(90deg, var(--accent), var(--accent-400))",
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--navy)", width: "135px", textAlign: "right" }}>
-                        Bozorga tayyorlik: {item.readinessPct}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Level Distribution */}
-            <aside className="card" style={{ padding: "26px" }}>
-              <div className="card-heading" style={{ marginBottom: "16px" }}>
-                <div>
-                  <p className="card-kicker">MALAKA IYERARXIYASI</p>
-                  <h2>L1–L5 Darajalar taqsimoti</h2>
-                </div>
-              </div>
-              <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "16px" }}>
-                Talabalarning amaliy ko‘nikma darajalari bo‘yicha taqsimlanishi:
-              </p>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {universityAnalyticsData.levelDistribution.map((lvl) => (
-                  <div key={lvl.level}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "4px" }}>
-                      <strong>{lvl.level}</strong>
-                      <span>
-                        {lvl.count} nafar ({lvl.pct})
-                      </span>
-                    </div>
-                    <div className="progress-track" style={{ height: "6px", margin: 0 }}>
-                      <div
-                        style={{
-                          width: lvl.pct,
-                          height: "100%",
-                          borderRadius: "10px",
-                          background:
-                            lvl.level.includes("L5")
-                              ? "#ec4899"
-                              : lvl.level.includes("L4")
-                              ? "var(--success-400)"
-                              : lvl.level.includes("L3")
-                              ? "var(--accent-400)"
-                              : lvl.level.includes("L2")
-                              ? "var(--warning-400)"
-                              : "var(--subtle)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </aside>
-          </div>
-
-          {/* Curriculum White Spots */}
-          <section className="card" style={{ padding: "26px" }}>
-            <div className="card-heading" style={{ marginBottom: "18px" }}>
-              <div>
-                <p className="card-kicker">O‘QUV DASTURI TAVSIYALARI</p>
-                <h2>Aniqlangan "Oq dog‘lar" va o‘quv rejasi yangilanishlari</h2>
-              </div>
-              <span className="level-badge">AI Tahlil natijasi</span>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
-              {universityAnalyticsData.curriculumGaps.map((gap) => (
-                <div
-                  key={gap.skill}
-                  style={{
-                    padding: "20px",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border)",
-                    background: "var(--danger-soft)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "12px", fontWeight: 800, color: "var(--muted)" }}>{gap.direction}</span>
-                    <span
-                      style={{
-                        padding: "4px 9px",
-                        borderRadius: "12px",
-                        background: "var(--danger-soft)",
-                        color: "var(--danger)",
-                        fontSize: "12.5px",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {gap.shortfallPct} yetishmovchilik
-                    </span>
-                  </div>
-                  <h3 style={{ margin: "4px 0 8px", fontSize: "17px", color: "var(--navy)" }}>{gap.skill}</h3>
-                  <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.5" }}>
-                    <strong>Tavsiya:</strong> {gap.recommendation}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {renderGapsSection()}
         </div>
       )}
 
@@ -2237,40 +2701,7 @@ export default function UniversityDashboard({
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "16px" }}>
-            {universityAnalyticsData.curriculumGaps.map((gap) => (
-              <div
-                key={gap.skill}
-                className="card"
-                style={{
-                  padding: "22px",
-                  borderRadius: "12px",
-                  border: "1px solid var(--danger-ring)",
-                  background: "var(--danger-soft)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <span style={{ fontSize: "12px", fontWeight: 800, color: "var(--danger-fg)" }}>{gap.direction}</span>
-                  <span
-                    style={{
-                      padding: "4px 10px",
-                      borderRadius: "12px",
-                      background: "var(--danger-soft)",
-                      color: "var(--danger)",
-                      fontSize: "12.5px",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {gap.shortfallPct} yetishmovchilik
-                  </span>
-                </div>
-                <h3 style={{ margin: "4px 0 8px", fontSize: "18px", color: "var(--navy)" }}>{gap.skill}</h3>
-                <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.6" }}>
-                  <strong>AI Tavsiyasi:</strong> {gap.recommendation}
-                </p>
-              </div>
-            ))}
-          </div>
+          {renderGapGrid("full")}
         </div>
       )}
 
@@ -2288,105 +2719,7 @@ export default function UniversityDashboard({
             </div>
           </div>
 
-          <div className="summary-grid" style={{ marginBottom: "26px" }}>
-            {/* Direction analytics */}
-            <section className="card" style={{ padding: "26px" }}>
-              <div className="card-heading" style={{ marginBottom: "16px" }}>
-                <div>
-                  <p className="card-kicker">FAKULTETLAR VA PILOT YO‘NALISHLARI</p>
-                  <h2>Yo‘nalishlar kesimida natijadorlik</h2>
-                </div>
-                <span className="level-badge">3 ta pilot yo‘nalish</span>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {universityAnalyticsData.directionStats.map((item) => (
-                  <div
-                    key={item.name}
-                    style={{
-                      padding: "16px",
-                      borderRadius: "10px",
-                      background: "var(--surface-2)",
-                      border: "1px solid var(--border)",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "8px" }}>
-                      <div>
-                        <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{item.name}</strong>
-                        <span style={{ fontSize: "13px", color: "var(--muted)", marginLeft: "8px" }}>
-                          ({item.students} talaba)
-                        </span>
-                      </div>
-                      <strong style={{ fontSize: "15.5px", color: "var(--royal)" }}>
-                        {item.avgScore} ball · {item.avgConfidence}% ishonch
-                      </strong>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div className="progress-track" style={{ flex: 1, height: "8px", margin: 0 }}>
-                        <div
-                          style={{
-                            width: `${item.readinessPct}%`,
-                            height: "100%",
-                            borderRadius: "10px",
-                            background: "linear-gradient(90deg, var(--accent), var(--accent-400))",
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--navy)", width: "135px", textAlign: "right" }}>
-                        Bozorga tayyorlik: {item.readinessPct}%
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Level Distribution */}
-            <aside className="card" style={{ padding: "26px" }}>
-              <div className="card-heading" style={{ marginBottom: "16px" }}>
-                <div>
-                  <p className="card-kicker">MALAKA IYERARXIYASI</p>
-                  <h2>L1–L5 Darajalar taqsimoti</h2>
-                </div>
-              </div>
-              <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "16px" }}>
-                Talabalarning amaliy ko‘nikma darajalari bo‘yicha taqsimlanishi:
-              </p>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {universityAnalyticsData.levelDistribution.map((lvl) => (
-                  <div key={lvl.level}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "4px" }}>
-                      <strong>{lvl.level}</strong>
-                      <span>
-                        {lvl.count} nafar ({lvl.pct})
-                      </span>
-                    </div>
-                    <div className="progress-track" style={{ height: "6px", margin: 0 }}>
-                      <div
-                        style={{
-                          width: lvl.pct,
-                          height: "100%",
-                          borderRadius: "10px",
-                          background:
-                            lvl.level.includes("L5")
-                              ? "#ec4899"
-                              : lvl.level.includes("L4")
-                              ? "var(--success-400)"
-                              : lvl.level.includes("L3")
-                              ? "var(--accent-400)"
-                              : lvl.level.includes("L2")
-                              ? "var(--warning-400)"
-                              : "var(--subtle)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </aside>
-          </div>
+          {renderDirectionsAndLevels()}
         </div>
       )}
 
@@ -2687,8 +3020,8 @@ export default function UniversityDashboard({
                 style={{
                   padding: "12px",
                   borderRadius: "10px",
-                  background: "rgba(79, 70, 229, 0.06)",
-                  border: "1px solid rgba(79, 70, 229, 0.2)",
+                  background: "rgba(30, 58, 138, 0.06)",
+                  border: "1px solid rgba(30, 58, 138, 0.2)",
                 }}
               >
                 <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, color: "var(--royal)", marginBottom: "6px" }}>

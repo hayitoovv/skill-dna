@@ -34,6 +34,7 @@ cd ..
 
 echo -e "\n🚀 3. Backend va Nginx qayta ishga tushirilmoqda..."
 sudo systemctl restart skilldna-backend
+sudo systemctl restart skilldna-worker 2>/dev/null || true
 sudo systemctl reload nginx
 
 echo "=========================================================="

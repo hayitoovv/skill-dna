@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, JSON, DateTime, Enum as SQLEnum
+from sqlalchemy import Boolean, Column, String, ForeignKey, Integer, JSON, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
@@ -66,3 +66,14 @@ class Consent(BaseModel):
     revoked_at = Column(DateTime(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="consents")
+
+
+class UserMFA(BaseModel):
+    """TOTP second factor (section 13.1). Separate table so enabling it needs no change to `users`."""
+    __tablename__ = "user_mfa"
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False, index=True)
+    secret_encrypted = Column(String(500), nullable=False)
+    enabled = Column(Boolean, default=False, nullable=False)
+    last_used_step = Column(Integer, nullable=True)
+    recovery_hashes = Column(JSON, default=list)

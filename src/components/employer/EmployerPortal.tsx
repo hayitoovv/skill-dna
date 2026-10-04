@@ -1,50 +1,302 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Icon } from "../common/Icons";
+import type { IconName } from "../common/Icons";
 import { employerCandidates } from "../../data/ontology";
 import type { EmployerCandidate, DirectionCode } from "../../types";
+import { api, ApiError, hasSession } from "../../services/api";
+
+type DataMode = "loading" | "live" | "demo";
+
+interface LiveStrength {
+  skill: string;
+  name: string;
+  current: number;
+  needed: number;
+  score?: number;
+  confidence?: number;
+}
+
+interface LiveMatch {
+  id: string;
+  name: string;
+  direction: string | null;
+  course: string | null;
+  matchPct: number;
+  explanation?: { strongest?: string[]; main_gaps?: string[]; missing_must?: string[] };
+  gaps?: { skill: string; name: string }[];
+  strengths?: LiveStrength[];
+}
+
+interface LiveProfileSkill {
+  code: string;
+  name: string;
+  score: number | null;
+  confidence: number | null;
+  level: string | null;
+  layers: Record<string, number | null>;
+  evidence: { layer: string; title: string; verified_by: string; human_verified: boolean; date: string }[];
+}
+
+interface LiveProfile {
+  id: string;
+  name: string;
+  direction: string | null;
+  course: string | null;
+  skills: LiveProfileSkill[];
+  notice?: string;
+}
+
+/** One card's worth of data, built either from demo data or from a live match. */
+interface CardView {
+  id: string;
+  name: string;
+  directionName: string;
+  levelLabel: string | null;
+  matchScore: number;
+  matchReason: ReactNode;
+  topSkills: { name: string; score: number }[];
+  verifiedBadges: number | null;
+  demo: EmployerCandidate | null;
+}
+
+const DIRECTIONS: DirectionCode[] = ["software", "computer", "ai"];
+// Preferred pilot skill per direction; falls back to the first pilot skill the ontology returns.
+const PREFERRED_SKILL: Record<DirectionCode, string> = {
+  software: "SE-BACKEND",
+  computer: "CE-NET",
+  ai: "AI-ML",
+};
+const LAYER_COLORS: Record<string, string> = {
+  KNOW: "var(--accent)",
+  DO: "var(--success)",
+  ADAPT: "var(--violet)",
+  DEFEND: "var(--warning)",
+  PROVE: "var(--rose)",
+};
+const LAYERS = ["KNOW", "DO", "ADAPT", "DEFEND", "PROVE"];
+
+const fmt = (v: number | null | undefined) =>
+  v === null || v === undefined || Number.isNaN(v) ? "—" : String(Math.round(v));
+
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 3) || "?";
 
 export default function EmployerPortal() {
   const [selectedDirection, setSelectedDirection] = useState<DirectionCode | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [minScore, setMinScore] = useState(75);
   const [minConfidence, setMinConfidence] = useState(70);
-  const [selectedCandidate, setSelectedCandidate] = useState<EmployerCandidate | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<CardView | null>(null);
   const [invitedId, setInvitedId] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState<{ id: string; message: string } | null>(null);
 
-  const filteredCandidates = employerCandidates.filter((cand) => {
-    if (selectedDirection !== "all" && cand.direction !== selectedDirection) return false;
-    if (cand.overallScore < minScore) return false;
-    if (cand.confidence < minConfidence) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = cand.name.toLowerCase().includes(q);
-      const matchDir = cand.directionName.toLowerCase().includes(q);
-      const matchSkills = cand.topSkills.some((s) => s.name.toLowerCase().includes(q));
-      if (!matchName && !matchDir && !matchSkills) return false;
+  const [mode, setMode] = useState<DataMode>(() => (hasSession() ? "loading" : "demo"));
+  const [searching, setSearching] = useState(false);
+  const [liveMatches, setLiveMatches] = useState<LiveMatch[]>([]);
+  const [profile, setProfile] = useState<LiveProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const skillCache = useRef<Partial<Record<DirectionCode, string>>>({});
+  const requestSeq = useRef(0);
+  const liveFailed = useRef(!hasSession());
+
+  const pilotSkill = async (dir: DirectionCode): Promise<string> => {
+    const cached = skillCache.current[dir];
+    if (cached) return cached;
+    const skills = await api.getSkills(dir);
+    const preferred = skills.find((s) => s.code === PREFERRED_SKILL[dir]);
+    const code: string = preferred?.code ?? skills.find((s) => s.pilot)?.code ?? skills[0]?.code ?? PREFERRED_SKILL[dir];
+    skillCache.current[dir] = code;
+    return code;
+  };
+
+  // Live search: criteria from the direction's pilot skill + slider thresholds, then consenting matches (debounced).
+  useEffect(() => {
+    if (liveFailed.current) return;
+    const seq = ++requestSeq.current;
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const dirs = selectedDirection === "all" ? DIRECTIONS : [selectedDirection];
+        const perDirection = await Promise.all(
+          dirs.map(async (dir) => {
+            const code = await pilotSkill(dir);
+            const crit = await api.createCriteria({
+              job_title: `Talent search · ${dir} · ${code}`,
+              min_confidence: minConfidence,
+              skills: [{ skill_code: code, min_score: minScore, importance: 1, must: true }],
+            });
+            return (await api.getCriteriaMatches(crit.id)) as LiveMatch[];
+          })
+        );
+        if (seq !== requestSeq.current) return;
+        const byId = new Map<string, LiveMatch>();
+        for (const m of perDirection.flat()) {
+          const prev = byId.get(m.id);
+          if (!prev || m.matchPct > prev.matchPct) byId.set(m.id, m);
+        }
+        setLiveMatches([...byId.values()].sort((a, b) => b.matchPct - a.matchPct));
+        setMode("live");
+      } catch (err) {
+        if (seq !== requestSeq.current) return;
+        // 401/403 (e.g. non-employer via role switcher) or network failure: demo data for the rest of the session.
+        liveFailed.current = true;
+        setMode("demo");
+        if (!(err instanceof ApiError)) console.warn("Employer live search failed:", err);
+      } finally {
+        if (seq === requestSeq.current) setSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDirection, minScore, minConfidence]);
+
+  const isLive = mode === "live";
+  const q = searchQuery.trim().toLowerCase();
+
+  const filteredCandidates: CardView[] = useMemo(() => {
+    if (mode === "live") {
+      return liveMatches
+        .filter((m) => {
+          if (!q) return true;
+          return (
+            m.name.toLowerCase().includes(q) ||
+            (m.direction ?? "").toLowerCase().includes(q) ||
+            (m.strengths ?? []).some((s) => s.name.toLowerCase().includes(q))
+          );
+        })
+        .map((m) => {
+          const strongest = m.explanation?.strongest ?? [];
+          const gaps = m.explanation?.main_gaps ?? [];
+          const missing = m.explanation?.missing_must ?? [];
+          return {
+            id: m.id,
+            name: m.name,
+            directionName: m.direction ?? "—",
+            levelLabel: m.course,
+            matchScore: Math.round(m.matchPct),
+            matchReason: (
+              <>
+                <div>Kuchli tomonlar: {strongest.length > 0 ? strongest.join("; ") : "—"}</div>
+                {gaps.length > 0 && <div>Asosiy bo‘shliqlar: {gaps.join("; ")}</div>}
+                {missing.length > 0 && <div>Majburiy, lekin yetishmaydi: {missing.join(", ")}</div>}
+              </>
+            ),
+            topSkills: (m.strengths ?? []).map((s) => ({ name: s.name, score: Math.round(s.score ?? s.current) })),
+            verifiedBadges: null,
+            demo: null,
+          };
+        });
     }
-    return true;
-  });
+    return employerCandidates
+      .filter((cand) => {
+        if (selectedDirection !== "all" && cand.direction !== selectedDirection) return false;
+        if (cand.overallScore < minScore) return false;
+        if (cand.confidence < minConfidence) return false;
+        if (q) {
+          const matchName = cand.name.toLowerCase().includes(q);
+          const matchDir = cand.directionName.toLowerCase().includes(q);
+          const matchSkills = cand.topSkills.some((s) => s.name.toLowerCase().includes(q));
+          if (!matchName && !matchDir && !matchSkills) return false;
+        }
+        return true;
+      })
+      .map((cand) => ({
+        id: cand.id,
+        name: cand.name,
+        directionName: cand.directionName,
+        levelLabel: cand.level,
+        matchScore: cand.matchScore,
+        matchReason: cand.matchReason,
+        topSkills: cand.topSkills,
+        verifiedBadges: cand.verifiedBadges,
+        demo: cand,
+      }));
+  }, [mode, liveMatches, q, selectedDirection, minScore, minConfidence]);
 
-  const handleInvite = (cand: EmployerCandidate) => {
+  const openEvidence = async (cand: CardView) => {
+    setSelectedCandidate(cand);
+    setProfile(null);
+    setProfileError(null);
+    if (cand.demo) return;
+    setProfileLoading(true);
+    try {
+      setProfile((await api.getCandidate(cand.id)) as LiveProfile);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Dalillarni yuklab bo‘lmadi");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleInvite = async (cand: CardView) => {
+    setInviteError(null);
+    if (!cand.demo) {
+      try {
+        await api.inviteCandidate(cand.id);
+      } catch (err) {
+        setInviteError({ id: cand.id, message: err instanceof Error ? err.message : "Taklif yuborilmadi" });
+        setTimeout(() => setInviteError(null), 4000);
+        return;
+      }
+    }
     setInvitedId(cand.id);
     setTimeout(() => {
       setInvitedId(null);
     }, 3000);
   };
 
-  const directionOptions: { key: DirectionCode | "all"; label: string; icon: any } = [
+  const directionOptions: { key: DirectionCode | "all"; label: string; icon: IconName }[] = [
     { key: "all", label: "Barcha yo‘nalishlar", icon: "grid" },
     { key: "software", label: "Dasturiy injiniring", icon: "code" },
     { key: "computer", label: "Kompyuter injiniringi", icon: "cpu" },
     { key: "ai", label: "Sun’iy intellekt", icon: "sparkles" },
-  ] as const;
+  ];
+
+  const humanVerifiedCount = profile
+    ? profile.skills.reduce((acc, sk) => acc + sk.evidence.filter((e) => e.human_verified).length, 0)
+    : 0;
 
   return (
     <div className="page">
       {/* Top Welcome & Header */}
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">ISH BERUVCHI PANELI · TALENT SEARCH</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <p className="eyebrow" style={{ margin: 0 }}>ISH BERUVCHI PANELI · TALENT SEARCH</p>
+            <span
+              title={
+                isLive
+                  ? "Natijalar backenddan: faqat profilini ulashishga rozilik bergan talabalar"
+                  : mode === "loading"
+                    ? "Backendga ulanilmoqda"
+                    : "Backend mavjud emas yoki ish beruvchi sifatida kirilmagan — namunaviy ma’lumot"
+              }
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "3px 9px",
+                borderRadius: "20px",
+                fontSize: "11px",
+                fontWeight: 700,
+                background: isLive ? "var(--success-soft)" : "var(--surface-3)",
+                color: isLive ? "var(--success)" : "var(--muted)",
+                border: isLive ? "1px solid var(--success-ring)" : "1px solid var(--border)",
+              }}
+            >
+              {isLive && <span className="live-pulse-indicator" />}
+              {mode === "loading" ? "Yuklanmoqda…" : isLive ? "Jonli ma’lumot" : "Demo ma’lumot"}
+              {isLive && searching && <span style={{ fontWeight: 500 }}>· yangilanmoqda</span>}
+            </span>
+          </div>
           <h1>Tasdiqlangan iqtidorlarni qidirish</h1>
           <p className="subtitle">
             Rezyumega emas, 5 qatlamli tekshirilgan dalillar (Evidence Graph)ga asoslangan ishonchli saralash.
@@ -336,15 +588,31 @@ export default function EmployerPortal() {
         )}
       </div>
 
-      {filteredCandidates.length === 0 ? (
+      {mode === "loading" ? (
         <div className="card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--muted)" }}>
           <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "var(--surface-3)", color: "var(--muted)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
-            <Icon name="search" size={24} />
+            <Icon name="refresh" size={24} />
+          </div>
+          <h3 style={{ margin: "0 0 6px", color: "var(--navy)", fontSize: "17px" }}>Nomzodlar qidirilmoqda…</h3>
+          <p style={{ margin: 0, fontSize: "13.5px" }}>Mezonlar bo‘yicha tasdiqlangan profillar tekshirilmoqda.</p>
+        </div>
+      ) : filteredCandidates.length === 0 ? (
+        <div className="card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--muted)" }}>
+          <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "var(--surface-3)", color: "var(--muted)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+            <Icon name={isLive && liveMatches.length === 0 ? "lock" : "search"} size={24} />
           </div>
           <h3 style={{ margin: "0 0 6px", color: "var(--navy)", fontSize: "17px" }}>Mos nomzod topilmadi</h3>
-          <p style={{ margin: 0, fontSize: "13.5px", maxWidth: "420px", marginLeft: "auto", marginRight: "auto" }}>
-            Qidiruv mezonlarini yoki ball chegaralarini biroz pasaytirib ko‘ring.
-          </p>
+          {isLive && liveMatches.length === 0 ? (
+            <p style={{ margin: 0, fontSize: "13.5px", maxWidth: "480px", marginLeft: "auto", marginRight: "auto" }}>
+              Bu yerda faqat o‘z profilini ish beruvchilar bilan ulashishga rozilik bergan talabalar ko‘rinadi
+              (maxfiylik qoidasi). Hozircha bu mezonlarga mos va rozilik bergan nomzod yo‘q — ball yoki ishonchlilik
+              chegarasini pasaytirib ko‘ring.
+            </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: "13.5px", maxWidth: "420px", marginLeft: "auto", marginRight: "auto" }}>
+              Qidiruv mezonlarini yoki ball chegaralarini biroz pasaytirib ko‘ring.
+            </p>
+          )}
         </div>
       ) : (
         <div className={`candidates-grid ${filteredCandidates.length === 1 ? "single-item" : ""}`}>
@@ -359,7 +627,7 @@ export default function EmployerPortal() {
                       height: "48px",
                       minWidth: "48px",
                       borderRadius: "14px",
-                      background: "linear-gradient(135deg, var(--ink), var(--ink-2))",
+                      background: "linear-gradient(160deg, #2b4fa8, #1e3a8a 45%, #0f2744)",
                       color: "#ffffff",
                       display: "grid",
                       placeItems: "center",
@@ -369,28 +637,27 @@ export default function EmployerPortal() {
                       border: "1.5px solid rgba(255, 255, 255, 0.2)",
                     }}
                   >
-                    {cand.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
+                    {initials(cand.name)}
                   </div>
                   <div>
                     <h3 style={{ margin: 0, fontSize: "17.5px", fontWeight: 700, color: "var(--navy)" }}>{cand.name}</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: "7px", marginTop: "3px" }}>
                       <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 500 }}>{cand.directionName}</span>
-                      <span
-                        style={{
-                          padding: "2px 8px",
-                          borderRadius: "6px",
-                          background: "var(--accent-soft)",
-                          color: "var(--royal)",
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          border: "1px solid var(--accent-ring)",
-                        }}
-                      >
-                        {cand.level}
-                      </span>
+                      {cand.levelLabel && (
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "6px",
+                            background: "var(--accent-soft)",
+                            color: "var(--royal)",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            border: "1px solid var(--accent-ring)",
+                          }}
+                        >
+                          {cand.levelLabel}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -475,32 +742,39 @@ export default function EmployerPortal() {
                       {sk.name}: <strong style={{ color: "var(--royal)" }}>{sk.score}</strong>
                     </span>
                   ))}
-                  <span
-                    style={{
-                      padding: "5px 10px",
-                      borderRadius: "8px",
-                      background: "var(--warning-soft)",
-                      color: "var(--warning-fg)",
-                      fontSize: "11.5px",
-                      fontWeight: 700,
-                      border: "1px solid var(--warning-ring)",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "5px",
-                    }}
-                  >
-                    <Icon name="award" size={13} />
-                    {cand.verifiedBadges} ta OB 3.0 sertifikat
-                  </span>
+                  {cand.topSkills.length === 0 && <span style={{ fontSize: "12px", color: "var(--muted)" }}>—</span>}
+                  {cand.verifiedBadges !== null && (
+                    <span
+                      style={{
+                        padding: "5px 10px",
+                        borderRadius: "8px",
+                        background: "var(--warning-soft)",
+                        color: "var(--warning-fg)",
+                        fontSize: "11.5px",
+                        fontWeight: 700,
+                        border: "1px solid var(--warning-ring)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                      }}
+                    >
+                      <Icon name="award" size={13} />
+                      {cand.verifiedBadges} ta OB 3.0 sertifikat
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {inviteError?.id === cand.id && (
+                <div style={{ marginBottom: "10px", fontSize: "12px", color: "var(--rose)", fontWeight: 600 }}>{inviteError.message}</div>
+              )}
 
               {/* Actions Row (Both buttons perfectly aligned on the same row with equal height) */}
               <div className="candidate-actions-row">
                 <button
                   type="button"
                   className="candidate-evidence-btn"
-                  onClick={() => setSelectedCandidate(cand)}
+                  onClick={() => openEvidence(cand)}
                 >
                   <Icon name="shieldCheck" size={16} />
                   <span>Dalillarni ko‘rish</span>
@@ -540,7 +814,7 @@ export default function EmployerPortal() {
             <button className="modal-close" onClick={() => setSelectedCandidate(null)}>
               <Icon name="close" />
             </button>
-            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, var(--ink), var(--ink-2))", color: "white" }}>
+            <div className="modal-symbol" style={{ background: "linear-gradient(160deg, #2b4fa8, #1e3a8a 45%, #0f2744)", color: "white" }}>
               <Icon name="shieldCheck" size={30} />
             </div>
             <p className="eyebrow" style={{ color: "var(--royal)" }}>VERIFIED CANDIDATE EVIDENCE · OB 3.0</p>
@@ -549,6 +823,91 @@ export default function EmployerPortal() {
               Nomzod tomonidan berilgan rasmiy rozilik (Consent) asosida ochiqlangan tekshirilgan ko‘nikmalar dalillari.
             </p>
 
+            {!selectedCandidate.demo ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left", marginBottom: "22px", maxHeight: "52vh", overflowY: "auto" }}>
+                {profileLoading && (
+                  <div style={{ padding: "18px", textAlign: "center", fontSize: "13px", color: "var(--muted)" }}>Dalillar yuklanmoqda…</div>
+                )}
+                {profileError && (
+                  <div style={{ padding: "13px 15px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", fontSize: "12.5px", color: "var(--rose)", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Icon name="alertTriangle" size={18} />
+                    <span>{profileError}</span>
+                  </div>
+                )}
+                {profile && (
+                  <>
+                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+                      {profile.direction ?? "—"} · {profile.course ?? "—"}
+                    </div>
+                    {profile.skills.length === 0 && (
+                      <div style={{ padding: "14px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", fontSize: "13px", color: "var(--muted)" }}>
+                        Tasdiqlangan ko‘nikmalar hali mavjud emas.
+                      </div>
+                    )}
+                    {profile.skills.map((sk) => (
+                      <div key={sk.code} style={{ padding: "14px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", gap: "10px" }}>
+                          <div>
+                            <strong style={{ fontSize: "13.5px", color: "var(--navy)" }}>{sk.name}</strong>
+                            <div style={{ fontSize: "11.5px", color: "var(--muted)", marginTop: "2px" }}>
+                              {sk.code}
+                              {sk.level ? ` · ${sk.level}` : ""}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <span style={{ fontSize: "17px", fontWeight: 800, color: "var(--royal)" }}>{fmt(sk.score)}/100</span>
+                            <div style={{ fontSize: "11.5px", color: "var(--success)", fontWeight: 700 }}>{fmt(sk.confidence)}% Ishonchlilik</div>
+                          </div>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px", textAlign: "center" }}>
+                          {LAYERS.map((layer) => {
+                            const v = sk.layers?.[layer];
+                            return (
+                              <div key={layer} style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
+                                <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700 }}>{layer}</div>
+                                <strong style={{ fontSize: "13px", color: v === null || v === undefined ? "var(--muted)" : LAYER_COLORS[layer] }}>
+                                  {v === null || v === undefined ? "—" : `${fmt(v)}%`}
+                                </strong>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {sk.evidence.length > 0 && (
+                          <ul style={{ listStyle: "none", padding: 0, margin: "10px 0 0", display: "flex", flexDirection: "column", gap: "5px" }}>
+                            {sk.evidence.map((ev, i) => (
+                              <li key={`${ev.layer}-${i}`} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--text-2)" }}>
+                                <span style={{ minWidth: "52px", fontSize: "10px", fontWeight: 800, color: LAYER_COLORS[ev.layer] ?? "var(--muted)" }}>{ev.layer}</span>
+                                <span style={{ flex: 1 }}>{ev.title}</span>
+                                {ev.human_verified && (
+                                  <span title="Inson tomonidan tasdiqlangan" style={{ color: "var(--success)", display: "inline-flex" }}>
+                                    <Icon name="userCheck" size={13} />
+                                  </span>
+                                )}
+                                <span style={{ color: "var(--muted)", fontSize: "11px" }}>{ev.date}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                    <div style={{ padding: "13px 15px", borderRadius: "12px", background: "var(--success-soft)", border: "1px solid var(--success-ring)", fontSize: "12.5px", color: "var(--success-fg)", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <Icon name="checkCircle" size={18} />
+                      <span>
+                        <strong>Tasdiqlangan dalillar:</strong>{" "}
+                        {profile.skills.reduce((acc, sk) => acc + sk.evidence.length, 0)} ta, shundan {humanVerifiedCount} tasi inson
+                        tomonidan tekshirilgan.
+                      </span>
+                    </div>
+                    {profile.notice && (
+                      <div style={{ padding: "13px 15px", borderRadius: "12px", background: "var(--warning-soft)", border: "1px solid var(--warning-ring)", fontSize: "12.5px", color: "var(--warning-fg)", display: "flex", alignItems: "center", gap: "10px" }}>
+                        <Icon name="alertTriangle" size={18} />
+                        <span>{profile.notice}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left", marginBottom: "22px" }}>
               <div style={{ padding: "14px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
@@ -556,8 +915,8 @@ export default function EmployerPortal() {
                   <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>5 qatlamli tekshirilgan indeks</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--royal)" }}>{selectedCandidate.overallScore}/100</span>
-                  <div style={{ fontSize: "11.5px", color: "var(--success)", fontWeight: 700 }}>{selectedCandidate.confidence}% Ishonchlilik</div>
+                  <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--royal)" }}>{selectedCandidate.demo.overallScore}/100</span>
+                  <div style={{ fontSize: "11.5px", color: "var(--success)", fontWeight: 700 }}>{selectedCandidate.demo.confidence}% Ishonchlilik</div>
                 </div>
               </div>
 
@@ -565,7 +924,7 @@ export default function EmployerPortal() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <strong style={{ fontSize: "13.5px", color: "var(--navy)" }}>Qatlamlar bo‘yicha tekshiruv:</strong>
                   <span style={{ padding: "3px 8px", borderRadius: "6px", background: "var(--accent-soft)", color: "var(--royal)", fontSize: "11px", fontWeight: 800 }}>
-                    {selectedCandidate.level} MUTAXASSIS
+                    {selectedCandidate.demo.level} MUTAXASSIS
                   </span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px", textAlign: "center" }}>
@@ -599,6 +958,7 @@ export default function EmployerPortal() {
                 </span>
               </div>
             </div>
+            )}
 
             <div style={{ display: "flex", gap: "10px" }}>
               <button
@@ -614,7 +974,7 @@ export default function EmployerPortal() {
                 className="candidate-invite-btn"
                 style={{ flex: 1.5 }}
                 onClick={() => {
-                  handleInvite(selectedCandidate);
+                  void handleInvite(selectedCandidate);
                   setSelectedCandidate(null);
                 }}
               >

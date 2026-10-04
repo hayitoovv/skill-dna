@@ -7,9 +7,11 @@ import UniversityDashboard from "./components/university/UniversityDashboard";
 import ModeratorQueue from "./components/moderator/ModeratorQueue";
 import AuthScreen from "./components/auth/AuthScreen";
 import AssessmentModal from "./components/student/AssessmentModal";
+import SecurityModal from "./components/common/SecurityModal";
 import type { DirectionCode, Role, User } from "./types";
 import { demoUsers } from "./data/ontology";
-import { api } from "./services/api";
+import { api, hasSession } from "./services/api";
+import { LanguageSwitcher, useI18n } from "./i18n";
 
 const roleLabels: Record<Role, { title: string; badge: string; icon: any }> = {
   student: { title: "Talaba kabineti", badge: "STUDENT", icon: "dna" },
@@ -26,6 +28,7 @@ const directionLabels: Record<DirectionCode, string> = {
 };
 
 export default function App() {
+  const { t } = useI18n();
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem("skill_dna_user");
@@ -53,6 +56,7 @@ export default function App() {
   });
 
   const [roleSwitchFeedback, setRoleSwitchFeedback] = useState<string | null>(null);
+  const [securityOpen, setSecurityOpen] = useState(false);
 
   const [direction, setDirection] = useState<DirectionCode>(() => {
     try {
@@ -140,9 +144,8 @@ export default function App() {
       parsedUser = saved ? JSON.parse(saved) : null;
     } catch {}
 
-    const uid = parsedUser?.id || parsedUser?.email;
-    if (uid) {
-      api.getMe(uid)
+    if (parsedUser && hasSession()) {
+      api.getMe()
         .then((me) => {
           if (me && me.id && me.full_name) {
             // Check if user previously selected an explicit active role
@@ -205,12 +208,13 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    if (window.confirm("Hisobingizdan chiqishni tasdiqlaysizmi?")) {
+    if (window.confirm(t("shell.logoutConfirm"))) {
       setCurrentUser(null);
       setActiveRole("student");
       try {
         localStorage.removeItem("skill_dna_user");
         localStorage.removeItem("skill_dna_token");
+        localStorage.removeItem("skill_dna_refresh");
         localStorage.removeItem("skill_dna_page");
         localStorage.removeItem("skill_dna_active_role");
       } catch {}
@@ -245,16 +249,10 @@ export default function App() {
         localStorage.setItem("skill_dna_user", JSON.stringify(updated));
       } catch {}
 
-      // Informative security feedback toast
-      setRoleSwitchFeedback(`RBAC Xavfsizligi: Faol portal "${roleLabels[newRole].title}" ga o‘zgartirildi va sessiya sinxronlandi.`);
+      // The switcher only changes the view; roles are assigned by an administrator (section 2.3),
+      // so live data in another portal still follows the account's real permissions.
+      setRoleSwitchFeedback(t("shell.viewMode", { portal: t(`role.${newRole}`) }));
       setTimeout(() => setRoleSwitchFeedback(null), 4000);
-
-      // Persist role update to backend PostgreSQL via authenticated RBAC endpoint
-      try {
-        await api.updateMe(currentUser.id, { role: newRole });
-      } catch (err: any) {
-        console.warn("[RBAC] Rolni serverda sinxronlashda xatolik:", err?.message || err);
-      }
     }
   };
 
@@ -285,172 +283,172 @@ export default function App() {
 
         {/* Role Selector Card */}
         <div className="role-switcher">
-          <label htmlFor="role-select">Faol portal</label>
+          <label htmlFor="role-select">{t("shell.activePortal")}</label>
           <select
             id="role-select"
             value={role}
             onChange={(e) => handleRoleChange(e.target.value as Role)}
           >
-            <option value="student">Talaba (Student)</option>
-            <option value="teacher">O‘qituvchi (Teacher)</option>
-            <option value="employer">Ish beruvchi (Employer)</option>
-            <option value="university">Universitet Dekanati (Admin)</option>
-            <option value="moderator">Moderator (Integrity)</option>
+            <option value="student">{t("roleopt.student")}</option>
+            <option value="teacher">{t("roleopt.teacher")}</option>
+            <option value="employer">{t("roleopt.employer")}</option>
+            <option value="university">{t("roleopt.university")}</option>
+            <option value="moderator">{t("roleopt.moderator")}</option>
           </select>
         </div>
 
         {/* Navigation based on Role */}
         {role === "student" && (
           <nav className="main-nav" aria-label="Asosiy navigatsiya">
-            <div className="nav-label">TALABA PANELI</div>
+            <div className="nav-label">{t("nav.studentPanel")}</div>
             <button
               className={`nav-item ${activePage === "dashboard" ? "active" : ""}`}
               onClick={() => goTo("dashboard")}
             >
-              <Icon name="grid" /> Boshqaruv paneli
+              <Icon name="grid" /> {t("nav.dashboard")}
             </button>
             <button className={`nav-item ${activePage === "dna" ? "active" : ""}`} onClick={() => goTo("dna")}>
-              <Icon name="dna" /> Mening Skill DNA’m
+              <Icon name="dna" /> {t("nav.myDna")}
             </button>
             <button className={`nav-item ${activePage === "tasks" ? "active" : ""}`} onClick={() => goTo("tasks")}>
-              <Icon name="file" /> Topshiriqlar <span className="nav-pill">5</span>
+              <Icon name="file" /> {t("nav.tasks")} <span className="nav-pill">5</span>
             </button>
             <button className={`nav-item ${activePage === "career" ? "active" : ""}`} onClick={() => goTo("career")}>
-              <Icon name="briefcase" /> Karyera yo‘li
+              <Icon name="briefcase" /> {t("nav.career")}
             </button>
-            <div className="nav-label section">PROFIL & SOZLAMALAR</div>
+            <div className="nav-label section">{t("nav.profileSettings")}</div>
             <button
               className={`nav-item ${activePage === "certificates" ? "active" : ""}`}
               onClick={() => goTo("certificates")}
             >
-              <Icon name="award" /> Sertifikatlar (OB 3.0)
+              <Icon name="award" /> {t("nav.certificates")}
             </button>
             <button
               className={`nav-item ${activePage === "settings" ? "active" : ""}`}
               onClick={() => goTo("settings")}
             >
-              <Icon name="settings" /> Sozlamalar & Consent
+              <Icon name="settings" /> {t("nav.settings")}
             </button>
           </nav>
         )}
 
         {role === "teacher" && (
           <nav className="main-nav" aria-label="O‘qituvchi navigatsiyasi">
-            <div className="nav-label">O‘QITUVCHI MODULLARI</div>
+            <div className="nav-label">{t("nav.teacherModules")}</div>
             <button
               className={`nav-item ${teacherTab === "heatmap" ? "active" : ""}`}
               onClick={() => handleTeacherTabChange("heatmap")}
             >
-              <Icon name="users" /> Guruh Skill Heatmap
+              <Icon name="users" /> {t("nav.heatmap")}
             </button>
             <button
               className={`nav-item ${teacherTab === "queue" ? "active" : ""}`}
               onClick={() => handleTeacherTabChange("queue")}
             >
-              <Icon name="check" /> PROVE Tasdiqlash navbati
+              <Icon name="check" /> {t("nav.proveQueue")}
             </button>
             <button
               className={`nav-item ${teacherTab === "remedial" ? "active" : ""}`}
               onClick={() => handleTeacherTabChange("remedial")}
             >
-              <Icon name="code" /> Remedial Generator
+              <Icon name="code" /> {t("nav.remedial")}
             </button>
             <button
               className={`nav-item ${teacherTab === "viva" ? "active" : ""}`}
               onClick={() => handleTeacherTabChange("viva")}
             >
-              <Icon name="file" /> AI Viva natijalari
+              <Icon name="file" /> {t("nav.vivaResults")}
             </button>
           </nav>
         )}
 
         {role === "employer" && (
           <nav className="main-nav" aria-label="Ish beruvchi navigatsiyasi">
-            <div className="nav-label">ISH BERUVCHI</div>
+            <div className="nav-label">{t("nav.employer")}</div>
             <button className="nav-item active">
-              <Icon name="search" /> Nomzodlar qidiruvi
+              <Icon name="search" /> {t("nav.candidateSearch")}
             </button>
             <button className="nav-item">
-              <Icon name="shield" /> Verified Candidates
+              <Icon name="shield" /> {t("nav.verified")}
             </button>
             <button className="nav-item">
-              <Icon name="briefcase" /> Takliflar jurnali
+              <Icon name="briefcase" /> {t("nav.offers")}
             </button>
           </nav>
         )}
 
         {role === "university" && (
           <nav className="main-nav" aria-label="Universitet navigatsiyasi">
-            <div className="nav-label">ASOSIY DASHBOARD</div>
+            <div className="nav-label">{t("nav.mainDashboard")}</div>
             <button
               className={`nav-item ${univTab === "dashboard" || univTab === "analytics" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("dashboard")}
             >
-              <Icon name="grid" /> Boshqaruv paneli
+              <Icon name="grid" /> {t("nav.dashboard")}
             </button>
 
-            <div className="nav-label section">AKADEMIK BOSHQARUV</div>
+            <div className="nav-label section">{t("nav.academicMgmt")}</div>
             <button
               className={`nav-item ${univTab === "groups" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("groups")}
             >
-              <Icon name="users" /> Guruhlar & Biriktirish <span className="nav-pill">4</span>
+              <Icon name="users" /> {t("nav.groups")} <span className="nav-pill">4</span>
             </button>
             <button
               className={`nav-item ${univTab === "teachers" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("teachers")}
             >
-              <Icon name="user" /> O‘qituvchilar bazasi <span className="nav-pill">4</span>
+              <Icon name="user" /> {t("nav.teachers")} <span className="nav-pill">4</span>
             </button>
             <button
               className={`nav-item ${univTab === "students" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("students")}
             >
-              <Icon name="dna" /> Talabalar kontingenti <span className="nav-pill">6</span>
+              <Icon name="dna" /> {t("nav.students")} <span className="nav-pill">6</span>
             </button>
             <button
               className={`nav-item ${univTab === "workflow" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("workflow")}
             >
-              <Icon name="lightning" /> Tuzilma & Ketma-ketlik
+              <Icon name="lightning" /> {t("nav.workflow")}
             </button>
 
-            <div className="nav-label section">AKADEMIK TAHLIL</div>
+            <div className="nav-label section">{t("nav.academicAnalysis")}</div>
             <button
               className={`nav-item ${univTab === "curriculum" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("curriculum")}
             >
-              <Icon name="alert" /> O‘quv dasturi oq dog‘lari
+              <Icon name="alert" /> {t("nav.curriculum")}
             </button>
             <button
               className={`nav-item ${univTab === "levels" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("levels")}
             >
-              <Icon name="award" /> Malaka taqsimoti (L1–L5)
+              <Icon name="award" /> {t("nav.levels")}
             </button>
           </nav>
         )}
 
         {role === "moderator" && (
           <nav className="main-nav" aria-label="Moderator navigatsiyasi">
-            <div className="nav-label">HALOLLIK NAZORATI</div>
+            <div className="nav-label">{t("nav.integrity")}</div>
             <button
               className={`nav-item ${moderatorTab === "flags" ? "active" : ""}`}
               onClick={() => handleModeratorTabChange("flags")}
             >
-              <Icon name="shield" /> Bayroqlar navbati (Flags)
+              <Icon name="shield" /> {t("nav.flags")}
             </button>
             <button
               className={`nav-item ${moderatorTab === "transcripts" ? "active" : ""}`}
               onClick={() => handleModeratorTabChange("transcripts")}
             >
-              <Icon name="file" /> Viva Transkript tekshiruvi
+              <Icon name="file" /> {t("nav.transcripts")}
             </button>
             <button
               className={`nav-item ${moderatorTab === "rules" ? "active" : ""}`}
               onClick={() => handleModeratorTabChange("rules")}
             >
-              <Icon name="settings" /> Ontologiya & Rubrikalar
+              <Icon name="settings" /> {t("nav.ontology")}
             </button>
           </nav>
         )}
@@ -459,7 +457,7 @@ export default function App() {
         <div
           className="user-mini"
           onClick={() => goTo("settings")}
-          title="Profil va sozlamalarga o‘tish"
+          title={t("shell.profileHint")}
         >
           <div className="avatar">{currentUser.avatar}</div>
           <div>
@@ -513,20 +511,20 @@ export default function App() {
             <div className="top-title">
               <span>{displayOrg}</span>
               <span className="crumb-sep">/</span>
-              <strong>{currentRoleInfo.title}</strong>
+              <strong>{t(`role.${role}`)}</strong>
             </div>
 
             {/* 3 Pilot Directions Switcher for Students */}
             {role === "student" && (
               <div className="direction-switch">
-                <span>Yo‘nalish</span>
+                <span>{t("shell.direction")}</span>
                 <select
                   value={direction}
                   onChange={(e) => handleDirectionChange(e.target.value as DirectionCode)}
                 >
-                  <option value="software">{directionLabels.software}</option>
-                  <option value="computer">{directionLabels.computer}</option>
-                  <option value="ai">{directionLabels.ai}</option>
+                  <option value="software">{t("dir.software")}</option>
+                  <option value="computer">{t("dir.computer")}</option>
+                  <option value="ai">{t("dir.ai")}</option>
                 </select>
               </div>
             )}
@@ -539,10 +537,20 @@ export default function App() {
               title="RBAC Xavfsizlik protokoli: Sessiya JWT va server auditi orqali himoyalangan"
             >
               <i />
-              <span>Himoyalangan</span>
+              <span>{t("shell.protected")}</span>
             </div>
 
-            <button className="icon-button" aria-label="Bildirishnomalar">
+            <button
+              className="icon-button"
+              aria-label="Xavfsizlik: ikki bosqichli tasdiq"
+              title={t("shell.security")}
+              onClick={() => setSecurityOpen(true)}
+              style={["moderator", "university", "super_admin"].includes(currentUser.role) ? { color: "var(--success)" } : undefined}
+            >
+              <Icon name="shieldCheck" size={17} />
+            </button>
+            <LanguageSwitcher compact />
+            <button className="icon-button" aria-label={t("shell.notifications")}>
               <Icon name="bell" size={17} />
               <span className="notification-dot" />
             </button>
@@ -550,7 +558,7 @@ export default function App() {
 
             <button className="logout-button" onClick={handleLogout} title="Hisobdan chiqish">
               <Icon name="logout" size={14} />
-              <span className="hidden sm:inline">Chiqish</span>
+              <span className="hidden sm:inline">{t("shell.logout")}</span>
             </button>
           </div>
         </header>
@@ -594,13 +602,10 @@ export default function App() {
         onClose={() => setAssessmentOpen(false)}
         direction={direction}
         userId={currentUser?.id}
-        onAssessmentCompleted={(newScore) => {
-          if (currentUser) {
-            localStorage.setItem(`skill_dna_score_${currentUser.id}`, String(newScore));
-            setAssessmentScoreVersion((v) => v + 1);
-          }
-        }}
+        onAssessmentCompleted={() => setAssessmentScoreVersion((v) => v + 1)}
       />
+
+      {securityOpen && <SecurityModal onClose={() => setSecurityOpen(false)} />}
 
       {/* Role Switch Security Notification Toast */}
       {roleSwitchFeedback && (

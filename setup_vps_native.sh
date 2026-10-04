@@ -71,7 +71,7 @@ pip install -r requirements.txt
 cat << 'EOF' > "$PROJECT_DIR/backend/.env"
 PROJECT_NAME="SKILL DNA — AI Talent Intelligence Platform"
 API_V1_STR="/api/v1"
-SECRET_KEY="skilldna-production-secure-token-vps-2026"
+ENVIRONMENT="production"
 POSTGRES_SERVER="127.0.0.1"
 POSTGRES_PORT=5432
 POSTGRES_USER="postgres"
@@ -80,6 +80,10 @@ POSTGRES_DB="skill_dna"
 DATABASE_URL="postgresql+asyncpg://postgres:root123@127.0.0.1:5432/skill_dna"
 SYNC_DATABASE_URL="postgresql://postgres:root123@127.0.0.1:5432/skill_dna"
 EOF
+# Secrets are generated per server and never committed to the repository
+echo "SECRET_KEY=\"$(openssl rand -hex 32)\"" >> "$PROJECT_DIR/backend/.env"
+echo "CHALLENGE_SALT=\"$(openssl rand -hex 32)\"" >> "$PROJECT_DIR/backend/.env"
+chmod 600 "$PROJECT_DIR/backend/.env"
 
 # Baza sxemasini initsializatsiya qilish
 echo "PostgreSQL jadvallari yaratilmoqda..."

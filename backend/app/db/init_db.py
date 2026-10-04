@@ -11,6 +11,9 @@ from app.models import (
 )
 
 async def init_database():
+    from app.db.ontology_seed import seed_ontology
+    from app.db.recompute_scores import recompute_all
+
     print("Creating all database tables in PostgreSQL (skill_dna)...")
     async with engine.begin() as conn:
         # Create all tables defined in models
@@ -21,8 +24,11 @@ async def init_database():
         # Check if already seeded
         res = await session.execute(select(Direction))
         if res.scalars().first():
-            print("Database already initialized. Ensuring demo students have full 80-90% progress...")
+            print("Database already initialized. Updating ontology (section 9) and demo students...")
             await ensure_demo_students(session)
+            print("Ontology:", await seed_ontology(session))
+            await session.commit()
+            print("Recomputed scores:", await recompute_all())
             return
 
         print("Seeding initial data...")
@@ -325,6 +331,9 @@ async def init_database():
 
         await session.commit()
         await ensure_demo_students(session)
+        print("Ontology:", await seed_ontology(session))
+        await session.commit()
+        print("Recomputed scores:", await recompute_all())
         print("Database seeded with sample users, directions, skills, tasks, and scores!")
 
 async def ensure_demo_students(session: AsyncSession):
@@ -336,7 +345,7 @@ async def ensure_demo_students(session: AsyncSession):
     if not dir_software:
         return
 
-    sk_res = await session.execute(select(Skill).where(Skill.direction_id == dir_software.id).limit(1))
+    sk_res = await session.execute(select(Skill).where(Skill.code == "SE-BACKEND"))
     sk_backend = sk_res.scalars().first()
     if not sk_backend:
         return
@@ -395,40 +404,7 @@ async def ensure_demo_students(session: AsyncSession):
             ]
             session.add_all(consents)
 
-        # Skill score
-        sc_res = await session.execute(
-            select(SkillScore).where(SkillScore.user_id == user.id, SkillScore.skill_id == sk_backend.id)
-        )
-        score_record = sc_res.scalars().first()
-        if not score_record:
-            score_record = SkillScore(
-                user_id=user.id,
-                skill_id=sk_backend.id,
-                score=83.0,
-                confidence=81.0,
-                level="L3",
-                components={
-                    "KNOW": 88.0,
-                    "DO": 85.0,
-                    "ADAPT": 78.0,
-                    "DEFEND": 82.0,
-                    "PROVE": 80.0
-                },
-                computed_at=datetime.now(timezone.utc),
-                formula_version="2.0"
-            )
-            session.add(score_record)
-        else:
-            score_record.score = 83.0
-            score_record.confidence = 81.0
-            score_record.level = "L3"
-            score_record.components = {
-                "KNOW": 88.0,
-                "DO": 85.0,
-                "ADAPT": 78.0,
-                "DEFEND": 82.0,
-                "PROVE": 80.0
-            }
+        # Skill scores are derived from evidence by recompute_all() (section 4), never written directly
 
         # Evidence records
         ev_res = await session.execute(select(Evidence).where(Evidence.user_id == user.id))
@@ -479,7 +455,7 @@ async def ensure_demo_students(session: AsyncSession):
             session.add_all(evidences)
 
     await session.commit()
-    print("Demo students (Azizbek Sobirov, Shoxrux Mirzayev) verified with 80-90% progress!")
+    print("Demo students (Azizbek Sobirov, Shoxrux Mirzayev) ensured with demo evidence")
 
 if __name__ == "__main__":
     asyncio.run(init_database())

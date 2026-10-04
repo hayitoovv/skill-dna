@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.api import api_router
+from app.api.v1.endpoints.credentials import did_document
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -24,6 +25,9 @@ app.add_middleware(
 # Mount API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# did:web resolution needs the issuer document at the domain root (section 14)
+app.add_api_route("/.well-known/did.json", did_document, methods=["GET"], tags=["Credentials (OB 3.0)"])
+
 @app.get("/health", tags=["System"])
 async def health_check():
     return {
@@ -31,6 +35,7 @@ async def health_check():
         "platform": "SKILL DNA",
         "version": "2.0.0",
         "database": "PostgreSQL (skill_dna)",
+        "llm": "enabled" if settings.ANTHROPIC_API_KEY else "deterministic fallback",
     }
 
 @app.get("/", tags=["System"])

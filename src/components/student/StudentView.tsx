@@ -1,8 +1,9 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode, type CSSProperties } from "react";
 import { Icon, Logo } from "../common/Icons";
 import { directionsData, sampleTasksByDirection } from "../../data/ontology";
 import type { DirectionCode, LayerKey, LayerItem, User } from "../../types";
 import { api } from "../../services/api";
+import { printCredential } from "./certificatePrint";
 import CareerCoachModal from "./CareerCoachModal";
 import EvidenceGraphModal from "./EvidenceGraphModal";
 
@@ -171,6 +172,273 @@ function SkillChart({
   );
 }
 
+/** Small pill that tells the viewer whether a section shows backend data or bundled demo content. */
+function SourceBadge({ live, style }: { live: boolean; style?: CSSProperties }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "5px",
+        fontSize: "11px",
+        fontWeight: 800,
+        letterSpacing: "0.02em",
+        padding: "3px 10px",
+        borderRadius: "999px",
+        background: live ? "var(--success-soft)" : "var(--warning-soft)",
+        color: live ? "var(--success-fg)" : "var(--warning-fg)",
+        whiteSpace: "nowrap",
+        ...style,
+      }}
+    >
+      <i
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          background: live ? "var(--success-400)" : "var(--warning-400)",
+        }}
+      />
+      {live ? "Jonli ma’lumot" : "Demo ma’lumot"}
+    </span>
+  );
+}
+
+const LAYER_META: Record<string, { tone: string; icon: string; label: string }> = {
+  KNOW: { tone: "blue", icon: "file", label: "Nazariy bilim" },
+  DO: { tone: "emerald", icon: "code", label: "Amaliy ijro" },
+  ADAPT: { tone: "violet", icon: "settings", label: "Moslashuvchanlik" },
+  DEFEND: { tone: "amber", icon: "briefcase", label: "Yechimni himoya (Viva)" },
+  PROVE: { tone: "rose", icon: "award", label: "Real dalillar" },
+};
+const LAYER_ORDER: LayerKey[] = ["KNOW", "DO", "ADAPT", "DEFEND", "PROVE"];
+
+const CONFIDENCE_PARTS: { key: string; label: string; hint: string }[] = [
+  { key: "coverage", label: "Qamrov", hint: "Qatlamlarning qancha qismida dalil bor" },
+  { key: "consistency", label: "Barqarorlik", hint: "Natijalar bir-biriga qanchalik yaqin" },
+  { key: "volume", label: "Hajm", hint: "Dalillar soni yetarlimi" },
+  { key: "recency", label: "Yangilik", hint: "Dalillar qanchalik yaqinda olingan" },
+  { key: "verification", label: "Tasdiqlash", hint: "Inson (o‘qituvchi) tasdiqlagan ulush" },
+];
+
+const fmtDate = (iso?: string | null) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("uz-UZ", { year: "numeric", month: "short", day: "numeric" });
+};
+const round1 = (n: number | null | undefined) => (n == null ? null : Math.round(n * 10) / 10);
+const levelNum = (level?: string | null) => {
+  const m = /^L(\d)/.exec(level ?? "");
+  return m ? Number(m[1]) : 0;
+};
+
+/** "Nega?" — explains a live Skill Score via GET /skills/{id}/score. */
+function WhyScoreModal({ skillId, skillName, onClose }: { skillId: string | null; skillName: string; onClose: () => void }) {
+  const [data, setData] = useState<any>(null);
+  const [state, setState] = useState<"loading" | "live" | "offline">("loading");
+
+  useEffect(() => {
+    if (!skillId) {
+      setState("offline");
+      return;
+    }
+    setState("loading");
+    api
+      .getSkillScore(skillId)
+      .then((res) => {
+        setData(res);
+        setState("live");
+      })
+      .catch(() => setState("offline"));
+  }, [skillId]);
+
+  const parts: Record<string, number> = data?.confidence_parts ?? {};
+  const blockers: string[] = data?.level_blockers ?? [];
+  const flags: any[] = data?.open_flags ?? [];
+  const evidence: any[] = data?.evidence ?? [];
+
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{ maxWidth: "600px", width: "95%", maxHeight: "90vh", overflowY: "auto" }}
+      >
+        <button className="modal-close" aria-label="Yopish" onClick={onClose}>
+          <Icon name="close" />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+          <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-hover))", display: "grid", placeItems: "center", color: "#fff" }}>
+            <Icon name="search" size={20} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: "20px", margin: 0, display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              Nega shu ball? {state !== "loading" && <SourceBadge live={state === "live"} />}
+            </h2>
+            <span style={{ fontSize: "13px", color: "var(--muted)" }}>{data?.skill?.name ?? skillName} · formula {data?.formula_version ?? "—"}</span>
+          </div>
+        </div>
+
+        {state === "loading" && <div style={{ padding: "30px", textAlign: "center", color: "var(--muted)" }}>Tahlil yuklanmoqda...</div>}
+
+        {state === "offline" && (
+          <p style={{ fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>
+            Ballning batafsil tushuntirishi (Confidence tarkibi va daraja to‘siqlari) faqat serverga ulanganda ko‘rsatiladi. Hozir demo
+            profil ko‘rsatilmoqda, shuning uchun taxminiy raqamlar keltirilmaydi.
+          </p>
+        )}
+
+        {state === "live" && (
+          <>
+            <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
+              {[
+                ["Skill Score", `${round1(data.score) ?? 0}/100`],
+                ["Confidence", `${round1(data.confidence) ?? 0}%`],
+                ["Daraja", data.level ?? "L0"],
+              ].map(([k, v]) => (
+                <div key={k} style={{ flex: "1 1 120px", padding: "10px 14px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "10px" }}>
+                  <span style={{ fontSize: "12px", color: "var(--muted)", display: "block" }}>{k}</span>
+                  <strong style={{ fontSize: "17px", color: "var(--navy)" }}>{v}</strong>
+                </div>
+              ))}
+            </div>
+
+            <p className="card-kicker" style={{ marginBottom: "8px" }}>CONFIDENCE TARKIBI</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "9px", marginBottom: "16px" }}>
+              {CONFIDENCE_PARTS.map((p) => {
+                const v = parts[p.key];
+                const pct = v == null ? null : Math.round(v * 100);
+                return (
+                  <div key={p.key}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px" }}>
+                      <span>
+                        <strong style={{ color: "var(--navy)" }}>{p.label}</strong>{" "}
+                        <span style={{ color: "var(--muted)", fontSize: "12px" }}>· {p.hint}</span>
+                      </span>
+                      <b>{pct == null ? "—" : `${pct}%`}</b>
+                    </div>
+                    <div className="progress-track" style={{ marginTop: "4px" }}>
+                      <div className="progress-fill" style={{ width: `${pct ?? 0}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="card-kicker" style={{ marginBottom: "8px" }}>KEYINGI DARAJA TO‘SIQLARI</p>
+            {blockers.length === 0 ? (
+              <p style={{ fontSize: "13.5px", color: "var(--muted)", margin: "0 0 14px" }}>To‘siqlar yo‘q.</p>
+            ) : (
+              <ul style={{ margin: "0 0 14px", paddingLeft: "18px", fontSize: "13.5px", color: "var(--ink-2)", lineHeight: 1.6 }}>
+                {blockers.map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+              </ul>
+            )}
+
+            {flags.length > 0 && (
+              <div style={{ padding: "10px 12px", borderRadius: "9px", background: "var(--danger-soft)", color: "var(--danger-fg)", fontSize: "13px", marginBottom: "14px" }}>
+                {flags.length} ta ochiq integrity bayrog‘i bor — moderator qaroridan keyin ball yakunlanadi.
+              </div>
+            )}
+
+            {evidence.length > 0 && (
+              <>
+                <p className="card-kicker" style={{ marginBottom: "8px" }}>DALILLAR ({evidence.length})</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
+                  {evidence.slice(0, 8).map((ev) => (
+                    <div key={ev.id} style={{ display: "flex", justifyContent: "space-between", gap: "10px", fontSize: "13px", padding: "7px 10px", background: "var(--surface-2)", borderRadius: "8px" }}>
+                      <span style={{ minWidth: 0 }}>
+                        <b>{ev.layer}</b> · {ev.title}
+                        {ev.human_verified && <span style={{ color: "var(--success-fg)", fontWeight: 700 }}> · inson tasdiqlagan</span>}
+                      </span>
+                      <b style={{ whiteSpace: "nowrap" }}>{round1(ev.score)}</b>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        <button className="primary-button full" onClick={onClose}>
+          Tushunarli
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Read-only details of a live task (non-DO layers have their own flows elsewhere). */
+function TaskInfoModal({ task, skillName, onClose }: { task: any; skillName?: string; onClose: () => void }) {
+  const spec = task?.spec ?? {};
+  const questions: any[] = Array.isArray(spec.questions) ? spec.questions : [];
+  const requirements: string[] = Array.isArray(spec.requirements) ? spec.requirements : [];
+  const meta = LAYER_META[task.layer] ?? LAYER_META.DO;
+  const layerHint: Record<string, string> = {
+    KNOW: "Nazariy test: savollarga javob berasiz, natija avtomatik tekshiriladi.",
+    ADAPT: "Parametrli chellinj: avvalgi yechimingizni yangi cheklovga moslashtirasiz.",
+    DEFEND: "AI Viva: yechimingizni og‘zaki himoya qilasiz. Buning uchun ‘viva_record’ roziligi kerak.",
+    PROVE: "Real loyiha: repozitoriy havolasini topshirasiz, o‘qituvchi tomonidan tasdiqlanadi.",
+  };
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{ maxWidth: "600px", width: "95%", maxHeight: "90vh", overflowY: "auto" }}
+      >
+        <button className="modal-close" aria-label="Yopish" onClick={onClose}>
+          <Icon name="close" />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+          <div className={`task-card-icon ${meta.tone}`}>
+            <Icon name={meta.icon as any} />
+          </div>
+          <div>
+            <p className="eyebrow" style={{ margin: 0 }}>
+              {task.layer} · {meta.label}
+            </p>
+            <h2 style={{ fontSize: "19px", margin: 0 }}>{task.title}</h2>
+          </div>
+        </div>
+        <p style={{ fontSize: "13.5px", color: "var(--muted)", margin: "0 0 12px" }}>
+          {skillName ? `${skillName} · ` : ""}
+          {task.difficulty} · {task.duration_minutes} daqiqa · +{task.reward_points} ball · {task.ai_mode}
+        </p>
+        {layerHint[task.layer] && <p style={{ fontSize: "14px", lineHeight: 1.6, margin: "0 0 14px" }}>{layerHint[task.layer]}</p>}
+        {questions.length > 0 && (
+          <>
+            <p className="card-kicker" style={{ marginBottom: "6px" }}>SAVOLLAR</p>
+            <ol style={{ margin: "0 0 14px", paddingLeft: "20px", fontSize: "13.5px", lineHeight: 1.6 }}>
+              {questions.map((q, i) => (
+                <li key={typeof q === "string" ? q : q.id ?? i}>{typeof q === "string" ? q : q.text}</li>
+              ))}
+            </ol>
+          </>
+        )}
+        {requirements.length > 0 && (
+          <>
+            <p className="card-kicker" style={{ marginBottom: "6px" }}>TALABLAR</p>
+            <ul style={{ margin: "0 0 14px", paddingLeft: "20px", fontSize: "13.5px", lineHeight: 1.6 }}>
+              {requirements.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </>
+        )}
+        <button className="primary-button full" onClick={onClose}>
+          Tushunarli
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function StudentView({
   direction,
   activePage,
@@ -190,7 +458,7 @@ export default function StudentView({
     ? direction
     : "software";
   const currentDir = directionsData[validDirection] || directionsData.software;
-  const primarySkill = currentDir?.skills?.[0] || directionsData.software.skills[0];
+  const demoSkill = currentDir?.skills?.[0] || directionsData.software.skills[0];
 
   // Profile form state (synced with user and backend /api/v1/auth/me)
   const [profileName, setProfileName] = useState(user?.name || "Talaba");
@@ -208,17 +476,9 @@ export default function StudentView({
     user?.id === "usr-student-1" ||
     user?.email === "azizbek.sobirov@gmail.com";
 
-  const [completedScore, setCompletedScore] = useState<number | null>(() => {
-    if (!user) return null;
-    try {
-      const saved = localStorage.getItem(`skill_dna_score_${user.id}`);
-      return saved ? parseFloat(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
+  // Live Skill DNA from the backend (null while loading or when the backend is unreachable)
   const [liveDna, setLiveDna] = useState<any>(null);
+  const [dnaSource, setDnaSource] = useState<"loading" | "live" | "offline">("loading");
 
   useEffect(() => {
     if (user) {
@@ -228,47 +488,57 @@ export default function StudentView({
       if (user.bio) setProfileBio(user.bio);
       if (user.avatar) setProfileAvatar(user.avatar);
 
-      const queryId = user.id || user.email;
+      api
+        .getDnaProfile()
+        .then((res) => {
+          setLiveDna(res);
+          setDnaSource("live");
+        })
+        .catch(() => setDnaSource("offline"));
 
-      if (queryId) {
-        try {
-          const saved = localStorage.getItem(`skill_dna_score_${user.id}`);
-          setCompletedScore(saved ? parseFloat(saved) : null);
-        } catch {}
-
-        // Fetch live DNA profile
-        api
-          .getDnaProfile(queryId)
-          .then((res) => {
-            if (res) setLiveDna(res);
-          })
-          .catch(() => {});
-
-        // Fetch live user profile from PostgreSQL
-        api
-          .getMe(queryId)
-          .then((me) => {
-            if (me) {
-              if (me.full_name) setProfileName(me.full_name);
-              if (me.email) setProfileEmail(me.email);
-              if (me.phone) setProfilePhone(me.phone);
-              if (me.avatar) setProfileAvatar(me.avatar);
-              if (me.bio) setProfileBio(me.bio);
-            }
-          })
-          .catch(() => {});
-      }
+      api
+        .getMe()
+        .then((me) => {
+          if (me) {
+            if (me.full_name) setProfileName(me.full_name);
+            if (me.email) setProfileEmail(me.email);
+            if (me.phone) setProfilePhone(me.phone);
+            if (me.avatar) setProfileAvatar(me.avatar);
+            if (me.bio) setProfileBio(me.bio);
+          }
+        })
+        .catch(() => {});
     }
   }, [user, assessmentKey]);
 
-  // If new user who hasn't submitted assessments yet
-  const isNewUser = !isDemoStudent && !completedScore && (!liveDna || liveDna.overall_score === 0);
+  // Live data always wins; the bundled demo profile is shown only offline for the demo accounts
+  const live = dnaSource === "live" ? liveDna : null;
+  const livePrimary = live?.primary_skill ?? null;
+  const isNewUser = live ? !livePrimary : !isDemoStudent;
+  const primarySkill = livePrimary
+    ? {
+        ...demoSkill,
+        name: livePrimary.name,
+        score: livePrimary.score,
+        confidence: livePrimary.confidence,
+        level: livePrimary.level.split(" ")[0],
+        evidenceCount: livePrimary.evidenceCount,
+        verifiedCount: livePrimary.evidenceCount,
+      }
+    : demoSkill;
 
+  const liveLayers: Partial<Record<LayerKey, number | null>> = live?.layers ?? {};
   const layerScores: Record<LayerKey, number> = isNewUser
     ? { KNOW: 0, DO: 0, ADAPT: 0, DEFEND: 0, PROVE: 0 }
-    : completedScore
-    ? { KNOW: 85, DO: Math.round(completedScore), ADAPT: 75, DEFEND: 80, PROVE: 60 }
-    : (liveDna?.layers || primarySkill.layers);
+    : live
+    ? {
+        KNOW: liveLayers.KNOW ?? 0,
+        DO: liveLayers.DO ?? 0,
+        ADAPT: liveLayers.ADAPT ?? 0,
+        DEFEND: liveLayers.DEFEND ?? 0,
+        PROVE: liveLayers.PROVE ?? 0,
+      }
+    : primarySkill.layers;
 
   const layers: LayerItem[] = [
     { key: "KNOW", label: "Nazariy bilim", score: layerScores.KNOW, weight: "15%", weightNum: 0.15, tone: "blue", icon: "file" },
@@ -278,37 +548,16 @@ export default function StudentView({
     { key: "PROVE", label: "Real dalillar", score: layerScores.PROVE, weight: "15%", weightNum: 0.15, tone: "rose", icon: "award" },
   ];
 
-  const overallScoreVal = isNewUser
+  const overallScoreVal = isNewUser ? 0 : primarySkill.score;
+  const confidenceVal = isNewUser ? 0 : primarySkill.confidence;
+  const evidenceCountVal = isNewUser ? 0 : live ? live.evidence_count : primarySkill.evidenceCount;
+  const verifiedCountVal = isNewUser ? 0 : primarySkill.verifiedCount;
+  const levelVal = isNewUser ? "L0 · BOSHLANG‘ICH" : livePrimary ? livePrimary.level.replace(" ", " · ") : `${primarySkill.level} · MUTAXASSIS`;
+
+  // Coverage = share of layer weight that has any evidence (section 6.3)
+  const coverageVal = isNewUser
     ? 0
-    : completedScore
-    ? Math.round(completedScore)
-    : (liveDna?.overall_score ?? primarySkill.score);
-
-  const confidenceVal = isNewUser
-    ? 0
-    : completedScore
-    ? 78
-    : (liveDna?.confidence ?? primarySkill.confidence);
-
-  const evidenceCountVal = isNewUser
-    ? 0
-    : completedScore
-    ? 1
-    : (liveDna?.evidence_count ?? primarySkill.evidenceCount);
-
-  const verifiedCountVal = isNewUser
-    ? 0
-    : completedScore
-    ? 1
-    : primarySkill.verifiedCount;
-
-  const levelVal = isNewUser
-    ? "L0 · BOSHLANG‘ICH"
-    : completedScore
-    ? "L3 · MUTAXASSIS"
-    : `${primarySkill.level} · MUTAXASSIS`;
-
-  const coverageVal = isNewUser ? 0 : completedScore ? 65 : 85;
+    : Math.round(layers.reduce((sum, l) => sum + (live ? (liveLayers[l.key] != null ? l.weightNum : 0) : l.weightNum), 0) * 100);
 
   const [selectedLayer, setSelectedLayer] = useState<LayerKey>("DO");
   const selected = layers.find((l) => l.key === selectedLayer) ?? layers[1];
@@ -323,6 +572,128 @@ export default function StudentView({
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [coachModalOpen, setCoachModalOpen] = useState(false);
   const [evidenceModalOpen, setEvidenceModalOpen] = useState(false);
+  const [whyOpen, setWhyOpen] = useState(false);
+  const [infoTask, setInfoTask] = useState<any>(null);
+
+  // ---------- Live tasks for the direction's skills ----------
+  const [liveTasks, setLiveTasks] = useState<any[] | null>(null);
+  const [skillNames, setSkillNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setLiveTasks(null);
+    Promise.all([api.getSkills(validDirection), api.getTasks()])
+      .then(([skills, all]) => {
+        if (cancelled) return;
+        const names: Record<string, string> = {};
+        (skills ?? []).forEach((sk: any) => (names[sk.id] = sk.name));
+        setSkillNames(names);
+        setLiveTasks((all ?? []).filter((t: any) => names[t.skill_id] && t.status !== "archived"));
+      })
+      .catch(() => !cancelled && setLiveTasks(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [user, validDirection, assessmentKey]);
+  const tasksLive = liveTasks !== null;
+  const liveSkillById: Record<string, any> = {};
+  (live?.skills ?? []).forEach((sk: any) => (liveSkillById[sk.id] = sk));
+  const liveVisibleTasks = (liveTasks ?? []).filter((t) => taskFilter === "Barchasi" || t.layer === taskFilter);
+  const nextLiveTask =
+    liveTasks?.find((t) => t.layer === "DO" && t.skill_id === livePrimary?.id) ?? liveTasks?.find((t) => t.layer === "DO") ?? null;
+
+  // ---------- Live career target ----------
+  const [careerData, setCareerData] = useState<any>(null);
+  const [careerList, setCareerList] = useState<any[]>([]);
+  const [careerLoading, setCareerLoading] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    api
+      .getCareerTarget()
+      .then(setCareerData)
+      .catch(() => setCareerData(null));
+    api
+      .getCareers()
+      .then((rows) => setCareerList(rows ?? []))
+      .catch(() => setCareerList([]));
+  }, [user, assessmentKey]);
+  const careerLive = !!careerData;
+  const selectCareer = (id: string) => {
+    if (!id || id === careerData?.id) return;
+    setCareerLoading(true);
+    api
+      .getCareerMatch(id)
+      .then(setCareerData)
+      .catch(() => {})
+      .finally(() => setCareerLoading(false));
+  };
+
+  // ---------- Live credentials ----------
+  const [credentials, setCredentials] = useState<any[] | null>(null);
+  const [issuing, setIssuing] = useState<string | null>(null);
+  const [issueMsg, setIssueMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [verifyResult, setVerifyResult] = useState<Record<string, any>>({});
+  const loadCredentials = () =>
+    api
+      .getCredentials()
+      .then((rows) => setCredentials(rows ?? []))
+      .catch(() => setCredentials(null));
+  useEffect(() => {
+    if (user) loadCredentials();
+  }, [user, assessmentKey]);
+  const credsLive = credentials !== null;
+  const issueFor = async (skill: any) => {
+    setIssuing(skill.id);
+    setIssueMsg(null);
+    try {
+      const res = await api.issueCredential(skill.id);
+      setIssueMsg({ ok: true, text: `Sertifikat chiqarildi: ${res?.title ?? skill.name}` });
+      await loadCredentials();
+    } catch (err: any) {
+      setIssueMsg({ ok: false, text: err?.message || "Sertifikat chiqarib bo‘lmadi." });
+    } finally {
+      setIssuing(null);
+    }
+  };
+  const verifyCred = async (id: string) => {
+    setVerifyResult((prev) => ({ ...prev, [id]: { loading: true } }));
+    try {
+      const res = await api.verifyCredential(id);
+      setVerifyResult((prev) => ({ ...prev, [id]: res }));
+    } catch (err: any) {
+      setVerifyResult((prev) => ({ ...prev, [id]: { error: err?.message || "Tekshirib bo‘lmadi" } }));
+    }
+  };
+  const copyLink = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {}
+    setShared(true);
+  };
+
+  // ---------- Live consents (section 13.2) ----------
+  const [consents, setConsents] = useState<{ type: string; granted: boolean; granted_at: string | null }[] | null>(null);
+  const [consentBusy, setConsentBusy] = useState<string | null>(null);
+  const [consentError, setConsentError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    api
+      .getConsents()
+      .then(setConsents)
+      .catch(() => setConsents(null));
+  }, [user]);
+  const toggleConsent = async (type: string, granted: boolean) => {
+    setConsentBusy(type);
+    setConsentError(null);
+    try {
+      await api.setConsent(type, granted);
+      setConsents(await api.getConsents());
+    } catch (err: any) {
+      setConsentError(err?.message || "Rozilikni saqlab bo‘lmadi.");
+    } finally {
+      setConsentBusy(null);
+    }
+  };
 
   // Animation controller: stores linear time progress from 0 to 1
   const [animTime, setAnimTime] = useState(0);
@@ -419,7 +790,19 @@ export default function StudentView({
                 />
                 <div className="score-summary">
                   <div className="confidence-head">
-                    <span>Ishonchlilik (Confidence)</span>
+                    <span>
+                      Ishonchlilik (Confidence)
+                      {live && livePrimary && (
+                      <button
+                        type="button"
+                        onClick={() => setWhyOpen(true)}
+                        title="Ball qanday hisoblangan?"
+                        style={{ marginLeft: "8px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--accent)", borderRadius: "999px", padding: "1px 9px", fontSize: "11.5px", fontWeight: 800, cursor: "pointer" }}
+                      >
+                        nega?
+                      </button>
+                    )}
+                    </span>
                     <strong>{animatedConfidenceScore}%</strong>
                   </div>
                   <div className="progress-track">
@@ -431,7 +814,7 @@ export default function StudentView({
                   <p>
                     {isNewUser
                       ? "Hali dalillar mavjud emas · 0 ta dalil qayd etilgan"
-                      : `Yuqori ishonchlilik · ${evidenceCountVal} ta dalil, ${verifiedCountVal} tasdiqlangan`}
+                      : `${confidenceVal >= 70 ? "Yuqori" : confidenceVal >= 40 ? "O‘rtacha" : "Past"} ishonchlilik · ${evidenceCountVal} ta dalil, ${verifiedCountVal} tasdiqlangan`}
                   </p>
                   <div className="selected-layer">
                     <div className={`layer-icon ${selected.tone}`}>
@@ -457,34 +840,39 @@ export default function StudentView({
                 <span className="small-badge">
                   <Icon name="clock" size={15} /> KEYINGI QADAM
                 </span>
-                <span className="time">≈ {tasks[0].duration}</span>
+                <span className="time">≈ {nextLiveTask ? `${nextLiveTask.duration_minutes} daqiqa` : tasks[0].duration}</span>
               </div>
               <div className="task-visual">
                 <Icon name="code" size={36} />
               </div>
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <p className="task-type">{tasks[0].layer} · AMALIY TOPSHIRIQ</p>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                <p className="task-type">{nextLiveTask ? nextLiveTask.layer : tasks[0].layer} · AMALIY TOPSHIRIQ</p>
                 <span
                   style={{
                     fontSize: "11px",
                     padding: "3px 8px",
                     borderRadius: "4px",
-                    background: tasks[0].aiMode === "AI-free" ? "var(--danger-400)" : "var(--success-400)",
+                    background: (nextLiveTask ? nextLiveTask.ai_mode : tasks[0].aiMode) === "AI-free" ? "var(--danger-400)" : "var(--success-400)",
                     color: "white",
                     fontWeight: 700,
                   }}
                 >
-                  {tasks[0].aiMode}
+                  {nextLiveTask ? nextLiveTask.ai_mode : tasks[0].aiMode}
                 </span>
+                <SourceBadge live={!!nextLiveTask} />
               </div>
-              <h2>{tasks[0].title}</h2>
-              <p>Mavjud yechimni parametrli yangi cheklovga moslang va qaroringizni asoslang.</p>
+              <h2>{nextLiveTask ? nextLiveTask.title : tasks[0].title}</h2>
+              <p>
+                {nextLiveTask
+                  ? `${skillNames[nextLiveTask.skill_id] ?? ""} · ${nextLiveTask.difficulty} darajadagi amaliy topshiriq. Kodingiz avtotestlar bilan tekshiriladi.`
+                  : "Mavjud yechimni parametrli yangi cheklovga moslang va qaroringizni asoslang."}
+              </p>
               <div className="task-meta">
                 <span>
-                  <Icon name="file" size={16} /> 4 ta avtotest
+                  <Icon name="file" size={16} /> {nextLiveTask ? nextLiveTask.difficulty : "4 ta avtotest"}
                 </span>
                 <span>
-                  <Icon name="award" size={16} /> {tasks[0].reward}gacha
+                  <Icon name="award" size={16} /> {nextLiveTask ? `+${nextLiveTask.reward_points} ball` : tasks[0].reward}gacha
                 </span>
               </div>
               <button className="dark-button" onClick={onStartAssessment}>
@@ -567,13 +955,31 @@ export default function StudentView({
             </div>
             <div className="profile-stats">
               <div className="big-score">
-                <span>UMUMIY NATIJA</span>
+                <span>
+                  UMUMIY NATIJA
+                  {live && livePrimary && (
+                    <button
+                      type="button"
+                      onClick={() => setWhyOpen(true)}
+                      title="Ball qanday hisoblangan?"
+                      style={{ marginLeft: "8px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--accent)", borderRadius: "999px", padding: "1px 9px", fontSize: "11.5px", fontWeight: 800, cursor: "pointer", letterSpacing: 0 }}
+                    >
+                      nega?
+                    </button>
+                  )}
+                </span>
                 <strong>
                   {Math.round(overallScoreVal * mainEase)}
                   <small>/100</small>
                 </strong>
                 <p>
-                  {isNewUser
+                  {live
+                    ? livePrimary?.level_blockers?.length
+                      ? livePrimary.level_blockers[0]
+                      : isNewUser
+                      ? "Birinchi dalilni qo‘shing — L1 UNDERSTAND darajasi ochiladi"
+                      : "Keyingi daraja uchun to‘siqlar yo‘q"
+                    : isNewUser
                     ? "Keyingi darajagacha 20 ball (L1 UNDERSTAND)"
                     : "Keyingi darajagacha 9 ball (L4 CREATE)"}
                 </p>
@@ -628,9 +1034,21 @@ export default function StudentView({
                   <h2>Yo‘nalish ko‘nikmalari ro‘yxati</h2>
                   <p>Ushbu sohadagi asosiy kompetensiyalar</p>
                 </div>
+                {dnaSource !== "loading" && <SourceBadge live={!!live} />}
               </div>
               <div className="dna-layer-list">
-                {currentDir.skills.map((sk, index) => {
+                {(live
+                  ? (live.skills ?? []).map((sk: any) => ({
+                      id: sk.id,
+                      name: sk.name,
+                      isCore: sk.isCore,
+                      score: Math.round(sk.score ?? 0),
+                      level: (sk.level ?? "L0").split(" ")[0],
+                      evidenceCount: sk.evidenceCount ?? 0,
+                      confidence: Math.round(sk.confidence ?? 0),
+                    }))
+                  : currentDir.skills
+                ).map((sk: { id: string; name: string; isCore?: boolean; score: number; level: string; evidenceCount: number; confidence: number }, index: number) => {
                   const sProgress = getDnaSkillProgress(index);
                   const targetScore = isNewUser ? 0 : sk.score;
                   const currentScore = Math.round(targetScore * sProgress);
@@ -699,7 +1117,7 @@ export default function StudentView({
               </div>
               <div className="detail-metric">
                 <span>Oxirgi faoliyat</span>
-                <strong>Bugun</strong>
+                <strong>{live ? fmtDate(livePrimary?.computed_at) : "Bugun"}</strong>
               </div>
               <button className="dark-outline" onClick={onStartAssessment}>
                 Qatlamni rivojlantirish <Icon name="arrow" size={16} />
@@ -728,9 +1146,93 @@ export default function StudentView({
                 </button>
               ))}
             </div>
+            <SourceBadge live={tasksLive} />
           </div>
+          {tasksLive ? (
+            liveVisibleTasks.length === 0 ? (
+              <section className="card" style={{ textAlign: "center", padding: "36px 24px", color: "var(--muted)", fontSize: "14px" }}>
+                Bu qatlam uchun hozircha faol topshiriqlar yo‘q.
+              </section>
+            ) : (
+              LAYER_ORDER.filter((lk) => liveVisibleTasks.some((t) => t.layer === lk)).map((lk) => (
+                <section key={lk} style={{ marginBottom: "22px" }}>
+                  <div className="section-heading compact" style={{ marginBottom: "10px" }}>
+                    <div>
+                      <h2 style={{ fontSize: "17px" }}>
+                        {lk} · {LAYER_META[lk].label}
+                      </h2>
+                      <p>{liveVisibleTasks.filter((t) => t.layer === lk).length} ta topshiriq</p>
+                    </div>
+                  </div>
+                  <div className="tasks-grid">
+                    {liveVisibleTasks
+                      .filter((t) => t.layer === lk)
+                      .map((task) => {
+                        const meta = LAYER_META[task.layer] ?? LAYER_META.DO;
+                        const skill = liveSkillById[task.skill_id];
+                        const layerScore: number | null = skill?.layers?.[task.layer] ?? null;
+                        return (
+                          <article className="card task-card" key={task.id}>
+                            <div className="task-card-top">
+                              <div className={`task-card-icon ${meta.tone}`}>
+                                <Icon name={meta.icon as any} />
+                              </div>
+                              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "3px 8px",
+                                    borderRadius: "4px",
+                                    background: task.ai_mode === "AI-free" ? "var(--danger-soft)" : "var(--success-soft)",
+                                    color: task.ai_mode === "AI-free" ? "var(--danger)" : "var(--success)",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {task.ai_mode}
+                                </span>
+                                <span>{task.difficulty}</span>
+                              </div>
+                            </div>
+                            <p>
+                              {task.layer} QATLAMI · {skillNames[task.skill_id] ?? ""}
+                            </p>
+                            <h2>{task.title}</h2>
+                            <div className="task-card-meta">
+                              <span>
+                                <Icon name="clock" size={15} />
+                                {task.duration_minutes} daqiqa
+                              </span>
+                              <span>
+                                <Icon name="award" size={15} />+{task.reward_points} ball
+                              </span>
+                            </div>
+                            <div className="task-progress">
+                              <div>
+                                <span>Qatlam natijasi</span>
+                                <b>{layerScore == null ? "Dalil yo‘q" : `${Math.round(layerScore)}/100`}</b>
+                              </div>
+                              <i>
+                                <em style={{ width: `${((layerScore ?? 0) * mainEase).toFixed(1)}%` }} />
+                              </i>
+                            </div>
+                            <button
+                              className={task.layer === "DO" ? "primary-button full" : "dark-outline"}
+                              style={task.layer === "DO" ? undefined : { width: "100%", justifyContent: "center" }}
+                              onClick={() => (task.layer === "DO" ? onStartAssessment() : setInfoTask(task))}
+                            >
+                              {task.layer === "DO" ? (layerScore == null ? "Topshiriqni boshlash" : "Qayta topshirish") : "Batafsil"}
+                              <Icon name="arrow" size={16} />
+                            </button>
+                          </article>
+                        );
+                      })}
+                  </div>
+                </section>
+              ))
+            )
+          ) : (
           <div className="tasks-grid">
-            {visibleTasks.map((task, index) => (
+            {visibleTasks.map((task) => (
               <article className="card task-card" key={task.title}>
                 <div className="task-card-top">
                   <div className={`task-card-icon ${task.tone}`}>
@@ -783,6 +1285,7 @@ export default function StudentView({
               </article>
             ))}
           </div>
+          )}
         </div>
       )}
 
@@ -798,6 +1301,160 @@ export default function StudentView({
               </button>
             }
           />
+          {careerLive ? (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", margin: "0 0 12px" }}>
+                <SourceBadge live />
+                {careerList.length > 1 && (
+                  <>
+                    <span style={{ fontSize: "12.5px", color: "var(--muted)", marginLeft: "6px" }}>Boshqa rollar:</span>
+                    {careerList.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => selectCareer(c.id)}
+                        disabled={careerLoading}
+                        style={{
+                          padding: "5px 11px",
+                          borderRadius: "14px",
+                          fontSize: "12.5px",
+                          cursor: "pointer",
+                          border: c.id === careerData.id ? "1.5px solid var(--accent-400)" : "1px solid var(--border)",
+                          background: c.id === careerData.id ? "var(--accent-soft)" : "var(--surface-2)",
+                          color: "var(--ink-2)",
+                          fontWeight: c.id === careerData.id ? 700 : 500,
+                        }}
+                      >
+                        {c.roleName} · {c.matchPct == null ? "—" : `${round1(c.matchPct)}%`}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+              <section className="career-hero card">
+                <div>
+                  <span className="small-badge">
+                    <Icon name="briefcase" size={15} /> MAQSADLI ROL
+                  </span>
+                  <h2>{careerData.roleName ?? "Kasb profili tanlanmagan"}</h2>
+                  <p>
+                    {!careerData.roleName
+                      ? careerData.coachTip
+                      : careerData.matchPct == null
+                      ? `Majburiy ko‘nikma yetishmaydi${
+                          careerData.missing_must?.length
+                            ? ` (${careerData.gaps
+                                ?.filter((g: any) => careerData.missing_must.includes(g.skill))
+                                .map((g: any) => g.name)
+                                .join(", ")})`
+                            : ""
+                        } — moslik foizi shu ko‘nikma isbotlangandan keyin hisoblanadi.`
+                      : `Siz ushbu rol talablariga ${round1(careerData.matchPct)}% mos kelasiz.${
+                          careerData.explanation?.strongest?.length ? ` Kuchli tomon: ${careerData.explanation.strongest.join("; ")}.` : ""
+                        }`}
+                  </p>
+                </div>
+                <div className="match-ring">
+                  <svg viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r="50" />
+                    <circle
+                      className="match-value"
+                      cx="60"
+                      cy="60"
+                      r="50"
+                      style={{
+                        strokeDasharray: `${Math.round(314 * ((careerData.matchPct ?? 0) / 100) * mainEase)} 314`,
+                        animation: "none",
+                      }}
+                    />
+                  </svg>
+                  <strong>
+                    {careerData.matchPct == null ? "—" : Math.round(careerData.matchPct * mainEase)}
+                    {careerData.matchPct != null && <small>%</small>}
+                  </strong>
+                  <span>moslik</span>
+                </div>
+              </section>
+
+              <section className="career-layout">
+                <div className="card roadmap">
+                  <div className="section-heading compact">
+                    <div>
+                      <h2>Shaxsiy rivojlanish xaritasi (30/60/90 reja)</h2>
+                      <p>Eng katta bo‘shliqlar bo‘yicha tavsiya etilgan qadamlar</p>
+                    </div>
+                    <span>
+                      Taxminiy muddat <strong>{careerData.roadmap?.length ? `${careerData.roadmap.length * 30} kun` : "—"}</strong>
+                    </span>
+                  </div>
+                  {(careerData.roadmap ?? []).length === 0 && (
+                    <p style={{ fontSize: "14px", color: "var(--muted)" }}>Barcha talablar bajarilgan — reja talab qilinmaydi.</p>
+                  )}
+                  {(careerData.roadmap ?? []).map((step: any, index: number) => {
+                    const state = step.status === "done" || step.status === "completed" ? "done" : step.status === "current" ? "current" : "next";
+                    return (
+                      <div className={`roadmap-row ${state}`} key={`${step.phase}-${step.title}`}>
+                        <div className="road-node">{state === "done" ? <Icon name="check" size={16} /> : index + 1}</div>
+                        <div>
+                          <strong>{step.title}</strong>
+                          <span>
+                            {step.target_layer} qatlami · qayta baholash: {fmtDate(step.reassess_on)}
+                          </span>
+                        </div>
+                        <b>{step.phase}</b>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <aside className="card gaps-card">
+                  <p className="card-kicker">ASOSIY SKILL GAP’LAR</p>
+                  <h2>Rivojlantirish kerak</h2>
+                  {(careerData.gaps ?? []).length === 0 && (
+                    <p style={{ fontSize: "14px", color: "var(--muted)" }}>Bo‘shliqlar yo‘q.</p>
+                  )}
+                  {(careerData.gaps ?? []).map((gap: any, index: number) => {
+                    const gProgress = getDnaSkillProgress(index);
+                    const cur = gap.current ?? 0;
+                    return (
+                      <div className="gap-item" key={gap.skill ?? gap.name}>
+                        <div>
+                          <strong>
+                            {gap.name}
+                            {gap.must && <span style={{ color: "var(--danger)", fontSize: "11px", fontWeight: 800, marginLeft: "6px" }}>MAJBURIY</span>}
+                          </strong>
+                          <span>
+                            {Math.round(cur * gProgress)}/{gap.needed} <b>+{round1(gap.gap)} kerak</b>
+                          </span>
+                        </div>
+                        <i>
+                          <em style={{ width: `${(cur * gProgress).toFixed(1)}%` }} />
+                        </i>
+                      </div>
+                    );
+                  })}
+                  <div
+                    className="coach-tip"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setCoachModalOpen(true)}
+                    title="AI Career Coach bilan suhbatlashish"
+                  >
+                    <div className="proof-icon">
+                      <Icon name="dna" />
+                    </div>
+                    <div>
+                      <strong>AI Career Coach tavsiyasi</strong>
+                      <span>
+                        {careerData.coachTip} <b style={{ color: "var(--teal)", marginLeft: "4px" }}>AI bilan suhbatlashish ↗</b>
+                      </span>
+                    </div>
+                  </div>
+                </aside>
+              </section>
+            </>
+          ) : (
+            <>
+              <SourceBadge live={false} style={{ marginBottom: "12px" }} />
           <section className="career-hero card">
             <div>
               <span className="small-badge">
@@ -909,6 +1566,8 @@ export default function StudentView({
               </div>
             </aside>
           </section>
+            </>
+          )}
         </div>
       )}
 
@@ -919,6 +1578,184 @@ export default function StudentView({
             title="Sertifikatlar va Raqamli nishonlar"
             description="Ish beruvchilar dunyoning istalgan nuqtasidan ochiq tekshira oladigan, dalillarga asoslangan raqamli sertifikatlaringiz."
           />
+          {credsLive ? (
+            <>
+              <SourceBadge live style={{ marginBottom: "12px" }} />
+              {(() => {
+                const issued = (credentials ?? []).filter((c) => c.status === "issued");
+                const best = [...issued].sort((a, b) => levelNum(b.level) - levelNum(a.level))[0];
+                return best ? (
+                  <section className="certificate-summary card">
+                    <div className="cert-seal">
+                      <Icon name="award" size={33} />
+                    </div>
+                    <div>
+                      <span>ENG YUQORI DARAJA</span>
+                      <h2>{best.title}</h2>
+                      <p>
+                        {fmtDate(best.issued_at)} da berilgan · {issued.length} ta faol sertifikat
+                      </p>
+                    </div>
+                    <span className="verified large">
+                      <Icon name="check" /> Open Badges 3.0
+                    </span>
+                  </section>
+                ) : (
+                  <section className="card" style={{ textAlign: "center", padding: "36px 24px", margin: "0 0 20px" }}>
+                    <div className="cert-seal" style={{ margin: "0 auto 16px" }}>
+                      <Icon name="award" size={33} />
+                    </div>
+                    <h2 style={{ fontSize: "20px", marginBottom: "8px", color: "var(--navy)" }}>Hozircha faol sertifikatlar mavjud emas</h2>
+                    <p style={{ maxWidth: "540px", margin: "0 auto", color: "var(--muted)", fontSize: "14px", lineHeight: "1.6" }}>
+                      Sertifikat ko‘nikma kamida L3 darajaga va 60% Confidence’ga yetganda, ochiq integrity bayroqlari bo‘lmasa chiqariladi.
+                    </p>
+                  </section>
+                );
+              })()}
+
+              {(credentials ?? []).length > 0 && (
+                <div className="cert-grid">
+                  {(credentials ?? []).map((c) => {
+                    const lvl = levelNum(c.level);
+                    const tone = lvl >= 4 ? "emerald" : lvl === 3 ? "blue" : "violet";
+                    const vr = verifyResult[c.id];
+                    const revoked = c.status !== "issued";
+                    return (
+                      <article className="certificate card" key={c.id} style={revoked ? { opacity: 0.75 } : undefined}>
+                        <div className={`certificate-band ${tone}`}>
+                          <Logo size="sm" showTagline={false} />
+                          <div className="cert-mini-seal">
+                            <Icon name="award" />
+                          </div>
+                        </div>
+                        <div className="certificate-body">
+                          <p>
+                            SKILL DNA SERTIFIKATI ·{" "}
+                            <span style={{ color: revoked ? "var(--danger)" : "var(--success-fg)", fontWeight: 800 }}>
+                              {revoked ? "BEKOR QILINGAN" : "FAOL"}
+                            </span>
+                          </p>
+                          <h2>{c.title}</h2>
+                          <strong>{c.level}</strong>
+                          <div>
+                            <span>Sertifikat ID</span>
+                            <b>{c.code}</b>
+                          </div>
+                          <div>
+                            <span>{revoked ? "Bekor qilingan sana" : "Berilgan sana"}</span>
+                            <b>{fmtDate(revoked ? c.revoked_at : c.issued_at)}</b>
+                          </div>
+                          {vr && (
+                            <div
+                              style={{
+                                fontSize: "12.5px",
+                                padding: "6px 9px",
+                                borderRadius: "8px",
+                                background: vr.loading ? "var(--surface-2)" : vr.valid ? "var(--success-soft)" : "var(--danger-soft)",
+                                color: vr.loading ? "var(--muted)" : vr.valid ? "var(--success-fg)" : "var(--danger-fg)",
+                                display: "block",
+                              }}
+                            >
+                              {vr.loading
+                                ? "Tekshirilmoqda..."
+                                : vr.error
+                                ? vr.error
+                                : vr.valid
+                                ? `Haqiqiy · imzo ${vr.signature_valid ? "to‘g‘ri" : "noto‘g‘ri"} · ${vr.issuer?.name ?? ""}`
+                                : `Yaroqsiz · holat: ${vr.status}${vr.signature_valid === false ? " · imzo noto‘g‘ri" : ""}`}
+                            </div>
+                          )}
+                          <div className="certificate-actions">
+                            <button onClick={() => copyLink(c.verify_url)}>Ulashish</button>
+                            <button onClick={() => verifyCred(c.id)}>Tekshirish</button>
+                          </div>
+                          <button
+                            className="secondary-button"
+                            style={{ width: "100%", marginTop: "8px" }}
+                            onClick={() => printCredential(c, profileName).catch((e: Error) => setIssueMsg({ ok: false, text: e.message }))}
+                          >
+                            <Icon name="download" size={14} /> QR bilan PDF
+                          </button>
+                          <a
+                            href={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/v1/verify/${c.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: "12px", color: "var(--accent)", display: "block", marginTop: "6px" }}
+                          >
+                            Ochiq tekshiruv havolasi ↗
+                          </a>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+
+              {live && (live.skills ?? []).some((sk: any) => (sk.evidenceCount ?? 0) > 0) && (
+                <section className="card" style={{ padding: "18px 20px", marginTop: "20px" }}>
+                  <div className="section-heading compact" style={{ marginBottom: "10px" }}>
+                    <div>
+                      <h2>Sertifikat chiqarish</h2>
+                      <p>Talab: kamida L3 daraja, 60% Confidence va ochiq integrity bayroqlari yo‘q.</p>
+                    </div>
+                  </div>
+                  {(live.skills ?? [])
+                    .filter((sk: any) => (sk.evidenceCount ?? 0) > 0)
+                    .map((sk: any) => {
+                      const eligible = levelNum(sk.level) >= 3 && (sk.confidence ?? 0) >= 60 && !(sk.open_flags ?? []).length;
+                      const has = (credentials ?? []).some((c) => c.status === "issued" && c.title === `${sk.name} — ${sk.level}`);
+                      return (
+                        <div
+                          key={sk.id}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "10px 0", borderTop: "1px solid var(--border-soft)" }}
+                        >
+                          <div>
+                            <strong style={{ fontSize: "14.5px", color: "var(--navy)" }}>{sk.name}</strong>
+                            <span style={{ display: "block", fontSize: "12.5px", color: "var(--muted)" }}>
+                              {sk.level} · {Math.round(sk.score ?? 0)}/100 · {Math.round(sk.confidence ?? 0)}% Confidence
+                              {(sk.open_flags ?? []).length ? " · ochiq integrity bayrog‘i" : ""}
+                            </span>
+                          </div>
+                          <button
+                            className={eligible && !has ? "primary-button" : "dark-outline"}
+                            style={{ width: "auto", whiteSpace: "nowrap" }}
+                            disabled={issuing === sk.id || has}
+                            onClick={() => issueFor(sk)}
+                            title={eligible ? "" : "Talablar hali bajarilmagan — server sababini ko‘rsatadi"}
+                          >
+                            {issuing === sk.id ? "Chiqarilmoqda..." : has ? "Chiqarilgan ✓" : "Chiqarish"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  {issueMsg && (
+                    <div
+                      style={{
+                        marginTop: "10px",
+                        padding: "9px 12px",
+                        borderRadius: "9px",
+                        fontSize: "13.5px",
+                        background: issueMsg.ok ? "var(--success-soft)" : "var(--danger-soft)",
+                        color: issueMsg.ok ? "var(--success-fg)" : "var(--danger-fg)",
+                      }}
+                    >
+                      {issueMsg.text}
+                    </div>
+                  )}
+                </section>
+              )}
+              {shared && (
+                <div className="toast">
+                  <Icon name="check" /> Sertifikat tekshiruv havolasi (OB 3.0) nusxalandi
+                  <button onClick={() => setShared(false)}>
+                    <Icon name="close" size={16} />
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <SourceBadge live={false} style={{ marginBottom: "12px" }} />
           {isNewUser ? (
             <section className="card" style={{ textAlign: "center", padding: "50px 24px", margin: "20px 0" }}>
               <div className="cert-seal" style={{ margin: "0 auto 16px" }}>
@@ -989,6 +1826,8 @@ export default function StudentView({
                   </button>
                 </div>
               )}
+            </>
+          )}
             </>
           )}
         </div>
@@ -1088,7 +1927,63 @@ export default function StudentView({
                 </>
               )}
 
-              {settingsTab === "Rozilik (Consent)" && (
+              {settingsTab === "Rozilik (Consent)" && consents && (
+                <>
+                  <SourceBadge live style={{ marginBottom: "10px" }} />
+                  <div className="preference-list">
+                    {[
+                      {
+                        type: "data_processing",
+                        title: "Shaxsiy ma’lumotlar va natijalarni qayta ishlashga roziman",
+                        desc: "Topshiriq natijalari va dalillaringiz asosida Skill DNA hisoblanishi uchun zarur.",
+                      },
+                      {
+                        type: "viva_record",
+                        title: "AI Viva audio va transkript yozuvlarini saqlashga roziman",
+                        desc: "AI Viva (DEFEND qatlami) uchun talab qilinadi — rozilik bo‘lmasa yangi Viva sessiyasini boshlab bo‘lmaydi.",
+                      },
+                      {
+                        type: "employer_share",
+                        title: "Tasdiqlangan Skill DNA profilimni ish beruvchilarga ko‘rsatish",
+                        desc: "Ish beruvchilar faqat shu rozilikni bergan talabalarni qidiruvda ko‘radi.",
+                      },
+                    ].map((item) => {
+                      const c = consents.find((x) => x.type === item.type);
+                      const granted = !!c?.granted;
+                      const busy = consentBusy === item.type;
+                      return (
+                        <div key={item.type}>
+                          <div>
+                            <strong>{item.title}</strong>
+                            <span>
+                              {item.desc} {granted ? `Berilgan: ${fmtDate(c?.granted_at)}.` : "Hozir berilmagan."} Istalgan vaqtda bekor qilishingiz mumkin.
+                            </span>
+                          </div>
+                          <button
+                            className={`toggle ${granted ? "on" : ""}`}
+                            aria-label={item.title}
+                            aria-pressed={granted}
+                            disabled={busy}
+                            style={busy ? { opacity: 0.6 } : undefined}
+                            onClick={() => toggleConsent(item.type, !granted)}
+                          >
+                            <i />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {consentError && (
+                    <div style={{ marginTop: "10px", padding: "9px 12px", borderRadius: "9px", fontSize: "13.5px", background: "var(--danger-soft)", color: "var(--danger-fg)" }}>
+                      {consentError}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {settingsTab === "Rozilik (Consent)" && !consents && (
+                <>
+                  <SourceBadge live={false} style={{ marginBottom: "10px" }} />
                 <div className="preference-list">
                   {[
                     "AI Viva audio va transkript yozuvlarini saqlashga roziman",
@@ -1111,6 +2006,7 @@ export default function StudentView({
                     </div>
                   ))}
                 </div>
+                </>
               )}
 
               {settingsTab !== "Profil" && settingsTab !== "Rozilik (Consent)" && (
@@ -1137,12 +2033,10 @@ export default function StudentView({
                 <button
                   className="primary-button"
                   onClick={async () => {
-                    const queryId = user?.id || user?.email;
-                    if (queryId) {
+                    if (user) {
                       try {
-                        await api.updateMe(queryId, {
+                        await api.updateMe({
                           full_name: profileName,
-                          email: profileEmail,
                           phone: profilePhone,
                           bio: profileBio,
                         });
@@ -1189,8 +2083,10 @@ export default function StudentView({
       <CareerCoachModal
         isOpen={coachModalOpen}
         onClose={() => setCoachModalOpen(false)}
-        targetRole={currentDir.careerTarget.roleName}
-        matchPct={currentDir.careerTarget.matchPct}
+        targetRole={careerLive ? careerData.roleName : currentDir.careerTarget.roleName}
+        matchPct={careerLive ? careerData.matchPct : currentDir.careerTarget.matchPct}
+        careerId={careerLive ? careerData.id ?? undefined : undefined}
+        live={careerLive}
       />
 
       {/* Verifiable Evidence Graph Modal */}
@@ -1198,7 +2094,14 @@ export default function StudentView({
         isOpen={evidenceModalOpen}
         onClose={() => setEvidenceModalOpen(false)}
         skillName={primarySkill.name}
+        skillId={livePrimary?.id}
       />
+
+      {whyOpen && (
+        <WhyScoreModal skillId={livePrimary?.id ?? null} skillName={primarySkill.name} onClose={() => setWhyOpen(false)} />
+      )}
+
+      {infoTask && <TaskInfoModal task={infoTask} skillName={skillNames[infoTask.skill_id]} onClose={() => setInfoTask(null)} />}
     </>
   );
 }
