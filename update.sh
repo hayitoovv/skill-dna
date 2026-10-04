@@ -8,9 +8,13 @@ set -e
 echo "=========================================================="
 echo "🔄 GitHub dan yangi o'zgarishlar tortilmoqda..."
 echo "=========================================================="
-git pull origin main || git pull
+# Git runs as the repository owner: a root-run pull leaves root-owned objects in .git
+# and breaks later pulls by the normal user.
+REPO_OWNER=$(stat -c %U .git)
+as_owner() { if [ "$(id -un)" = "$REPO_OWNER" ]; then "$@"; else sudo -u "$REPO_OWNER" "$@"; fi; }
+as_owner git pull --ff-only origin main
 if command -v git-lfs &> /dev/null; then
-    git lfs pull || true
+    as_owner git lfs pull || true
 fi
 
 echo -e "\n📦 1. Frontend kutubxonalari tekshirilmoqda va build qilinmoqda..."
