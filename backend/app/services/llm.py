@@ -91,7 +91,8 @@ def _get_client() -> anthropic.AsyncAnthropic:
 def _get_gemini() -> genai.Client:
     global _gemini
     if _gemini is None:
-        _gemini = genai.Client(api_key=settings.GEMINI_API_KEY, http_options=genai_types.HttpOptions(timeout=60_000))
+        key = settings.GEMINI_API_KEY.strip().strip("\"'")  # tolerate a pasted key with spaces/quotes
+        _gemini = genai.Client(api_key=key, http_options=genai_types.HttpOptions(timeout=60_000))
     return _gemini
 
 
@@ -163,6 +164,7 @@ async def _gemini_structured(
         system_instruction=f"{system}\n\n{DATA_GUARD}",
         max_output_tokens=max_tokens or settings.LLM_MAX_TOKENS,
         response_mime_type="application/json",
+        automatic_function_calling=genai_types.AutomaticFunctionCallingConfig(disable=True),  # no tools here
         response_json_schema=_inline_refs(schema.model_json_schema()),
     )
     try:
