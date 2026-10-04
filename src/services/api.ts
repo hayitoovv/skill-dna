@@ -11,6 +11,8 @@ const API_BASE = `${SUBPATH}/api/v1`;
 
 const TOKEN_KEY = "skill_dna_token";
 const REFRESH_KEY = "skill_dna_refresh";
+/** Fired on window when the session is dead and the app must return to the login screen. */
+export const SESSION_EXPIRED_EVENT = "skilldna:session-expired";
 
 export class ApiError extends Error {
   status: number;
@@ -83,6 +85,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}, retry = t
 
   if (response.status === 401 && retry && (await refreshAccessToken())) {
     return request<T>(endpoint, options, false);
+  }
+  if (response.status === 401 && token && !endpoint.includes("/auth/login")) {
+    // Session can't be renewed (expired refresh token or rotated server key): send the user back to login
+    clearTokens();
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
   if (!response.ok) {
     let message = `Server xatosi: ${response.status}`;

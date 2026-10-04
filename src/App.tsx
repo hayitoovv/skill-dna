@@ -10,7 +10,7 @@ import AssessmentModal from "./components/student/AssessmentModal";
 import SecurityModal from "./components/common/SecurityModal";
 import type { DirectionCode, Role, User } from "./types";
 import { demoUsers } from "./data/ontology";
-import { api, hasSession } from "./services/api";
+import { api, hasSession, SESSION_EXPIRED_EVENT } from "./services/api";
 import { LanguageSwitcher, useI18n } from "./i18n";
 
 const roleLabels: Record<Role, { title: string; badge: string; icon: any }> = {
@@ -207,19 +207,27 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm(t("shell.logoutConfirm"))) {
-      setCurrentUser(null);
-      setActiveRole("student");
-      try {
-        localStorage.removeItem("skill_dna_user");
-        localStorage.removeItem("skill_dna_token");
-        localStorage.removeItem("skill_dna_refresh");
-        localStorage.removeItem("skill_dna_page");
-        localStorage.removeItem("skill_dna_active_role");
-      } catch {}
-    }
+  const signOut = () => {
+    setCurrentUser(null);
+    setActiveRole("student");
+    try {
+      localStorage.removeItem("skill_dna_user");
+      localStorage.removeItem("skill_dna_token");
+      localStorage.removeItem("skill_dna_refresh");
+      localStorage.removeItem("skill_dna_page");
+      localStorage.removeItem("skill_dna_active_role");
+    } catch {}
   };
+
+  const handleLogout = () => {
+    if (window.confirm(t("shell.logoutConfirm"))) signOut();
+  };
+
+  // A dead session (expired refresh token, rotated server key) returns to login instead of silently showing demo data
+  useEffect(() => {
+    window.addEventListener(SESSION_EXPIRED_EVENT, signOut);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, signOut);
+  }, []);
 
   // If user is not logged in, show AuthScreen
   if (!currentUser) {

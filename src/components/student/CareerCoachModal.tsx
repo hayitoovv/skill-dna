@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../common/Icons";
-import { api } from "../../services/api";
+import { api, ApiError } from "../../services/api";
 
 interface CareerCoachModalProps {
   isOpen: boolean;
@@ -74,15 +74,16 @@ export default function CareerCoachModal({
           time: nowTime(),
         },
       ]);
-    } catch {
+    } catch (err) {
+      // Only a network failure is "no connection"; server errors show their real reason
+      const content = err instanceof ApiError
+        ? err.status === 401
+          ? "Sessiya muddati tugagan. Iltimos, qaytadan tizimga kiring."
+          : `Murabbiy javob bera olmadi: ${err.message}`
+        : "Server bilan aloqa yo‘q. Namuna javob: avval eng katta bo‘shliqqa ega ko‘nikma bo‘yicha KNOW testini, so‘ng DO amaliy topshirig‘ini yakunlashni tavsiya qilaman.";
       setMessages((prev) => [
         ...prev,
-        {
-          role: "coach",
-          demo: true,
-          content: "Server bilan aloqa yo‘q. Namuna javob: avval eng katta bo‘shliqqa ega ko‘nikma bo‘yicha KNOW testini, so‘ng DO amaliy topshirig‘ini yakunlashni tavsiya qilaman.",
-          time: nowTime(),
-        },
+        { role: "coach", demo: !(err instanceof ApiError), content, time: nowTime() },
       ]);
     } finally {
       setLoading(false);

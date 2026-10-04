@@ -22,7 +22,13 @@ npm install
 npm run build
 cp -r public/* dist/ 2>/dev/null || true
 ln -sfn dist skilldna
-chmod -R 755 .
+# Only the built site needs to be world-readable (nginx); never chmod the whole tree,
+# that would make backend/.env (secrets) readable by every local user.
+chmod -R a+rX dist
+if [ -f backend/.env ]; then
+    chown "root:$REPO_OWNER" backend/.env 2>/dev/null || true
+    chmod 640 backend/.env
+fi
 
 echo -e "\n🐍 2. Backend paketlari va bazasi yangilanmoqda..."
 cd backend
