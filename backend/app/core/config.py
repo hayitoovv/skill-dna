@@ -41,8 +41,12 @@ class Settings(BaseSettings):
 
     # AI layer (section 3.2: provider abstraction). Without a key the
     # deterministic rubric graders are used instead of an LLM.
+    # LLM_PROVIDER: "anthropic" | "gemini" | "" (auto: whichever key is set, Anthropic first).
+    LLM_PROVIDER: str = ""
     ANTHROPIC_API_KEY: str = ""
     LLM_MODEL: str = "claude-opus-5-5"
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     LLM_MAX_TOKENS: int = 16000
     VIVA_GRADER_COUNT: int = 3
 

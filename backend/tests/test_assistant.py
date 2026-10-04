@@ -7,6 +7,7 @@ from app.services import assistant, llm
 @pytest.fixture(autouse=True)
 def no_llm(monkeypatch):
     monkeypatch.setattr(llm.settings, "ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(llm.settings, "GEMINI_API_KEY", "")
 
 
 def test_mode_defaults_to_guarded():

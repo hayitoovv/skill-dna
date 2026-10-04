@@ -12,6 +12,7 @@ CODE = "def order_total(subtotal, vip):\n    pct = 5\n    return subtotal - subt
 @pytest.fixture(autouse=True)
 def no_llm(monkeypatch):
     monkeypatch.setattr(llm.settings, "ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(llm.settings, "GEMINI_API_KEY", "")
 
 
 def test_plan_has_document_shape_and_uses_student_code():

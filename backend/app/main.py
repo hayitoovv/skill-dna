@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.api import api_router
 from app.api.v1.endpoints.credentials import did_document
+from app.services import llm
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -35,7 +36,7 @@ async def health_check():
         "platform": "SKILL DNA",
         "version": "2.0.0",
         "database": "PostgreSQL (skill_dna)",
-        "llm": "enabled" if settings.ANTHROPIC_API_KEY else "deterministic fallback",
+        "llm": llm.provider() or "deterministic fallback",
     }
 
 @app.get("/", tags=["System"])
