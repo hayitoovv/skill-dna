@@ -156,6 +156,9 @@ def _inline_refs(schema: dict) -> dict:
     return walk(schema)
 
 
+_GEMINI_TRY_NEXT = {404, 429, 500, 503}
+
+
 async def _gemini_structured(
     *, system: str, instruction: str, data: Dict[str, str], schema: Type[T], max_tokens: Optional[int]
 ) -> T:
@@ -167,18 +170,25 @@ async def _gemini_structured(
         automatic_function_calling=genai_types.AutomaticFunctionCallingConfig(disable=True),  # no tools here
         response_json_schema=_inline_refs(schema.model_json_schema()),
     )
-    try:
-        response = await _get_gemini().aio.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=f"{render_data(data)}\n\n{instruction}",
-            config=config,
-        )
-    except genai_errors.APIError as e:
-        logger.warning("Gemini API error %s: %s", e.code, e.message)
-        raise LLMUnavailable(f"api error {e.code}") from e
-    except Exception as e:  # network/timeouts surface as httpx errors
-        logger.warning("Gemini request failed: %s", e)
-        raise LLMUnavailable("connection error") from e
+    models = [settings.GEMINI_MODEL] + [m.strip() for m in settings.GEMINI_FALLBACK_MODELS.split(",") if m.strip()]
+    response = None
+    for i, model in enumerate(models):
+        try:
+            response = await _get_gemini().aio.models.generate_content(
+                model=model,
+                contents=f"{render_data(data)}\n\n{instruction}",
+                config=config,
+            )
+            break
+        except genai_errors.APIError as e:
+            logger.warning("Gemini API error %s on %s: %s", e.code, model, e.message)
+            # Overloaded, rate-limited or retired model: the next configured model may still answer
+            if e.code in _GEMINI_TRY_NEXT and i + 1 < len(models):
+                continue
+            raise LLMUnavailable(f"api error {e.code}") from e
+        except Exception as e:  # network/timeouts surface as httpx errors
+            logger.warning("Gemini request failed: %s", e)
+            raise LLMUnavailable("connection error") from e
 
     if response.prompt_feedback and response.prompt_feedback.block_reason:
         logger.info("Gemini blocked the prompt: %s", response.prompt_feedback.block_reason)

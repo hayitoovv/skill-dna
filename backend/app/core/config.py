@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "claude-opus-5-5"
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-3.8-flash"
+    # Comma-separated models tried in order when the main one is overloaded, rate-limited or retired
+    GEMINI_FALLBACK_MODELS: str = ""
     LLM_MAX_TOKENS: int = 16000
     VIVA_GRADER_COUNT: int = 3
 

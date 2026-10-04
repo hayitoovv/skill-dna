@@ -2,6 +2,7 @@
 from types import SimpleNamespace
 
 import pytest
+from google.genai import errors as genai_errors
 from google.genai import types as genai_types
 
 from app.services import llm, viva_engine
@@ -80,4 +81,29 @@ async def test_gemini_failures_fall_back(keys, monkeypatch, models):
     from app.services.career import CoachReply
 
     with pytest.raises(llm.LLMUnavailable):
+        await llm.structured(system="S", instruction="I", data={}, schema=CoachReply)
+
+
+class OverloadedThenOk(FakeModels):
+    async def generate_content(self, *, model, contents, config):
+        if model == "busy-model":
+            self.calls.append({"model": model})
+            raise genai_errors.ServerError(503, {"error": {"code": 503, "message": "high demand", "status": "UNAVAILABLE"}})
+        return await super().generate_content(model=model, contents=contents, config=config)
+
+
+async def test_gemini_falls_over_to_next_model(keys, monkeypatch):
+    keys(gemini="g")
+    monkeypatch.setattr(llm.settings, "GEMINI_MODEL", "busy-model")
+    monkeypatch.setattr(llm.settings, "GEMINI_FALLBACK_MODELS", "spare-model")
+    models = OverloadedThenOk('{"reply": "ok", "recommended_action": "a"}')
+    fake_gemini(monkeypatch, models)
+    from app.services.career import CoachReply
+
+    out = await llm.structured(system="S", instruction="I", data={}, schema=CoachReply)
+    assert out.reply == "ok"
+    assert [c["model"] for c in models.calls] == ["busy-model", "spare-model"]
+
+    monkeypatch.setattr(llm.settings, "GEMINI_FALLBACK_MODELS", "")
+    with pytest.raises(llm.LLMUnavailable):  # no spare configured -> deterministic fallback
         await llm.structured(system="S", instruction="I", data={}, schema=CoachReply)
