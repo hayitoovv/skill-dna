@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     LLM_MODEL: str = "claude-opus-5-5"
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-3.8-flash"
     LLM_MAX_TOKENS: int = 16000
     VIVA_GRADER_COUNT: int = 3
 
