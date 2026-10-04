@@ -1,10 +1,238 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon, GoogleIcon } from "../common/Icons";
 import { demoUsers } from "../../data/ontology";
 import type { User, Role, DirectionCode } from "../../types";
 import { api } from "../../services/api";
 import logoImg from "@/assets/logo.png";
-import authBgImg from "@/assets/auth-bg.png";
+import "./auth.css";
+
+const HELIX_RUNGS = 14;
+const helixIcons = ["code", "database", "cpu", "search", "gitBranch"] as const;
+
+const activityBubbles = [
+  { initials: "AS", name: "Azizbek S.", skill: "Backend · L4", size: 46 },
+  { initials: "MK", name: "Madina K.", skill: "SQL · L3", size: 38 },
+  { initials: "NR", name: "Nigora R.", skill: "ML · L4", size: 42 },
+  { initials: "BM", name: "Bobur M.", skill: "Tarmoqlar · L3", size: 34 },
+];
+
+// Per-element 3D tilt that follows the pointer while hovered
+function Tilt({ className, tip, children }: { className?: string; tip?: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const move = (e: React.PointerEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--tx", (((e.clientX - r.left) / r.width - 0.5) * 2).toFixed(3));
+    el.style.setProperty("--ty", (((e.clientY - r.top) / r.height - 0.5) * 2).toFixed(3));
+  };
+  const leave = () => {
+    ref.current?.style.setProperty("--tx", "0");
+    ref.current?.style.setProperty("--ty", "0");
+  };
+  return (
+    <div ref={ref} className={`a3d-tilt ${className || ""}`} data-tip={tip} onPointerMove={move} onPointerLeave={leave}>
+      {children}
+    </div>
+  );
+}
+
+const roleOptions: { key: Role; label: string; icon: "student" | "teacher" | "briefcase" }[] = [
+  { key: "student", label: "Talaba", icon: "student" },
+  { key: "teacher", label: "O‘qituvchi", icon: "teacher" },
+  { key: "employer", label: "Ish beruvchi", icon: "briefcase" },
+];
+
+const directionOptions: { key: DirectionCode; label: string; hint: string; icon: "code" | "cpu" | "sparkles" }[] = [
+  { key: "software", label: "Dasturiy injiniring", hint: "Backend, frontend, DevOps", icon: "code" },
+  { key: "computer", label: "Kompyuter injiniringi", hint: "Tarmoqlar, apparat, tizimlar", icon: "cpu" },
+  { key: "ai", label: "Sun’iy intellekt", hint: "ML, ma’lumotlar tahlili, NLP", icon: "sparkles" },
+];
+
+// Custom listbox replacing the native <select>, whose popup can't be styled
+function DirectionSelect({ value, onChange }: { value: DirectionCode; onChange: (v: DirectionCode) => void }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const current = directionOptions.find((d) => d.key === value) ?? directionOptions[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [open]);
+
+  const openList = () => {
+    setActive(Math.max(0, directionOptions.findIndex((d) => d.key === value)));
+    setOpen(true);
+  };
+
+  const choose = (i: number) => {
+    onChange(directionOptions[i].key);
+    setOpen(false);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
+        e.preventDefault();
+        openList();
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((a) => (a + 1) % directionOptions.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => (a - 1 + directionOptions.length) % directionOptions.length);
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      choose(active);
+    } else if (e.key === "Escape" || e.key === "Tab") {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="a3d-field" ref={rootRef}>
+      <span className="a3d-label" id="direction-label">
+        Yo‘nalish
+      </span>
+      <div className={`a3d-select ${open ? "open" : ""}`}>
+        <button
+          type="button"
+          className="a3d-input a3d-select-trigger"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-labelledby="direction-label"
+          onClick={() => (open ? setOpen(false) : openList())}
+          onKeyDown={onKeyDown}
+        >
+          <Icon name="dna" size={17} />
+          <span className="a3d-select-value">{current.label}</span>
+          <svg className="a3d-select-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        {open && (
+          <ul className="a3d-select-list" role="listbox" aria-labelledby="direction-label">
+            {directionOptions.map((d, i) => (
+              <li
+                key={d.key}
+                role="option"
+                aria-selected={d.key === value}
+                className={`${i === active ? "active" : ""} ${d.key === value ? "selected" : ""}`}
+                onPointerEnter={() => setActive(i)}
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={() => choose(i)}
+              >
+                <span className="a3d-select-icon">
+                  <Icon name={d.icon} size={16} />
+                </span>
+                <span className="a3d-select-text">
+                  <strong>{d.label}</strong>
+                  <small>{d.hint}</small>
+                </span>
+                {d.key === value && (
+                  <svg className="a3d-select-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function initialsOf(fullName?: string) {
+  return fullName
+    ? fullName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "TL";
+}
+
+// 0–4 score used by the register form's strength meter
+function passwordStrength(pw: string) {
+  if (!pw) return 0;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/\d/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw) || pw.length >= 12) score++;
+  return Math.max(score, 1);
+}
+
+const strengthLabels = ["", "Zaif", "O‘rtacha", "Yaxshi", "Kuchli"];
+
+function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
+  return (
+    <label className="a3d-check">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className="a3d-check-box">
+        <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+          <path d="M1.5 4.5L4 7L9.5 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <span className="a3d-check-text">{children}</span>
+    </label>
+  );
+}
+
+function Field({
+  label,
+  icon,
+  type = "text",
+  placeholder,
+  value,
+  onChange,
+  reveal,
+  onReveal,
+  autoComplete,
+}: {
+  label: string;
+  icon: "mail" | "lock" | "user" | "phone";
+  type?: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  reveal?: boolean;
+  onReveal?: () => void;
+  autoComplete?: string;
+}) {
+  const isPassword = type === "password";
+  return (
+    <label className="a3d-field">
+      <span className="a3d-label">{label}</span>
+      <span className="a3d-input">
+        <Icon name={icon} size={17} />
+        <input
+          type={isPassword && reveal ? "text" : type}
+          placeholder={placeholder}
+          value={value}
+          autoComplete={autoComplete}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {isPassword && onReveal && (
+          <button type="button" className="a3d-eye" onClick={onReveal} aria-label="Parolni ko‘rsatish">
+            <Icon name={reveal ? "eyeOff" : "eye"} size={17} />
+          </button>
+        )}
+      </span>
+    </label>
+  );
+}
 
 export default function AuthScreen({
   onLogin,
@@ -13,6 +241,7 @@ export default function AuthScreen({
 }) {
   const [tab, setTab] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
+  const sceneRef = useRef<HTMLDivElement>(null);
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -20,6 +249,7 @@ export default function AuthScreen({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState("");
+  const [loginInfo, setLoginInfo] = useState("");
 
   // Register form state
   const [regFirstName, setRegFirstName] = useState("");
@@ -35,6 +265,33 @@ export default function AuthScreen({
   const [agreedTerms, setAgreedTerms] = useState(true);
   const [registerError, setRegisterError] = useState("");
 
+  // Mouse parallax: write CSS variables directly to avoid re-rendering the scene
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const el = sceneRef.current;
+    if (!el) return;
+    const mx = (e.clientX / window.innerWidth - 0.5) * 2;
+    const my = (e.clientY / window.innerHeight - 0.5) * 2;
+    el.style.setProperty("--mx", mx.toFixed(3));
+    el.style.setProperty("--my", my.toFixed(3));
+  };
+
+  // The panel rotates away on its Y axis, swaps faces, then rotates back in
+  const [phase, setPhase] = useState<"idle" | "out" | "in">("idle");
+  const [pill, setPill] = useState<"login" | "register">("login");
+  const switchTab = (next: "login" | "register") => {
+    if (next === tab || phase !== "idle") return;
+    setLoginError("");
+    setLoginInfo("");
+    setRegisterError("");
+    setPill(next);
+    setPhase("out");
+    window.setTimeout(() => {
+      setTab(next);
+      setPhase("in");
+      window.setTimeout(() => setPhase("idle"), 420);
+    }, 240);
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginIdentifier.trim() || !loginPassword.trim()) {
@@ -49,14 +306,6 @@ export default function AuthScreen({
       // 1. Attempt real backend login via PostgreSQL + JWT
       const res = await api.login(loginIdentifier.trim(), loginPassword.trim());
       if (res && res.user) {
-        const initials = res.user.full_name
-          ? res.user.full_name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()
-          : "TL";
         onLogin({
           id: res.user.id,
           name: res.user.full_name,
@@ -65,7 +314,7 @@ export default function AuthScreen({
           role: res.user.role as Role,
           direction: (res.user.direction as DirectionCode) || "software",
           organization: (res.user.organization && !res.user.organization.includes("TATU")) ? res.user.organization : "BSTU",
-          avatar: initials,
+          avatar: initialsOf(res.user.full_name),
           bio: res.user.bio || "",
         });
         return;
@@ -143,14 +392,6 @@ export default function AuthScreen({
       });
 
       if (res && res.user) {
-        const initials = res.user.full_name
-          ? res.user.full_name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()
-          : "TL";
         onLogin({
           id: res.user.id,
           name: res.user.full_name,
@@ -159,7 +400,7 @@ export default function AuthScreen({
           role: res.user.role as Role,
           direction: regDirection as DirectionCode,
           organization: (res.user.organization && !res.user.organization.includes("TATU")) ? res.user.organization : "BSTU",
-          avatar: initials,
+          avatar: initialsOf(res.user.full_name),
           bio: "",
         });
         return;
@@ -185,421 +426,376 @@ export default function AuthScreen({
   };
 
   return (
-    <div className="auth-page-wrapper">
-      <div className="auth-modal-card">
-        {/* ================= LEFT BANNER ================= */}
-        <div className="auth-left-banner">
-          {/* Background image overlay */}
-          <div
-            className="auth-bg-art"
-            style={{
-              backgroundImage: `url(${authBgImg})`,
-            }}
-          />
+    <div className="a3d" ref={sceneRef} onPointerMove={handlePointerMove}>
+      {/* ================= BACKGROUND LAYERS ================= */}
+      <div className="a3d-iso-grid" aria-hidden="true" />
+      <div className="a3d-aurora" aria-hidden="true">
+        <span className="a3d-blob b1" />
+        <span className="a3d-blob b2" />
+        <span className="a3d-blob b3" />
+      </div>
+      <div className="a3d-cubes" aria-hidden="true">
+        {[0, 1, 2, 3].map((c) => (
+          <span className={`a3d-cube c${c}`} key={c}>
+            <i className="top" />
+            <i className="left" />
+            <i className="right" />
+          </span>
+        ))}
+      </div>
+      <div className="a3d-particles" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, i) => (
+          <span key={i} style={{ "--p": i } as React.CSSProperties} />
+        ))}
+      </div>
 
-          <div className="auth-left-content">
-            {/* Logo */}
-            <div className="auth-logo-row">
-              <div className="auth-logo-badge">
-                <img
-                  src={logoImg}
-                  alt="Skill DNA"
-                  className="auth-logo-img"
-                />
-              </div>
-              <div className="auth-logo-text-block">
-                <div className="auth-logo-text">
-                  SKILL <span>DNA</span>
-                </div>
-                <div className="auth-logo-sub">
-                  REAL SKILLS · REAL OPPORTUNITIES
-                </div>
-              </div>
-            </div>
-
-            {/* Main Headline */}
-            <div className="auth-headline-block">
-              <h1>
-                O‘z salohiyatingizni <br />
-                <span className="accent-teal">oching</span>
-              </h1>
-              <p>
-                Bilimingizni sinang, mahoratingizni rivojlantiring va kelajagingizni quring.
-              </p>
-            </div>
-
-            {/* Spacer to let 3D illustration shine */}
-            <div className="auth-art-spacer" />
-
-            {/* Bottom 3 Badges */}
-            <div className="auth-bottom-badges">
-              <div className="auth-badge-col">
-                <div className="badge-icon-box">
-                  <Icon name="shield" size={17} />
-                </div>
-                <span>Ishonchli platforma</span>
-              </div>
-              <div className="auth-badge-col">
-                <div className="badge-icon-box">
-                  <Icon name="chart" size={17} />
-                </div>
-                <span>Real natijalar</span>
-              </div>
-              <div className="auth-badge-col">
-                <div className="badge-icon-box">
-                  <Icon name="lightning" size={17} />
-                </div>
-                <span>Kelajakka yo‘l</span>
-              </div>
-            </div>
+      {/* ================= LEFT: 3D SHOWCASE ================= */}
+      <section className="a3d-showcase">
+        <header className="a3d-brand">
+          <div className="a3d-brand-mark">
+            <img src={logoImg} alt="Skill DNA" />
           </div>
+          <div>
+            <strong>
+              SKILL <span>DNA</span>
+            </strong>
+            <small>Real Skills · Real Opportunities</small>
+          </div>
+        </header>
+
+        <div className="a3d-stage">
+          {/* Isometric pedestal the helix stands on */}
+          <div className="a3d-pedestal" aria-hidden="true">
+            <span className="ring r1" />
+            <span className="ring r2" />
+            <span className="ring r3" />
+          </div>
+
+          {/* Glowing slate-blue core column */}
+          <div className="a3d-core" aria-hidden="true" />
+
+          {/* Translucent DNA double helix; every bead carries a rotating skill icon */}
+          <div className="a3d-helix" aria-hidden="true">
+            {Array.from({ length: HELIX_RUNGS }, (_, i) => (
+              <div className="a3d-rung" key={i} style={{ "--i": i } as React.CSSProperties}>
+                <span className="a3d-bar" />
+                <span className="a3d-node left">
+                  <i>
+                    <Icon name={helixIcons[i % helixIcons.length]} size={11} />
+                  </i>
+                </span>
+                <span className="a3d-node right">
+                  <i>
+                    <Icon name={helixIcons[(i + 2) % helixIcons.length]} size={11} />
+                  </i>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Floating 3D blocks */}
+          <Tilt className="a3d-float f1" tip="Backend yo‘nalishi bo‘yicha umumiy ball">
+            <div className="a3d-block">
+              <div className="a3d-ring">
+                <svg viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="18" />
+                  <circle cx="22" cy="22" r="18" className="val" />
+                </svg>
+                <b>87</b>
+              </div>
+              <div>
+                <small>Skill Score</small>
+                <strong>Backend · REST API</strong>
+              </div>
+            </div>
+          </Tilt>
+
+          <Tilt className="a3d-float f2" tip="Dalillar AI Viva orqali himoya qilingan">
+            <div className="a3d-block compact">
+              <span className="a3d-chip ok">
+                <Icon name="shieldCheck" size={16} />
+              </span>
+              <div>
+                <strong>PROVE tasdiqlandi</strong>
+                <small>18 ta dalil · AI Viva</small>
+              </div>
+            </div>
+          </Tilt>
+
+          <Tilt className="a3d-float f3" tip="KNOW · DO · ADAPT · DEFEND · PROVE">
+            <div className="a3d-block bars">
+              <small>5 qatlamli model</small>
+              <div className="a3d-bars">
+                {[90, 85, 80, 78, 60].map((v, i) => (
+                  <span key={i} style={{ "--h": `${v}%`, "--d": `${i * 0.12}s` } as React.CSSProperties} />
+                ))}
+              </div>
+              <div className="a3d-bar-labels">
+                <i>K</i>
+                <i>D</i>
+                <i>A</i>
+                <i>Df</i>
+                <i>P</i>
+              </div>
+            </div>
+          </Tilt>
+
+          <Tilt className="a3d-float f4" tip="Open Badges 3.0 raqamli sertifikati">
+            <div className="a3d-block compact">
+              <span className="a3d-chip level">L4</span>
+              <div>
+                <strong>Mutaxassis darajasi</strong>
+                <small>Open Badges 3.0</small>
+              </div>
+            </div>
+          </Tilt>
         </div>
 
-        {/* ================= RIGHT FORM ================= */}
-        <div className="auth-right-form">
+        <div className="a3d-copy">
+          <h1>
+            <span className="metal">O‘z salohiyatingizni</span> <span className="metal emerald">oching</span>
+          </h1>
+          <p>Bilimingizni sinang, mahoratingizni rivojlantiring va kelajagingizni quring.</p>
 
-          {tab === "login" ? (
-            /* ----- LOGIN FORM ----- */
-            <div className="form-content-wrap">
-              <div className="form-header">
-                <h2>Tizimga kirish</h2>
-                <p>Hisobingizga kiring va davom eting</p>
-              </div>
+          <div className="a3d-bubbles">
+            {activityBubbles.map((b, i) => (
+              <span
+                key={b.initials}
+                className="a3d-bubble"
+                data-tip={`${b.name} · ${b.skill}`}
+                style={{ "--s": `${b.size}px`, "--b": i } as React.CSSProperties}
+              >
+                {b.initials}
+              </span>
+            ))}
+            <span className="a3d-bubble count" data-tip="Faol talabalar soni" style={{ "--s": "58px", "--b": 4 } as React.CSSProperties}>
+              <b>1 240+</b>
+            </span>
+            <p>
+              talaba ko‘nikmalarini <strong>isbotlamoqda</strong>
+            </p>
+          </div>
 
-              <form onSubmit={handleLoginSubmit} className="auth-form">
-                {/* Identifier */}
-                <div className="input-group">
-                  <label>Email yoki telefon raqami</label>
-                  <div className="input-field">
-                    <span className="field-icon">
-                      <Icon name="mail" size={18} />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="example@mail.com yoki +998 90 123 45 67"
-                      value={loginIdentifier}
-                      onChange={(e) => {
-                        setLoginIdentifier(e.target.value);
-                        setLoginError("");
-                      }}
-                    />
-                  </div>
+          <ul className="a3d-perks">
+            <li data-tip="5 qatlamli halollik nazorati">
+              <Icon name="shield" size={15} /> Ishonchli platforma
+            </li>
+            <li data-tip="Rezyume emas, real topshiriqlar">
+              <Icon name="chart" size={15} /> Real natijalar
+            </li>
+            <li data-tip="Tasdiqlangan nomzodlar ish beruvchilarga ko‘rinadi">
+              <Icon name="lightning" size={15} /> Kelajakka yo‘l
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* ================= RIGHT: ROTATING 3D HUB ================= */}
+      <section className="a3d-panel-wrap">
+        <div className="a3d-panel">
+          <div className="a3d-mobile-brand">
+            <div className="a3d-brand-mark">
+              <img src={logoImg} alt="Skill DNA" />
+            </div>
+            <strong>
+              SKILL <span>DNA</span>
+            </strong>
+          </div>
+
+          <div className={`a3d-tabs ${pill}`} role="tablist">
+            <span className="a3d-tab-pill" />
+            <button type="button" role="tab" aria-selected={pill === "login"} onClick={() => switchTab("login")}>
+              Kirish
+            </button>
+            <button type="button" role="tab" aria-selected={pill === "register"} onClick={() => switchTab("register")}>
+              Ro‘yxatdan o‘tish
+            </button>
+          </div>
+
+          <div className={`a3d-hub-face phase-${phase}`}>
+            {tab === "login" ? (
+              /* ----- LOGIN FORM ----- */
+              <>
+                <div className="a3d-head">
+                  <h2>Xush kelibsiz 👋</h2>
+                  <p>Hisobingizga kiring va davom eting</p>
                 </div>
 
-                {/* Password */}
-                <div className="input-group">
-                  <label>Parol</label>
-                  <div className="input-field">
-                    <span className="field-icon">
-                      <Icon name="lock" size={18} />
-                    </span>
-                    <input
-                      type={showLoginPassword ? "text" : "password"}
-                      placeholder="Parolingizni kiriting"
-                      value={loginPassword}
-                      onChange={(e) => {
-                        setLoginPassword(e.target.value);
-                        setLoginError("");
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="eye-toggle"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      aria-label="Parolni ko‘rsatish"
-                    >
-                      <Icon name={showLoginPassword ? "eyeOff" : "eye"} size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Remember & Forgot */}
-                <div className="form-aux-row">
-                  <label className="custom-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                    />
-                    <span className="checkbox-box">
-                      {rememberMe && (
-                        <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                          <path
-                            d="M1.5 4.5L4 7L9.5 1.5"
-                            stroke="white"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="checkbox-text">Meni eslab qolish</span>
-                  </label>
-                  <a
-                    href="#forgot"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert("Parolni tiklash havolasi emailingizga yuborildi.");
-                    }}
-                    className="forgot-link"
-                  >
-                    Parolni unutdingizmi?
-                  </a>
-                </div>
-
-                {loginError && <div className="form-error-alert">{loginError}</div>}
-
-                {/* Submit button */}
-                <button type="submit" className="auth-submit-btn">
-                  Kirish <span className="btn-arrow">→</span>
-                </button>
-
-                {/* Divider */}
-                <div className="auth-divider">
-                  <span>Yoki</span>
-                </div>
-
-                {/* Google Login */}
-                <button
-                  type="button"
-                  className="google-auth-btn"
-                  onClick={() => onLogin(demoUsers.student)}
-                >
-                  <GoogleIcon size={19} />
-                  <span>Google orqali kirish</span>
-                </button>
-
-                {/* Switch link */}
-                <div className="switch-auth-link">
-                  Hisobingiz yo‘qmi?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTab("register");
+                <form onSubmit={handleLoginSubmit} className="a3d-form">
+                  <Field
+                    label="Email yoki telefon raqami"
+                    icon="mail"
+                    placeholder="example@mail.com yoki +998 90 123 45 67"
+                    value={loginIdentifier}
+                    autoComplete="username"
+                    onChange={(v) => {
+                      setLoginIdentifier(v);
                       setLoginError("");
                     }}
-                  >
-                    Ro‘yxatdan o‘ting
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : (
-            /* ----- REGISTER FORM ----- */
-            <div className="form-content-wrap">
-              <div className="form-header">
-                <h2>Ro‘yxatdan o‘tish</h2>
-                <p>Yangi hisob oching va imkoniyatlar dunyosiga qadam qo‘ying</p>
-              </div>
-
-              <form onSubmit={handleRegisterSubmit} className="auth-form register-form">
-                {/* First Name & Last Name */}
-                <div className="form-row-2col">
-                  <div className="input-group">
-                    <label>Ism</label>
-                    <div className="input-field">
-                      <span className="field-icon">
-                        <Icon name="user" size={18} />
-                      </span>
-                      <input
-                        type="text"
-                        placeholder="Ismingizni kiriting"
-                        value={regFirstName}
-                        onChange={(e) => setRegFirstName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="input-group">
-                    <label>Familiya</label>
-                    <div className="input-field">
-                      <span className="field-icon">
-                        <Icon name="user" size={18} />
-                      </span>
-                      <input
-                        type="text"
-                        placeholder="Familiyangizni kiriting"
-                        value={regLastName}
-                        onChange={(e) => setRegLastName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div className="input-group">
-                  <label>Email</label>
-                  <div className="input-field">
-                    <span className="field-icon">
-                      <Icon name="mail" size={18} />
-                    </span>
-                    <input
-                      type="email"
-                      placeholder="example@mail.com"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Phone */}
-                <div className="input-group">
-                  <label>Telefon raqam</label>
-                  <div className="input-field">
-                    <span className="field-icon">
-                      <Icon name="phone" size={18} />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="+998 90 123 45 67"
-                      value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Password & Confirm */}
-                <div className="input-group">
-                  <label>Parol</label>
-                  <div className="input-field">
-                    <span className="field-icon">
-                      <Icon name="lock" size={18} />
-                    </span>
-                    <input
-                      type={showRegPassword ? "text" : "password"}
-                      placeholder="Parolni kiriting"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="eye-toggle"
-                      onClick={() => setShowRegPassword(!showRegPassword)}
-                      aria-label="Parolni ko‘rsatish"
-                    >
-                      <Icon name={showRegPassword ? "eyeOff" : "eye"} size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <label>Parolni tasdiqlang</label>
-                  <div className="input-field">
-                    <span className="field-icon">
-                      <Icon name="lock" size={18} />
-                    </span>
-                    <input
-                      type={showRegConfirmPassword ? "text" : "password"}
-                      placeholder="Parolni qayta kiriting"
-                      value={regConfirmPassword}
-                      onChange={(e) => setRegConfirmPassword(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="eye-toggle"
-                      onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                      aria-label="Parolni tasdiqlashni ko‘rsatish"
-                    >
-                      <Icon name={showRegConfirmPassword ? "eyeOff" : "eye"} size={18} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Agreement */}
-                <div className="agreement-check-row">
-                  <label className="custom-checkbox agreement-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={agreedTerms}
-                      onChange={(e) => setAgreedTerms(e.target.checked)}
-                    />
-                    <span className="checkbox-box">
-                      {agreedTerms && (
-                        <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                          <path
-                            d="M1.5 4.5L4 7L9.5 1.5"
-                            stroke="white"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="checkbox-text agreement-text">
-                      <a href="#terms" onClick={(e) => e.preventDefault()}>
-                        Foydalanish shartlari
-                      </a>
-                      {" va "}
-                      <a href="#privacy" onClick={(e) => e.preventDefault()}>
-                        Maxfiylik siyosati
-                      </a>
-                      {" bilan tanishdim va roziman"}
-                    </span>
-                  </label>
-                </div>
-
-                {registerError && <div className="form-error-alert">{registerError}</div>}
-
-                {/* Submit button */}
-                <button type="submit" className="auth-submit-btn">
-                  Ro‘yxatdan o‘tish <span className="btn-arrow">→</span>
-                </button>
-
-                {/* Divider */}
-                <div className="auth-divider">
-                  <span>Yoki</span>
-                </div>
-
-                {/* Google Register */}
-                <button
-                  type="button"
-                  className="google-auth-btn"
-                  onClick={() => onLogin(demoUsers.student)}
-                >
-                  <GoogleIcon size={19} />
-                  <span>Google orqali ro‘yxatdan o‘tish</span>
-                </button>
-
-                {/* Switch link */}
-                <div className="switch-auth-link">
-                  Hisobingiz bormi?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTab("login");
-                      setRegisterError("");
+                  />
+                  <Field
+                    label="Parol"
+                    icon="lock"
+                    type="password"
+                    placeholder="Parolingizni kiriting"
+                    value={loginPassword}
+                    autoComplete="current-password"
+                    reveal={showLoginPassword}
+                    onReveal={() => setShowLoginPassword(!showLoginPassword)}
+                    onChange={(v) => {
+                      setLoginPassword(v);
+                      setLoginError("");
                     }}
-                  >
-                    Kirish
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-        </div>
-      </div>
+                  />
 
-      {/* Floating Demo Bar below the card */}
-      <div className="auth-demo-footer">
-        <span>Tezkor demo hisoblar:</span>
-        <button type="button" onClick={() => onLogin(demoUsers.student)} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <Icon name="student" size={14} /> Talaba
-        </button>
-        <button type="button" onClick={() => onLogin(demoUsers.teacher)} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <Icon name="teacher" size={14} /> O‘qituvchi
-        </button>
-        <button type="button" onClick={() => onLogin(demoUsers.employer)} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <Icon name="briefcase" size={14} /> Ish beruvchi
-        </button>
-        <button type="button" onClick={() => onLogin(demoUsers.university)} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <Icon name="university" size={14} /> Rektorat
-        </button>
-        <button type="button" onClick={() => onLogin(demoUsers.moderator)} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          <Icon name="shieldCheck" size={14} /> Moderator
-        </button>
-      </div>
+                  <div className="a3d-aux">
+                    <Checkbox checked={rememberMe} onChange={setRememberMe}>
+                      Meni eslab qolish
+                    </Checkbox>
+                    <button
+                      type="button"
+                      className="a3d-link"
+                      onClick={() => setLoginInfo("Parolni tiklash havolasi emailingizga yuborildi.")}
+                    >
+                      Parolni unutdingizmi?
+                    </button>
+                  </div>
+
+                  {loginError && <div className="a3d-alert error">{loginError}</div>}
+                  {loginInfo && !loginError && <div className="a3d-alert info">{loginInfo}</div>}
+
+                  <button type="submit" className="a3d-submit" disabled={loading}>
+                    <span className="a3d-core-orb" aria-hidden="true" />
+                    <span>{loading ? "Tekshirilmoqda..." : "Kirish"}</span>
+                    {!loading && <Icon name="arrow" size={17} />}
+                  </button>
+
+                  <div className="a3d-divider">
+                    <span>yoki</span>
+                  </div>
+
+                  <button type="button" className="a3d-google" onClick={() => onLogin(demoUsers.student)}>
+                    <GoogleIcon size={18} />
+                    <span>Google orqali kirish</span>
+                  </button>
+
+                  <p className="a3d-switch">
+                    Hisobingiz yo‘qmi?{" "}
+                    <button type="button" onClick={() => switchTab("register")}>
+                      Ro‘yxatdan o‘ting
+                    </button>
+                  </p>
+                </form>
+              </>
+            ) : (
+              /* ----- REGISTER FORM ----- */
+              <>
+                <div className="a3d-head">
+                  <h2>Hisob yarating</h2>
+                  <p>Imkoniyatlar dunyosiga birinchi qadam</p>
+                </div>
+
+                <form onSubmit={handleRegisterSubmit} className="a3d-form">
+                  <div className="a3d-roles">
+                    {roleOptions.map((r) => (
+                      <button
+                        key={r.key}
+                        type="button"
+                        className={regRole === r.key ? "active" : ""}
+                        onClick={() => setRegRole(r.key)}
+                      >
+                        <Icon name={r.icon} size={18} />
+                        <span>{r.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="a3d-row">
+                    <Field label="Ism" icon="user" placeholder="Ismingiz" value={regFirstName} onChange={setRegFirstName} autoComplete="given-name" />
+                    <Field label="Familiya" icon="user" placeholder="Familiyangiz" value={regLastName} onChange={setRegLastName} autoComplete="family-name" />
+                  </div>
+
+                  <div className="a3d-row">
+                    <Field label="Email" icon="mail" type="email" placeholder="example@mail.com" value={regEmail} onChange={setRegEmail} autoComplete="email" />
+                    <Field label="Telefon" icon="phone" placeholder="+998 90 123 45 67" value={regPhone} onChange={setRegPhone} autoComplete="tel" />
+                  </div>
+
+                  {regRole === "student" && (
+                    <DirectionSelect value={regDirection} onChange={setRegDirection} />
+                  )}
+
+                  <div className="a3d-row">
+                    <Field
+                      label="Parol"
+                      icon="lock"
+                      type="password"
+                      placeholder="Parol"
+                      value={regPassword}
+                      autoComplete="new-password"
+                      reveal={showRegPassword}
+                      onReveal={() => setShowRegPassword(!showRegPassword)}
+                      onChange={setRegPassword}
+                    />
+                    <Field
+                      label="Tasdiqlash"
+                      icon="lock"
+                      type="password"
+                      placeholder="Qayta kiriting"
+                      value={regConfirmPassword}
+                      autoComplete="new-password"
+                      reveal={showRegConfirmPassword}
+                      onReveal={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                      onChange={setRegConfirmPassword}
+                    />
+                  </div>
+
+                  {regPassword && (
+                    <div className={`a3d-strength s${passwordStrength(regPassword)}`}>
+                      <div>
+                        {[1, 2, 3, 4].map((n) => (
+                          <i key={n} />
+                        ))}
+                      </div>
+                      <span>{strengthLabels[passwordStrength(regPassword)]}</span>
+                    </div>
+                  )}
+
+                  <Checkbox checked={agreedTerms} onChange={setAgreedTerms}>
+                    <a href="#terms" onClick={(e) => e.preventDefault()}>
+                      Foydalanish shartlari
+                    </a>
+                    {" va "}
+                    <a href="#privacy" onClick={(e) => e.preventDefault()}>
+                      Maxfiylik siyosati
+                    </a>
+                    {" bilan tanishdim va roziman"}
+                  </Checkbox>
+
+                  {registerError && <div className="a3d-alert error">{registerError}</div>}
+
+                  <button type="submit" className="a3d-submit" disabled={loading}>
+                    <span className="a3d-core-orb" aria-hidden="true" />
+                    <span>{loading ? "Yaratilmoqda..." : "Ro‘yxatdan o‘tish"}</span>
+                    {!loading && <Icon name="arrow" size={17} />}
+                  </button>
+
+                  <button type="button" className="a3d-google" onClick={() => onLogin(demoUsers.student)}>
+                    <GoogleIcon size={18} />
+                    <span>Google orqali ro‘yxatdan o‘tish</span>
+                  </button>
+
+                  <p className="a3d-switch">
+                    Hisobingiz bormi?{" "}
+                    <button type="button" onClick={() => switchTab("login")}>
+                      Kirish
+                    </button>
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
