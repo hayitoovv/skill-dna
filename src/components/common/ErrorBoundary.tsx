@@ -51,8 +51,8 @@ export default class ErrorBoundary extends Component<Props, State> {
             justifyContent: "center",
             minHeight: "100vh",
             padding: "24px",
-            background: "#0f172a",
-            color: "#f8fafc",
+            background: "var(--ink)",
+            color: "var(--surface-2)",
             fontFamily: "system-ui, -apple-system, sans-serif",
             textAlign: "center",
           }}
@@ -60,10 +60,10 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div
             style={{
               maxWidth: "520px",
-              background: "#1e293b",
+              background: "var(--ink-2)",
               padding: "36px",
               borderRadius: "16px",
-              border: "1px solid #334155",
+              border: "1px solid var(--text-2)",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
             }}
           >
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 height: "56px",
                 borderRadius: "12px",
                 background: "rgba(239, 68, 68, 0.15)",
-                color: "#ef4444",
+                color: "var(--danger-400)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -85,21 +85,21 @@ export default class ErrorBoundary extends Component<Props, State> {
             <h1 style={{ fontSize: "22px", fontWeight: 700, margin: "0 0 10px" }}>
               Kutilmagan xatolik yuz berdi
             </h1>
-            <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: "1.6", margin: "0 0 20px" }}>
+            <p style={{ color: "var(--subtle)", fontSize: "14px", lineHeight: "1.6", margin: "0 0 20px" }}>
               Ilovada vaqtinchalik xatolik paydo bo‘ldi. Qayta yuklash tugmasi orqali sahifani yangilashingiz mumkin.
             </p>
             {this.state.error && (
               <pre
                 style={{
-                  background: "#090d16",
+                  background: "var(--ink)",
                   padding: "12px",
                   borderRadius: "8px",
                   fontSize: "12px",
-                  color: "#fca5a5",
+                  color: "var(--danger-ring)",
                   overflowX: "auto",
                   textAlign: "left",
                   margin: "0 0 24px",
-                  border: "1px solid #7f1d1d",
+                  border: "1px solid var(--danger-strong)",
                 }}
               >
                 {this.state.error.message}
@@ -112,7 +112,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 style={{
                   padding: "10px 20px",
                   borderRadius: "8px",
-                  background: "#0284c7",
+                  background: "var(--info)",
                   color: "#ffffff",
                   border: "none",
                   fontWeight: 600,
@@ -129,8 +129,8 @@ export default class ErrorBoundary extends Component<Props, State> {
                   padding: "10px 20px",
                   borderRadius: "8px",
                   background: "transparent",
-                  color: "#cbd5e1",
-                  border: "1px solid #475569",
+                  color: "var(--border-strong)",
+                  border: "1px solid var(--text-3)",
                   fontWeight: 600,
                   fontSize: "14px",
                   cursor: "pointer",

@@ -436,8 +436,8 @@ export default function TeacherPortal({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#eff6ff",
-              color: "#2563eb",
+              background: "var(--accent-soft)",
+              color: "var(--accent)",
               display: "grid",
               placeItems: "center",
             }}
@@ -458,8 +458,8 @@ export default function TeacherPortal({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#ecfdf5",
-              color: "#059669",
+              background: "var(--success-soft)",
+              color: "var(--success)",
               display: "grid",
               placeItems: "center",
             }}
@@ -480,8 +480,8 @@ export default function TeacherPortal({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#fef3c7",
-              color: "#d97706",
+              background: "var(--warning-soft)",
+              color: "var(--warning)",
               display: "grid",
               placeItems: "center",
             }}
@@ -502,8 +502,8 @@ export default function TeacherPortal({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#f5f3ff",
-              color: "#7c3aed",
+              background: "var(--violet-soft)",
+              color: "var(--violet)",
               display: "grid",
               placeItems: "center",
             }}
@@ -525,7 +525,7 @@ export default function TeacherPortal({
           display: "flex",
           gap: "8px",
           marginBottom: "24px",
-          borderBottom: "1.5px solid #e2e8f0",
+          borderBottom: "1.5px solid var(--border)",
           paddingBottom: "10px",
           flexWrap: "wrap",
         }}
@@ -536,7 +536,7 @@ export default function TeacherPortal({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "heatmap" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "heatmap" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "heatmap" ? "var(--navy)" : "#ffffff",
             color: currentTab === "heatmap" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -546,7 +546,7 @@ export default function TeacherPortal({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "heatmap" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "heatmap" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="chart" size={16} />
@@ -559,7 +559,7 @@ export default function TeacherPortal({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "queue" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "queue" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "queue" ? "var(--navy)" : "#ffffff",
             color: currentTab === "queue" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -569,7 +569,7 @@ export default function TeacherPortal({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "queue" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "queue" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="check" size={16} />
@@ -578,8 +578,8 @@ export default function TeacherPortal({
             style={{
               padding: "2px 7px",
               borderRadius: "10px",
-              background: currentTab === "queue" ? "rgba(255,255,255,0.2)" : "#fef3c7",
-              color: currentTab === "queue" ? "#ffffff" : "#d97706",
+              background: currentTab === "queue" ? "rgba(255,255,255,0.2)" : "var(--warning-soft)",
+              color: currentTab === "queue" ? "#ffffff" : "var(--warning)",
               fontSize: "11px",
               fontWeight: 800,
             }}
@@ -594,7 +594,7 @@ export default function TeacherPortal({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "remedial" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "remedial" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "remedial" ? "var(--navy)" : "#ffffff",
             color: currentTab === "remedial" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -604,7 +604,7 @@ export default function TeacherPortal({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "remedial" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "remedial" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="code" size={16} />
@@ -613,8 +613,8 @@ export default function TeacherPortal({
             style={{
               padding: "2px 7px",
               borderRadius: "10px",
-              background: currentTab === "remedial" ? "rgba(255,255,255,0.2)" : "#eff6ff",
-              color: currentTab === "remedial" ? "#ffffff" : "#2563eb",
+              background: currentTab === "remedial" ? "rgba(255,255,255,0.2)" : "var(--accent-soft)",
+              color: currentTab === "remedial" ? "#ffffff" : "var(--accent)",
               fontSize: "11px",
               fontWeight: 800,
             }}
@@ -629,7 +629,7 @@ export default function TeacherPortal({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "viva" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "viva" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "viva" ? "var(--navy)" : "#ffffff",
             color: currentTab === "viva" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -639,7 +639,7 @@ export default function TeacherPortal({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "viva" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "viva" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="file" size={16} />
@@ -648,8 +648,8 @@ export default function TeacherPortal({
             style={{
               padding: "2px 7px",
               borderRadius: "10px",
-              background: currentTab === "viva" ? "rgba(255,255,255,0.2)" : "#ecfdf5",
-              color: currentTab === "viva" ? "#ffffff" : "#059669",
+              background: currentTab === "viva" ? "rgba(255,255,255,0.2)" : "var(--success-soft)",
+              color: currentTab === "viva" ? "#ffffff" : "var(--success)",
               fontSize: "11px",
               fontWeight: 800,
             }}
@@ -765,7 +765,7 @@ export default function TeacherPortal({
                     fontSize: "11px",
                     padding: "3px 8px",
                     borderRadius: "4px",
-                    background: "#10b981",
+                    background: "var(--success-400)",
                     color: "white",
                     fontWeight: 700,
                   }}
@@ -861,7 +861,7 @@ export default function TeacherPortal({
                     gap: "20px",
                     padding: "16px 20px",
                     borderRadius: "10px",
-                    background: "#f8fafc",
+                    background: "var(--surface-2)",
                     border: "1px solid var(--border)",
                   }}
                 >
@@ -887,10 +887,10 @@ export default function TeacherPortal({
                           borderRadius: "10px",
                           background:
                             item.avgScore >= 75
-                              ? "linear-gradient(90deg, #059669, #10b981)"
+                              ? "linear-gradient(90deg, var(--success), var(--success-400))"
                               : item.avgScore >= 65
-                              ? "linear-gradient(90deg, #3b82f6, #60a5fa)"
-                              : "linear-gradient(90deg, #f59e0b, #ef4444)",
+                              ? "linear-gradient(90deg, var(--accent-400), var(--accent-300))"
+                              : "linear-gradient(90deg, var(--warning-400), var(--danger-400))",
                         }}
                       />
                     </div>
@@ -913,16 +913,16 @@ export default function TeacherPortal({
                         fontWeight: 700,
                         background:
                           item.status === "Yaxshi"
-                            ? "#ecfdf5"
+                            ? "var(--success-soft)"
                             : item.status.includes("O‘rtacha")
-                            ? "#eff6ff"
-                            : "#fef2f2",
+                            ? "var(--accent-soft)"
+                            : "var(--danger-soft)",
                         color:
                           item.status === "Yaxshi"
-                            ? "#059669"
+                            ? "var(--success)"
                             : item.status.includes("O‘rtacha")
-                            ? "#2563eb"
-                            : "#dc2626",
+                            ? "var(--accent)"
+                            : "var(--danger)",
                       }}
                     >
                       {item.status}
@@ -986,7 +986,7 @@ export default function TeacherPortal({
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                 <thead>
-                  <tr style={{ borderBottom: "2px solid #e2e8f0", color: "var(--muted)", fontSize: "12px", textTransform: "uppercase" }}>
+                  <tr style={{ borderBottom: "2px solid var(--border)", color: "var(--muted)", fontSize: "12px", textTransform: "uppercase" }}>
                     <th style={{ padding: "12px 10px" }}>Talaba</th>
                     <th style={{ padding: "12px 10px" }}>Daraja</th>
                     <th style={{ padding: "12px 10px" }}>Umumiy ball</th>
@@ -997,7 +997,7 @@ export default function TeacherPortal({
                 </thead>
                 <tbody>
                   {filteredStudents.map((st) => (
-                    <tr key={st.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <tr key={st.id} style={{ borderBottom: "1px solid var(--surface-3)" }}>
                       <td style={{ padding: "14px 10px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <div
@@ -1005,7 +1005,7 @@ export default function TeacherPortal({
                               width: "36px",
                               height: "36px",
                               borderRadius: "50%",
-                              background: "#eff6ff",
+                              background: "var(--accent-soft)",
                               color: "var(--royal)",
                               display: "grid",
                               placeItems: "center",
@@ -1026,8 +1026,8 @@ export default function TeacherPortal({
                           style={{
                             padding: "3px 8px",
                             borderRadius: "6px",
-                            background: st.level === "L4" ? "#ecfdf5" : "#eff6ff",
-                            color: st.level === "L4" ? "#047857" : "#1d4ed8",
+                            background: st.level === "L4" ? "var(--success-soft)" : "var(--accent-soft)",
+                            color: st.level === "L4" ? "var(--success-fg)" : "var(--accent-hover)",
                             fontWeight: 800,
                             fontSize: "12px",
                           }}
@@ -1041,11 +1041,11 @@ export default function TeacherPortal({
                       </td>
                       <td style={{ padding: "14px 10px" }}>
                         <div style={{ display: "flex", gap: "6px", fontSize: "11.5px", fontWeight: 700 }}>
-                          <span style={{ color: "#2563eb" }}>K:{st.layers.KNOW}</span>
-                          <span style={{ color: "#059669" }}>D:{st.layers.DO}</span>
-                          <span style={{ color: "#7c3aed" }}>A:{st.layers.ADAPT}</span>
-                          <span style={{ color: "#d97706" }}>DF:{st.layers.DEFEND}</span>
-                          <span style={{ color: "#e11d48" }}>P:{st.layers.PROVE}</span>
+                          <span style={{ color: "var(--accent)" }}>K:{st.layers.KNOW}</span>
+                          <span style={{ color: "var(--success)" }}>D:{st.layers.DO}</span>
+                          <span style={{ color: "var(--violet)" }}>A:{st.layers.ADAPT}</span>
+                          <span style={{ color: "var(--warning)" }}>DF:{st.layers.DEFEND}</span>
+                          <span style={{ color: "var(--rose)" }}>P:{st.layers.PROVE}</span>
                         </div>
                       </td>
                       <td style={{ padding: "14px 10px" }}>
@@ -1057,20 +1057,20 @@ export default function TeacherPortal({
                             fontWeight: 600,
                             background:
                               st.status === "Bozorga tayyor"
-                                ? "#ecfdf5"
+                                ? "var(--success-soft)"
                                 : st.status.includes("Bo‘shliq")
-                                ? "#fef3c7"
+                                ? "var(--warning-soft)"
                                 : st.status.includes("Remedial")
-                                ? "#fee2e2"
-                                : "#f1f5f9",
+                                ? "var(--danger-soft)"
+                                : "var(--surface-3)",
                             color:
                               st.status === "Bozorga tayyor"
-                                ? "#059669"
+                                ? "var(--success)"
                                 : st.status.includes("Bo‘shliq")
-                                ? "#b45309"
+                                ? "var(--warning-fg)"
                                 : st.status.includes("Remedial")
-                                ? "#dc2626"
-                                : "#475569",
+                                ? "var(--danger)"
+                                : "var(--text-3)",
                           }}
                         >
                           {st.status}
@@ -1146,7 +1146,7 @@ export default function TeacherPortal({
                     border: "1.5px solid var(--border)",
                     fontSize: "13px",
                     outline: "none",
-                    background: "#f8fafc",
+                    background: "var(--surface-2)",
                   }}
                 />
               </div>
@@ -1173,7 +1173,7 @@ export default function TeacherPortal({
                     fontSize: "12px",
                     fontWeight: 600,
                     cursor: "pointer",
-                    border: proveTypeFilter === tp.key ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+                    border: proveTypeFilter === tp.key ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
                     background: proveTypeFilter === tp.key ? "var(--navy)" : "#ffffff",
                     color: proveTypeFilter === tp.key ? "#ffffff" : "var(--navy)",
                     transition: "0.15s ease",
@@ -1211,7 +1211,7 @@ export default function TeacherPortal({
 
           {filteredProveQueue.length === 0 ? (
             <div className="card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--muted)" }}>
-              <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#ecfdf5", color: "#059669", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "var(--success-soft)", color: "var(--success)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
                 <Icon name="checkCircle" size={28} />
               </div>
               <h3 style={{ margin: "0 0 6px", color: "var(--navy)", fontSize: "17.5px" }}>
@@ -1228,7 +1228,7 @@ export default function TeacherPortal({
                   key={item.id}
                   className="candidate-card"
                   style={{
-                    background: confirmedId === item.id ? "#ecfdf5" : "white",
+                    background: confirmedId === item.id ? "var(--success-soft)" : "white",
                     transition: "all 0.3s ease",
                   }}
                 >
@@ -1240,7 +1240,7 @@ export default function TeacherPortal({
                           width: "44px",
                           height: "44px",
                           borderRadius: "12px",
-                          background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+                          background: "linear-gradient(135deg, var(--accent-strong), var(--accent))",
                           color: "#ffffff",
                           display: "grid",
                           placeItems: "center",
@@ -1259,7 +1259,7 @@ export default function TeacherPortal({
                             style={{
                               padding: "2px 7px",
                               borderRadius: "6px",
-                              background: "#eff6ff",
+                              background: "var(--accent-soft)",
                               color: "var(--royal)",
                               fontSize: "11px",
                               fontWeight: 700,
@@ -1277,9 +1277,9 @@ export default function TeacherPortal({
                         borderRadius: "20px",
                         fontSize: "11.5px",
                         fontWeight: 700,
-                        background: "#ecfdf5",
-                        color: "#059669",
-                        border: "1px solid #a7f3d0",
+                        background: "var(--success-soft)",
+                        color: "var(--success)",
+                        border: "1px solid var(--success-ring)",
                       }}
                     >
                       Kutilmoqda (PROVE)
@@ -1290,7 +1290,7 @@ export default function TeacherPortal({
                   <h4 style={{ margin: "0 0 6px", fontSize: "15.5px", color: "var(--navy)" }}>
                     {item.title}
                   </h4>
-                  <p style={{ margin: "0 0 14px", fontSize: "13px", color: "#475569", lineHeight: "1.5" }}>
+                  <p style={{ margin: "0 0 14px", fontSize: "13px", color: "var(--text-3)", lineHeight: "1.5" }}>
                     {item.description || "Talaba tomonidan tayyorlangan amaliy loyiha va test qamrovi."}
                   </p>
 
@@ -1303,14 +1303,14 @@ export default function TeacherPortal({
                       flexWrap: "wrap",
                       padding: "10px 12px",
                       borderRadius: "10px",
-                      background: "#f8fafc",
-                      border: "1px solid #e2e8f0",
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
                       marginBottom: "16px",
                       fontSize: "11.5px",
                       fontWeight: 700,
                     }}
                   >
-                    <span style={{ color: "#059669", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <span style={{ color: "var(--success)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       <Icon name="check" size={13} /> Testlar: {item.testsPassed || "95%"}
                     </span>
                     <span>•</span>
@@ -1318,7 +1318,7 @@ export default function TeacherPortal({
                       <Icon name="code" size={13} /> {item.commitsCount || 20} commit
                     </span>
                     <span>•</span>
-                    <span style={{ color: "#7c3aed" }}>
+                    <span style={{ color: "var(--violet)" }}>
                       Plagiat: {item.plagiarismScore || "0%"}
                     </span>
                   </div>
@@ -1392,21 +1392,21 @@ export default function TeacherPortal({
               style={{
                 padding: "22px",
                 borderRadius: "14px",
-                border: "1.5px solid #bfdbfe",
-                background: "linear-gradient(145deg, #f0f7ff, #e0f2fe)",
+                border: "1.5px solid var(--accent-ring)",
+                background: "linear-gradient(145deg, var(--accent-soft), var(--accent-soft))",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
               }}
             >
               <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "#1d4ed8", letterSpacing: "0.08em" }}>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--accent-hover)", letterSpacing: "0.08em" }}>
                   TAVSIYA ETILGAN PAKET #1
                 </span>
                 <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
                   DevOps & CI/CD bo‘yicha 12 nafar talabaga
                 </h3>
-                <p style={{ fontSize: "13px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>
                   Dockerfile optimallash, GitHub Actions matrix build va Docker compose konfiguratsiyasi. Har bir talabaga individual sintaktik cheklov beriladi.
                 </p>
               </div>
@@ -1428,21 +1428,21 @@ export default function TeacherPortal({
               style={{
                 padding: "22px",
                 borderRadius: "14px",
-                border: "1.5px solid #e2e8f0",
-                background: "#f8fafc",
+                border: "1.5px solid var(--border)",
+                background: "var(--surface-2)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
               }}
             >
               <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "#475569", letterSpacing: "0.08em" }}>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-3)", letterSpacing: "0.08em" }}>
                   TAVSIYA ETILGAN PAKET #2
                 </span>
                 <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
                   DSA (Graf va Daraxtlar) bo‘yicha 8 nafar talabaga
                 </h3>
-                <p style={{ fontSize: "13px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>
                   Dijkstra, BFS/DFS va binary search bo‘yicha parametrli algoritmik chellinjlar va avtomatik sandbox tekshiruvi.
                 </p>
               </div>
@@ -1464,21 +1464,21 @@ export default function TeacherPortal({
               style={{
                 padding: "22px",
                 borderRadius: "14px",
-                border: "1.5px solid #e2e8f0",
-                background: "#f8fafc",
+                border: "1.5px solid var(--border)",
+                background: "var(--surface-2)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
               }}
             >
               <div>
-                <span style={{ fontSize: "11px", fontWeight: 800, color: "#475569", letterSpacing: "0.08em" }}>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--text-3)", letterSpacing: "0.08em" }}>
                   TAVSIYA ETILGAN PAKET #3
                 </span>
                 <h3 style={{ fontSize: "17.5px", color: "var(--navy)", margin: "8px 0" }}>
                   SQL Tranzaksiyalar & Indekslar (8 talaba)
                 </h3>
-                <p style={{ fontSize: "13px", color: "#334155", marginBottom: "16px", lineHeight: "1.5" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-2)", marginBottom: "16px", lineHeight: "1.5" }}>
                   Deadlock simulyatsiyasi, EXPLAIN ANALYZE hisoboti va MVCC izolatsiya sinovi bo‘yicha vazifalar to‘plami.
                 </p>
               </div>
@@ -1538,7 +1538,7 @@ export default function TeacherPortal({
                       style={{
                         padding: "2px 7px",
                         borderRadius: "6px",
-                        background: "#eff6ff",
+                        background: "var(--accent-soft)",
                         color: "var(--royal)",
                         fontSize: "11px",
                         fontWeight: 700,
@@ -1558,7 +1558,7 @@ export default function TeacherPortal({
 
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "11.5px", color: "#059669", fontWeight: 700 }}>
+                    <div style={{ fontSize: "11.5px", color: "var(--success)", fontWeight: 700 }}>
                       Kutilayotgan o‘sish: {task.scoreBoost}
                     </div>
                     <strong style={{ fontSize: "14px", color: "var(--navy)" }}>{task.progress}</strong>
@@ -1632,7 +1632,7 @@ export default function TeacherPortal({
                   border: "1.5px solid var(--border)",
                   fontSize: "13px",
                   outline: "none",
-                  background: "#f8fafc",
+                  background: "var(--surface-2)",
                 }}
               />
             </div>
@@ -1653,7 +1653,7 @@ export default function TeacherPortal({
                     fontSize: "12.5px",
                     fontWeight: 600,
                     cursor: "pointer",
-                    border: vivaFilter === f.key ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+                    border: vivaFilter === f.key ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
                     background: vivaFilter === f.key ? "var(--navy)" : "#ffffff",
                     color: vivaFilter === f.key ? "#ffffff" : "var(--navy)",
                     transition: "0.15s ease",
@@ -1675,7 +1675,7 @@ export default function TeacherPortal({
                   key={v.id}
                   className="candidate-card"
                   style={{
-                    borderLeft: isFlagged ? "4px solid #ef4444" : "4px solid #10b981",
+                    borderLeft: isFlagged ? "4px solid var(--danger-400)" : "4px solid var(--success-400)",
                   }}
                 >
                   {/* Top info */}
@@ -1687,8 +1687,8 @@ export default function TeacherPortal({
                           height: "44px",
                           borderRadius: "12px",
                           background: isFlagged
-                            ? "linear-gradient(135deg, #7f1d1d, #991b1b)"
-                            : "linear-gradient(135deg, #065f46, #059669)",
+                            ? "linear-gradient(135deg, var(--danger-strong), var(--danger-fg))"
+                            : "linear-gradient(135deg, var(--success-fg), var(--success))",
                           color: "#ffffff",
                           display: "grid",
                           placeItems: "center",
@@ -1714,8 +1714,8 @@ export default function TeacherPortal({
                           borderRadius: "20px",
                           fontSize: "12px",
                           fontWeight: 800,
-                          background: isFlagged ? "#fee2e2" : "#ecfdf5",
-                          color: isFlagged ? "#dc2626" : "#059669",
+                          background: isFlagged ? "var(--danger-soft)" : "var(--success-soft)",
+                          color: isFlagged ? "var(--danger)" : "var(--success)",
                         }}
                       >
                         {v.vivaScore} ball ({v.confidence}% ishonch)
@@ -1730,12 +1730,12 @@ export default function TeacherPortal({
                   {/* Strengths & Weaknesses */}
                   <div style={{ marginBottom: "14px" }}>
                     {v.strengths.slice(0, 2).map((s: string, idx: number) => (
-                      <div key={idx} style={{ fontSize: "12px", color: "#065f46", display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
+                      <div key={idx} style={{ fontSize: "12px", color: "var(--success-fg)", display: "flex", alignItems: "center", gap: "5px", marginBottom: "3px" }}>
                         <span style={{ fontWeight: 800 }}>✓</span> {s}
                       </div>
                     ))}
                     {v.weaknesses.slice(0, 1).map((w: string, idx: number) => (
-                      <div key={idx} style={{ fontSize: "12px", color: "#b91c1c", display: "flex", alignItems: "center", gap: "5px" }}>
+                      <div key={idx} style={{ fontSize: "12px", color: "var(--danger-fg)", display: "flex", alignItems: "center", gap: "5px" }}>
                         <span style={{ fontWeight: 800 }}>!</span> {w}
                       </div>
                     ))}
@@ -1746,10 +1746,10 @@ export default function TeacherPortal({
                     style={{
                       padding: "10px 12px",
                       borderRadius: "8px",
-                      background: "#f8fafc",
-                      border: "1px solid #e2e8f0",
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
                       fontSize: "12px",
-                      color: "#475569",
+                      color: "var(--text-3)",
                       marginBottom: "16px",
                       fontStyle: "italic",
                     }}
@@ -1805,7 +1805,7 @@ export default function TeacherPortal({
                   width: "56px",
                   height: "56px",
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+                  background: "linear-gradient(135deg, var(--accent-strong), var(--accent))",
                   color: "white",
                   display: "grid",
                   placeItems: "center",
@@ -1828,15 +1828,15 @@ export default function TeacherPortal({
                   borderRadius: "14px",
                   fontSize: "13px",
                   fontWeight: 800,
-                  background: inspectedStudent.level === "L4" ? "#ecfdf5" : "#eff6ff",
-                  color: inspectedStudent.level === "L4" ? "#047857" : "#1d4ed8",
+                  background: inspectedStudent.level === "L4" ? "var(--success-soft)" : "var(--accent-soft)",
+                  color: inspectedStudent.level === "L4" ? "var(--success-fg)" : "var(--accent-hover)",
                 }}
               >
                 {inspectedStudent.level}
               </span>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", padding: "14px", background: "#f8fafc", borderRadius: "10px", marginBottom: "20px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", padding: "14px", background: "var(--surface-2)", borderRadius: "10px", marginBottom: "20px" }}>
               <div>
                 <span style={{ fontSize: "11px", color: "var(--muted)", display: "block" }}>UMUMIY BALL</span>
                 <strong style={{ fontSize: "20px", color: "var(--navy)" }}>{inspectedStudent.overallScore} / 100</strong>
@@ -1860,7 +1860,7 @@ export default function TeacherPortal({
                     <span style={{ color: "var(--navy)", fontWeight: 700 }}>{inspectedStudent.layers[layerKey]} ball</span>
                   </div>
                   <div className="progress-track" style={{ height: "6px", margin: 0 }}>
-                    <div style={{ width: `${inspectedStudent.layers[layerKey]}%`, height: "100%", background: "#2563eb", borderRadius: "10px" }} />
+                    <div style={{ width: `${inspectedStudent.layers[layerKey]}%`, height: "100%", background: "var(--accent)", borderRadius: "10px" }} />
                   </div>
                 </div>
               ))}
@@ -1893,7 +1893,7 @@ export default function TeacherPortal({
               <Icon name="close" />
             </button>
 
-            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #1e3a8a, #2563eb)", color: "white" }}>
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, var(--accent-strong), var(--accent))", color: "white" }}>
               <Icon name="shieldCheck" size={28} />
             </div>
 
@@ -1905,26 +1905,26 @@ export default function TeacherPortal({
 
             {/* Rubrics table */}
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", textAlign: "left", marginBottom: "20px" }}>
-              <div style={{ padding: "14px", borderRadius: "12px", background: "#f8fafc", border: "1px solid var(--border)" }}>
+              <div style={{ padding: "14px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
                 <strong style={{ fontSize: "13.5px", color: "var(--navy)", display: "block", marginBottom: "10px" }}>
                   Baholash rubrikalari mezonlari:
                 </strong>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "12.5px" }}>
-                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ color: "var(--muted)" }}>Kod sifati & Clean Code</div>
-                    <strong style={{ color: "#2563eb", fontSize: "15px" }}>{inspectedProveItem.rubrics?.codeQuality || 90} / 100</strong>
+                    <strong style={{ color: "var(--accent)", fontSize: "15px" }}>{inspectedProveItem.rubrics?.codeQuality || 90} / 100</strong>
                   </div>
-                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ color: "var(--muted)" }}>Arxitektura & Patternlar</div>
-                    <strong style={{ color: "#059669", fontSize: "15px" }}>{inspectedProveItem.rubrics?.architecture || 88} / 100</strong>
+                    <strong style={{ color: "var(--success)", fontSize: "15px" }}>{inspectedProveItem.rubrics?.architecture || 88} / 100</strong>
                   </div>
-                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ color: "var(--muted)" }}>Avtomatlashgan Unit Testlar</div>
-                    <strong style={{ color: "#7c3aed", fontSize: "15px" }}>{inspectedProveItem.rubrics?.unitTests || 94} / 100</strong>
+                    <strong style={{ color: "var(--violet)", fontSize: "15px" }}>{inspectedProveItem.rubrics?.unitTests || 94} / 100</strong>
                   </div>
-                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ color: "var(--muted)" }}>Hujjatlar & Readme</div>
-                    <strong style={{ color: "#d97706", fontSize: "15px" }}>{inspectedProveItem.rubrics?.docs || 85} / 100</strong>
+                    <strong style={{ color: "var(--warning)", fontSize: "15px" }}>{inspectedProveItem.rubrics?.docs || 85} / 100</strong>
                   </div>
                 </div>
               </div>
@@ -1982,7 +1982,7 @@ export default function TeacherPortal({
               <Icon name="close" />
             </button>
 
-            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #1e3a8a, #2563eb)", color: "white" }}>
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, var(--accent-strong), var(--accent))", color: "white" }}>
               <Icon name="code" size={28} />
             </div>
 
@@ -1993,7 +1993,7 @@ export default function TeacherPortal({
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px", margin: "20px 0" }}>
               <div>
-                <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
+                <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: "6px" }}>
                   Mavzu yoki Bo‘shliq fani:
                 </label>
                 <select
@@ -2017,7 +2017,7 @@ export default function TeacherPortal({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: "6px" }}>
                     Qiyinlik darajasi:
                   </label>
                   <select
@@ -2038,7 +2038,7 @@ export default function TeacherPortal({
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "#334155", display: "block", marginBottom: "6px" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: "6px" }}>
                     AI Yordami rejimi:
                   </label>
                   <select
@@ -2071,11 +2071,11 @@ export default function TeacherPortal({
                 </span>
               </div>
             ) : generatedSuccess ? (
-              <div style={{ padding: "16px", borderRadius: "10px", background: "#ecfdf5", border: "1px solid #a7f3d0", marginBottom: "16px" }}>
-                <strong style={{ color: "#047857", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+              <div style={{ padding: "16px", borderRadius: "10px", background: "var(--success-soft)", border: "1px solid var(--success-ring)", marginBottom: "16px" }}>
+                <strong style={{ color: "var(--success-fg)", fontSize: "14px", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
                   <Icon name="checkCircle" size={16} /> 12 ta parametrli topshiriq muvaffaqiyatli tayyorlandi!
                 </strong>
-                <p style={{ color: "#065f46", fontSize: "12.5px", margin: 0 }}>
+                <p style={{ color: "var(--success-fg)", fontSize: "12.5px", margin: 0 }}>
                   Topshiriqlar {teacherGroupData.groupCode} guruhidagi tegishli talabalarning shaxsiy kabinetiga yuborildi.
                 </p>
               </div>
@@ -2106,7 +2106,7 @@ export default function TeacherPortal({
               <Icon name="close" />
             </button>
 
-            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #0f2744, #1e3a5f)", color: "white" }}>
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, var(--ink), var(--ink-2))", color: "white" }}>
               <Icon name="file" size={28} />
             </div>
 
@@ -2121,7 +2121,7 @@ export default function TeacherPortal({
               style={{
                 padding: "12px 18px",
                 borderRadius: "12px",
-                background: "#0f2744",
+                background: "var(--ink)",
                 color: "#ffffff",
                 display: "flex",
                 alignItems: "center",
@@ -2137,7 +2137,7 @@ export default function TeacherPortal({
                   height: "36px",
                   borderRadius: "50%",
                   border: "none",
-                  background: playingVivaAudio ? "#ef4444" : "#2563eb",
+                  background: playingVivaAudio ? "var(--danger-400)" : "var(--accent)",
                   color: "#ffffff",
                   display: "grid",
                   placeItems: "center",
@@ -2152,11 +2152,11 @@ export default function TeacherPortal({
                   {playingVivaAudio ? "Audio yozuv ijro etilmoqda..." : "Viva audio yozuvi"}
                 </div>
                 <div style={{ height: "6px", background: "rgba(255,255,255,0.2)", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ width: playingVivaAudio ? "65%" : "30%", height: "100%", background: "#38bdf8", transition: "width 0.3s ease" }} />
+                  <div style={{ width: playingVivaAudio ? "65%" : "30%", height: "100%", background: "var(--info-400)", transition: "width 0.3s ease" }} />
                 </div>
               </div>
 
-              <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+              <span style={{ fontSize: "11px", color: "var(--subtle)" }}>
                 05:12 / {inspectedViva.duration}
               </span>
             </div>
@@ -2169,8 +2169,8 @@ export default function TeacherPortal({
                   style={{
                     padding: "12px 14px",
                     borderRadius: "10px",
-                    background: d.speaker.includes("AI") ? "#eff6ff" : "#f8fafc",
-                    border: d.speaker.includes("AI") ? "1px solid #bfdbfe" : "1px solid #e2e8f0",
+                    background: d.speaker.includes("AI") ? "var(--accent-soft)" : "var(--surface-2)",
+                    border: d.speaker.includes("AI") ? "1px solid var(--accent-ring)" : "1px solid var(--border)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
@@ -2181,7 +2181,7 @@ export default function TeacherPortal({
                       </span>
                     )}
                   </div>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#334155" }}>"{d.text}"</p>
+                  <p style={{ margin: 0, fontSize: "13px", color: "var(--text-2)" }}>"{d.text}"</p>
                 </div>
               ))}
             </div>

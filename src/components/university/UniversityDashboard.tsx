@@ -986,7 +986,7 @@ export default function UniversityDashboard({
                 fontSize: "11px",
                 fontWeight: 800,
                 color: "var(--royal)",
-                background: "rgba(37, 99, 235, 0.1)",
+                background: "rgba(79, 70, 229, 0.1)",
                 padding: "3px 8px",
                 borderRadius: "5px",
                 letterSpacing: "0.08em",
@@ -998,7 +998,7 @@ export default function UniversityDashboard({
               style={{
                 fontSize: "11px",
                 fontWeight: 700,
-                color: "#10b981",
+                color: "var(--success-400)",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "5px",
@@ -1009,7 +1009,7 @@ export default function UniversityDashboard({
                   width: "6px",
                   height: "6px",
                   borderRadius: "50%",
-                  background: "#10b981",
+                  background: "var(--success-400)",
                 }}
               />
               Baza sinxron
@@ -1062,8 +1062,8 @@ export default function UniversityDashboard({
             className="card"
             style={{
               padding: "26px",
-              background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-              color: "#f8fafc",
+              background: "linear-gradient(135deg, var(--ink-2) 0%, var(--ink) 100%)",
+              color: "var(--surface-2)",
               borderRadius: "14px",
               marginBottom: "24px",
               border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -1074,7 +1074,7 @@ export default function UniversityDashboard({
                 <span
                   style={{
                     background: "rgba(56, 189, 248, 0.15)",
-                    color: "#38bdf8",
+                    color: "var(--info-400)",
                     padding: "4px 10px",
                     borderRadius: "6px",
                     fontSize: "11px",
@@ -1087,7 +1087,7 @@ export default function UniversityDashboard({
                 <h2 style={{ fontSize: "22px", margin: "10px 0 6px", color: "white" }}>
                   Universitet Ma’lumotlar Oqimi va Ketma-ketlik Zanjiri
                 </h2>
-                <p style={{ margin: 0, fontSize: "14px", color: "#94a3b8", maxWidth: "760px", lineHeight: "1.5" }}>
+                <p style={{ margin: 0, fontSize: "14px", color: "var(--subtle)", maxWidth: "760px", lineHeight: "1.5" }}>
                   To‘g‘ri akademik ketma-ketlik ma’lumotlar yaxlitligini ta’minlaydi: har bir talaba guruh orqali
                   o‘qituvchiga, o‘qituvchi esa kafedra va fan kompetensiyalariga mustahkam bog‘lanadi.
                 </p>
@@ -1112,7 +1112,7 @@ export default function UniversityDashboard({
                 <button
                   onClick={handleOpenAddGroup}
                   style={{
-                    background: "#2563eb",
+                    background: "var(--accent)",
                     color: "white",
                     border: 0,
                     borderRadius: "8px",
@@ -1147,13 +1147,13 @@ export default function UniversityDashboard({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8" }}>1-BOSQICH</span>
-                  <span style={{ fontSize: "11px", background: "#10b981", color: "white", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>Mavjud</span>
+                  <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--info-400)" }}>1-BOSQICH</span>
+                  <span style={{ fontSize: "11px", background: "var(--success-400)", color: "white", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>Mavjud</span>
                 </div>
                 <strong style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", color: "white", marginBottom: "4px" }}>
                   <Icon name="university" size={17} /> Ta’lim Yo‘nalishlari
                 </strong>
-                <p style={{ margin: 0, fontSize: "12.5px", color: "#94a3b8", lineHeight: "1.4" }}>
+                <p style={{ margin: 0, fontSize: "12.5px", color: "var(--subtle)", lineHeight: "1.4" }}>
                   Dasturiy injiniring, AI, Kompyuter injiniringi. Yo‘nalishlar o‘quv rejasi va ontologiyani belgilaydi.
                 </p>
               </div>
@@ -1168,13 +1168,13 @@ export default function UniversityDashboard({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8" }}>2-BOSQICH</span>
-                  <span style={{ fontSize: "11px", color: "#e2e8f0", fontWeight: 700 }}>{teachers.length} nafar faol</span>
+                  <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--info-400)" }}>2-BOSQICH</span>
+                  <span style={{ fontSize: "11px", color: "var(--border)", fontWeight: 700 }}>{teachers.length} nafar faol</span>
                 </div>
                 <strong style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", color: "white", marginBottom: "4px" }}>
                   <Icon name="teacher" size={17} /> O‘qituvchilar Bazasi
                 </strong>
-                <p style={{ margin: 0, fontSize: "12.5px", color: "#94a3b8", lineHeight: "1.4" }}>
+                <p style={{ margin: 0, fontSize: "12.5px", color: "var(--subtle)", lineHeight: "1.4" }}>
                   Admin o‘qituvchilarni yo‘nalish va kafedrasiga ko‘ra ro‘yxatga oladi. Ular guruhlarga kurator bo‘ladi.
                 </p>
               </div>
@@ -1182,20 +1182,20 @@ export default function UniversityDashboard({
               {/* Step 3 */}
               <div
                 style={{
-                  background: "rgba(37, 99, 235, 0.12)",
-                  border: "1px solid rgba(59, 130, 246, 0.35)",
+                  background: "rgba(79, 70, 229, 0.12)",
+                  border: "1px solid rgba(99, 102, 241, 0.35)",
                   borderRadius: "10px",
                   padding: "16px",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 800, color: "#93c5fd" }}>3-BOSQICH</span>
-                  <span style={{ fontSize: "11px", background: "#2563eb", color: "white", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>Bog‘lovchi</span>
+                  <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--accent-ring)" }}>3-BOSQICH</span>
+                  <span style={{ fontSize: "11px", background: "var(--accent)", color: "white", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>Bog‘lovchi</span>
                 </div>
                 <strong style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", color: "white", marginBottom: "4px" }}>
                   <Icon name="users" size={17} /> Guruh Ochish & Biriktirish
                 </strong>
-                <p style={{ margin: 0, fontSize: "12.5px", color: "#bfdbfe", lineHeight: "1.4" }}>
+                <p style={{ margin: 0, fontSize: "12.5px", color: "var(--accent-ring)", lineHeight: "1.4" }}>
                   Guruh yaratilgach, unga yo‘nalish va <strong>mas’ul o‘qituvchi</strong> darhol biriktiriladi.
                 </p>
               </div>
@@ -1210,13 +1210,13 @@ export default function UniversityDashboard({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8" }}>4-BOSQICH</span>
-                  <span style={{ fontSize: "11px", color: "#e2e8f0", fontWeight: 700 }}>{students.length} nafar</span>
+                  <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--info-400)" }}>4-BOSQICH</span>
+                  <span style={{ fontSize: "11px", color: "var(--border)", fontWeight: 700 }}>{students.length} nafar</span>
                 </div>
                 <strong style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "15px", color: "white", marginBottom: "4px" }}>
                   <Icon name="student" size={17} /> Talabalarni Joylashtirish
                 </strong>
-                <p style={{ margin: 0, fontSize: "12.5px", color: "#94a3b8", lineHeight: "1.4" }}>
+                <p style={{ margin: 0, fontSize: "12.5px", color: "var(--subtle)", lineHeight: "1.4" }}>
                   Talaba kiritilganda uning guruhi tanlanadi. Talaba avtomatik o‘sha guruh o‘qituvchisiga birikadi.
                 </p>
               </div>
@@ -1227,7 +1227,7 @@ export default function UniversityDashboard({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
             <div className="card" style={{ padding: "22px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", color: "#10b981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", color: "var(--success-400)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon name="check" size={20} />
                 </div>
                 <div>
@@ -1238,7 +1238,7 @@ export default function UniversityDashboard({
                 </div>
               </div>
 
-              <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13.5px", color: "#475569", lineHeight: "1.6" }}>
+              <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.6" }}>
                 <li style={{ marginBottom: "8px" }}>
                   <strong>Guruh yaratilayotganda o‘qituvchi tayyor bo‘ladi:</strong> Guruh ochish modalida mas’ul kuratorni ro‘yxatdan tanlash mumkin bo‘ladi.
                 </li>
@@ -1253,7 +1253,7 @@ export default function UniversityDashboard({
 
             <div className="card" style={{ padding: "22px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(59, 130, 246, 0.1)", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(99, 102, 241, 0.1)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon name="refresh" size={20} />
                 </div>
                 <div>
@@ -1264,16 +1264,16 @@ export default function UniversityDashboard({
                 </div>
               </div>
 
-              <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: "1.5", margin: "0 0 12px" }}>
+              <p style={{ fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.5", margin: "0 0 12px" }}>
                 Platforma qat’iy cheklov qo‘ymaydi. Agar o‘qituvchi o‘zgarsa yoki talaba boshqa guruhga o‘tsa:
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ padding: "10px", borderRadius: "8px", background: "#f8fafc", border: "1px solid var(--border)", fontSize: "13px" }}>
+                <div style={{ padding: "10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--border)", fontSize: "13px" }}>
                   <span style={{ color: "var(--royal)", fontWeight: 800, marginRight: "6px" }}>•</span>
                   <strong>Guruh o‘qituvchisini almashtirish:</strong> "Guruhlar" bo‘limida istalgan guruhning "O‘qituvchini o‘zgartirish" tugmasini bosish kifoya.
                 </div>
-                <div style={{ padding: "10px", borderRadius: "8px", background: "#f8fafc", border: "1px solid var(--border)", fontSize: "13px" }}>
+                <div style={{ padding: "10px", borderRadius: "8px", background: "var(--surface-2)", border: "1px solid var(--border)", fontSize: "13px" }}>
                   <span style={{ color: "var(--royal)", fontWeight: 800, marginRight: "6px" }}>•</span>
                   <strong>Talabani boshqa guruhga ko‘chirish:</strong> Talabaning guruhi o‘zgarganda, uning yangi kuratori va fanlar jadvali avtomatik moslashadi.
                 </div>
@@ -1325,7 +1325,7 @@ export default function UniversityDashboard({
                         width: "44px",
                         height: "44px",
                         borderRadius: "10px",
-                        background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                        background: "linear-gradient(135deg, var(--accent), var(--accent-hover))",
                         color: "white",
                         display: "flex",
                         alignItems: "center",
@@ -1339,7 +1339,7 @@ export default function UniversityDashboard({
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <strong style={{ fontSize: "15.5px", color: "var(--navy)", display: "block" }}>{t.name}</strong>
-                      <span style={{ fontSize: "12.5px", color: "#64748b", display: "block" }}>{t.title}</span>
+                      <span style={{ fontSize: "12.5px", color: "var(--muted)", display: "block" }}>{t.title}</span>
                       <span style={{ fontSize: "12px", color: "var(--royal)", fontWeight: 700 }}>{t.department}</span>
                     </div>
                     <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
@@ -1347,8 +1347,8 @@ export default function UniversityDashboard({
                         onClick={() => handleOpenEditTeacher(t)}
                         title="O‘qituvchini tahrirlash"
                         style={{
-                          border: "1px solid #cbd5e1",
-                          background: "#f8fafc",
+                          border: "1px solid var(--border-strong)",
+                          background: "var(--surface-2)",
                           borderRadius: "6px",
                           width: "32px",
                           height: "32px",
@@ -1356,7 +1356,7 @@ export default function UniversityDashboard({
                           alignItems: "center",
                           justifyContent: "center",
                           cursor: "pointer",
-                          color: "#334155",
+                          color: "var(--text-2)",
                         }}
                       >
                         <Icon name="edit" size={14} />
@@ -1365,8 +1365,8 @@ export default function UniversityDashboard({
                         onClick={() => setDeletingTeacher(t)}
                         title="O‘qituvchini o‘chirish"
                         style={{
-                          border: "1px solid #fecaca",
-                          background: "#fff1f2",
+                          border: "1px solid var(--danger-ring)",
+                          background: "var(--rose-soft)",
                           borderRadius: "6px",
                           width: "32px",
                           height: "32px",
@@ -1374,7 +1374,7 @@ export default function UniversityDashboard({
                           alignItems: "center",
                           justifyContent: "center",
                           cursor: "pointer",
-                          color: "#e11d48",
+                          color: "var(--rose)",
                         }}
                       >
                         <Icon name="trash" size={14} />
@@ -1383,15 +1383,15 @@ export default function UniversityDashboard({
                   </div>
 
                   <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px", marginBottom: "12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", color: "#475569", marginBottom: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", color: "var(--text-3)", marginBottom: "6px" }}>
                       <span>Email:</span>
                       <strong style={{ color: "var(--navy)" }}>{t.email}</strong>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", color: "#475569", marginBottom: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", color: "var(--text-3)", marginBottom: "6px" }}>
                       <span>Telefon:</span>
                       <span>{t.phone}</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", color: "#475569" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12.5px", color: "var(--text-3)" }}>
                       <span>Yo‘nalishi:</span>
                       <span className="level-badge">{t.directionName}</span>
                     </div>
@@ -1409,11 +1409,11 @@ export default function UniversityDashboard({
                             style={{
                               padding: "3px 8px",
                               borderRadius: "6px",
-                              background: "rgba(37, 99, 235, 0.1)",
+                              background: "rgba(79, 70, 229, 0.1)",
                               color: "var(--royal)",
                               fontSize: "12px",
                               fontWeight: 700,
-                              border: "1px solid rgba(37, 99, 235, 0.2)",
+                              border: "1px solid rgba(79, 70, 229, 0.2)",
                               display: "inline-flex",
                               alignItems: "center",
                               gap: "4px",
@@ -1423,7 +1423,7 @@ export default function UniversityDashboard({
                           </span>
                         ))
                       ) : (
-                        <span style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>
+                        <span style={{ fontSize: "12px", color: "var(--subtle)", fontStyle: "italic" }}>
                           Hozircha guruh biriktirilmagan
                         </span>
                       )}
@@ -1502,7 +1502,7 @@ export default function UniversityDashboard({
                           width: "32px",
                           height: "32px",
                           borderRadius: "8px",
-                          background: "#eff6ff",
+                          background: "var(--accent-soft)",
                           color: "var(--royal)",
                           display: "flex",
                           alignItems: "center",
@@ -1516,8 +1516,8 @@ export default function UniversityDashboard({
                         style={{
                           padding: "2px 8px",
                           borderRadius: "12px",
-                          background: "#f1f5f9",
-                          color: "#475569",
+                          background: "var(--surface-3)",
+                          color: "var(--text-3)",
                           fontSize: "12px",
                           fontWeight: 700,
                         }}
@@ -1530,8 +1530,8 @@ export default function UniversityDashboard({
                         onClick={() => handleOpenEditGroup(g)}
                         title="Guruhni tahrirlash"
                         style={{
-                          border: "1px solid #cbd5e1",
-                          background: "#f8fafc",
+                          border: "1px solid var(--border-strong)",
+                          background: "var(--surface-2)",
                           borderRadius: "6px",
                           width: "30px",
                           height: "30px",
@@ -1539,7 +1539,7 @@ export default function UniversityDashboard({
                           alignItems: "center",
                           justifyContent: "center",
                           cursor: "pointer",
-                          color: "#334155",
+                          color: "var(--text-2)",
                         }}
                       >
                         <Icon name="edit" size={13} />
@@ -1548,8 +1548,8 @@ export default function UniversityDashboard({
                         onClick={() => setDeletingGroup(g)}
                         title="Guruhni o‘chirish"
                         style={{
-                          border: "1px solid #fecaca",
-                          background: "#fff1f2",
+                          border: "1px solid var(--danger-ring)",
+                          background: "var(--rose-soft)",
                           borderRadius: "6px",
                           width: "30px",
                           height: "30px",
@@ -1557,7 +1557,7 @@ export default function UniversityDashboard({
                           alignItems: "center",
                           justifyContent: "center",
                           cursor: "pointer",
-                          color: "#e11d48",
+                          color: "var(--rose)",
                         }}
                       >
                         <Icon name="trash" size={13} />
@@ -1573,12 +1573,12 @@ export default function UniversityDashboard({
                     style={{
                       padding: "12px",
                       borderRadius: "8px",
-                      background: "#f8fafc",
+                      background: "var(--surface-2)",
                       border: "1px solid var(--border)",
                       marginBottom: "14px",
                     }}
                   >
-                    <span style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", letterSpacing: "0.05em", display: "block", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--muted)", letterSpacing: "0.05em", display: "block", marginBottom: "4px" }}>
                       MAS’UL O‘QITUVCHI (KURATOR):
                     </span>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1605,7 +1605,7 @@ export default function UniversityDashboard({
                         </>
                       ) : (
                         <>
-                          <span style={{ fontSize: "13px", color: "#b45309", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <span style={{ fontSize: "13px", color: "var(--warning-fg)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
                             <Icon name="clock" size={13} /> O‘qituvchi biriktirilmagan
                           </span>
                           <button
@@ -1631,19 +1631,19 @@ export default function UniversityDashboard({
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", fontSize: "12.5px" }}>
-                    <div style={{ padding: "8px", borderRadius: "6px", background: "#f8fafc", border: "1px solid var(--border)" }}>
+                    <div style={{ padding: "8px", borderRadius: "6px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
                       <span style={{ color: "var(--muted)", display: "block" }}>Talabalar:</span>
                       <strong style={{ fontSize: "14px", color: "var(--navy)" }}>{g.studentsCount} nafar</strong>
                     </div>
-                    <div style={{ padding: "8px", borderRadius: "6px", background: "#f8fafc", border: "1px solid var(--border)" }}>
+                    <div style={{ padding: "8px", borderRadius: "6px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
                       <span style={{ color: "var(--muted)", display: "block" }}>O‘rtacha ko‘rsatkich:</span>
-                      <strong style={{ fontSize: "14px", color: "#10b981" }}>{g.avgScore ? `${g.avgScore} ball` : "Yangi"}</strong>
+                      <strong style={{ fontSize: "14px", color: "var(--success-400)" }}>{g.avgScore ? `${g.avgScore} ball` : "Yangi"}</strong>
                     </div>
                   </div>
                 </div>
 
                 <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", color: "#94a3b8" }}>Ochilgan: {g.createdDate}</span>
+                  <span style={{ fontSize: "12px", color: "var(--subtle)" }}>Ochilgan: {g.createdDate}</span>
                   <button
                     onClick={() => {
                       setStudentFilterGroup(g.code);
@@ -1701,7 +1701,7 @@ export default function UniversityDashboard({
               flexWrap: "wrap",
             }}
           >
-            <div style={{ flex: 1, minWidth: "220px", display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", padding: "6px 12px", borderRadius: "8px", border: "1px solid var(--border)" }}>
+            <div style={{ flex: 1, minWidth: "220px", display: "flex", alignItems: "center", gap: "8px", background: "var(--surface-2)", padding: "6px 12px", borderRadius: "8px", border: "1px solid var(--border)" }}>
               <Icon name="search" size={16} />
               <input
                 type="text"
@@ -1751,7 +1751,7 @@ export default function UniversityDashboard({
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13.5px" }}>
                 <thead>
-                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid var(--border)", color: "#64748b", fontWeight: 700 }}>
+                  <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)", color: "var(--muted)", fontWeight: 700 }}>
                     <th style={{ padding: "12px 16px" }}>Talaba Ism-familiyasi</th>
                     <th style={{ padding: "12px 16px" }}>Akademik Guruh</th>
                     <th style={{ padding: "12px 16px" }}>Yo‘nalish</th>
@@ -1774,7 +1774,7 @@ export default function UniversityDashboard({
                               style={{
                                 padding: "3px 8px",
                                 borderRadius: "6px",
-                                background: "#eff6ff",
+                                background: "var(--accent-soft)",
                                 color: "var(--royal)",
                                 fontWeight: 700,
                                 fontSize: "12.5px",
@@ -1787,8 +1787,8 @@ export default function UniversityDashboard({
                               style={{
                                 padding: "3px 8px",
                                 borderRadius: "6px",
-                                background: "#fef3c7",
-                                color: "#b45309",
+                                background: "var(--warning-soft)",
+                                color: "var(--warning-fg)",
                                 fontWeight: 700,
                                 fontSize: "12px",
                                 display: "inline-flex",
@@ -1800,12 +1800,12 @@ export default function UniversityDashboard({
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: "12px 16px", color: "#475569" }}>{s.directionName}</td>
+                        <td style={{ padding: "12px 16px", color: "var(--text-3)" }}>{s.directionName}</td>
                         <td style={{ padding: "12px 16px" }}>
                           {s.curatorName && s.curatorName !== "Biriktirilmagan" ? (
                             <span style={{ fontWeight: 600, color: "var(--navy)" }}>{s.curatorName}</span>
                           ) : (
-                            <span style={{ color: "#94a3b8", fontStyle: "italic", fontSize: "12.5px" }}>Biriktirilmagan</span>
+                            <span style={{ color: "var(--subtle)", fontStyle: "italic", fontSize: "12.5px" }}>Biriktirilmagan</span>
                           )}
                         </td>
                         <td style={{ padding: "12px 16px" }}>
@@ -1822,8 +1822,8 @@ export default function UniversityDashboard({
                                   style={{
                                     padding: "2px 7px",
                                     borderRadius: "12px",
-                                    background: "#dcfce7",
-                                    color: "#16a34a",
+                                    background: "var(--success-soft)",
+                                    color: "var(--success)",
                                     fontSize: "11.5px",
                                     fontWeight: 700,
                                   }}
@@ -1855,8 +1855,8 @@ export default function UniversityDashboard({
                                   style={{
                                     padding: "2px 7px",
                                     borderRadius: "12px",
-                                    background: "#fef3c7",
-                                    color: "#b45309",
+                                    background: "var(--warning-soft)",
+                                    color: "var(--warning-fg)",
                                     fontSize: "11.5px",
                                     fontWeight: 700,
                                   }}
@@ -1869,8 +1869,8 @@ export default function UniversityDashboard({
                                     setSelectedGroupForStudent(groups[0]?.code || "");
                                   }}
                                   style={{
-                                    border: "1px solid #cbd5e1",
-                                    background: "#f8fafc",
+                                    border: "1px solid var(--border-strong)",
+                                    background: "var(--surface-2)",
                                     color: "var(--navy)",
                                     padding: "2px 7px",
                                     borderRadius: "6px",
@@ -1889,8 +1889,8 @@ export default function UniversityDashboard({
                                 onClick={() => handleOpenEditStudent(s)}
                                 title="Talabani tahrirlash"
                                 style={{
-                                  border: "1px solid #cbd5e1",
-                                  background: "#f8fafc",
+                                  border: "1px solid var(--border-strong)",
+                                  background: "var(--surface-2)",
                                   borderRadius: "6px",
                                   width: "28px",
                                   height: "28px",
@@ -1898,7 +1898,7 @@ export default function UniversityDashboard({
                                   alignItems: "center",
                                   justifyContent: "center",
                                   cursor: "pointer",
-                                  color: "#334155",
+                                  color: "var(--text-2)",
                                 }}
                               >
                                 <Icon name="edit" size={13} />
@@ -1907,8 +1907,8 @@ export default function UniversityDashboard({
                                 onClick={() => setDeletingStudent(s)}
                                 title="Talabani o‘chirish"
                                 style={{
-                                  border: "1px solid #fecaca",
-                                  background: "#fff1f2",
+                                  border: "1px solid var(--danger-ring)",
+                                  background: "var(--rose-soft)",
                                   borderRadius: "6px",
                                   width: "28px",
                                   height: "28px",
@@ -1916,7 +1916,7 @@ export default function UniversityDashboard({
                                   alignItems: "center",
                                   justifyContent: "center",
                                   cursor: "pointer",
-                                  color: "#e11d48",
+                                  color: "var(--rose)",
                                 }}
                               >
                                 <Icon name="trash" size={13} />
@@ -2040,7 +2040,7 @@ export default function UniversityDashboard({
                   style={{
                     padding: "14px",
                     borderRadius: "10px",
-                    background: "#f8fafc",
+                    background: "var(--surface-2)",
                     border: "1px solid var(--border)",
                   }}
                 >
@@ -2053,15 +2053,15 @@ export default function UniversityDashboard({
                   <div style={{ fontSize: "12.5px", color: "var(--muted)", marginBottom: "4px" }}>
                     Yo‘nalish: <strong style={{ color: "var(--navy)" }}>{g.directionName}</strong>
                   </div>
-                  <div style={{ fontSize: "12.5px", color: "#475569", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "12.5px", color: "var(--text-3)", marginBottom: "8px" }}>
                     Kurator:{" "}
-                    <strong style={{ color: g.curatorId && g.curatorName && g.curatorName !== "Biriktirilmagan" ? "var(--royal)" : "#b45309" }}>
+                    <strong style={{ color: g.curatorId && g.curatorName && g.curatorName !== "Biriktirilmagan" ? "var(--royal)" : "var(--warning-fg)" }}>
                       {g.curatorName && g.curatorName !== "Biriktirilmagan" ? g.curatorName : "Biriktirilmagan"}
                     </strong>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", borderTop: "1px solid var(--border)", paddingTop: "8px" }}>
                     <span>Talabalar: <strong>{g.studentsCount} nafar</strong></span>
-                    <span>O‘rtacha: <strong style={{ color: "#10b981" }}>{g.avgScore ? `${g.avgScore} ball` : "Yangi"}</strong></span>
+                    <span>O‘rtacha: <strong style={{ color: "var(--success-400)" }}>{g.avgScore ? `${g.avgScore} ball` : "Yangi"}</strong></span>
                   </div>
                 </div>
               ))}
@@ -2087,7 +2087,7 @@ export default function UniversityDashboard({
                     style={{
                       padding: "16px",
                       borderRadius: "10px",
-                      background: "#f8fafc",
+                      background: "var(--surface-2)",
                       border: "1px solid var(--border)",
                     }}
                   >
@@ -2110,7 +2110,7 @@ export default function UniversityDashboard({
                             width: `${item.readinessPct}%`,
                             height: "100%",
                             borderRadius: "10px",
-                            background: "linear-gradient(90deg, #2563eb, #3b82f6)",
+                            background: "linear-gradient(90deg, var(--accent), var(--accent-400))",
                           }}
                         />
                       </div>
@@ -2154,12 +2154,12 @@ export default function UniversityDashboard({
                             lvl.level.includes("L5")
                               ? "#ec4899"
                               : lvl.level.includes("L4")
-                              ? "#10b981"
+                              ? "var(--success-400)"
                               : lvl.level.includes("L3")
-                              ? "#3b82f6"
+                              ? "var(--accent-400)"
                               : lvl.level.includes("L2")
-                              ? "#f59e0b"
-                              : "#94a3b8",
+                              ? "var(--warning-400)"
+                              : "var(--subtle)",
                         }}
                       />
                     </div>
@@ -2187,7 +2187,7 @@ export default function UniversityDashboard({
                     padding: "20px",
                     borderRadius: "12px",
                     border: "1px solid var(--border)",
-                    background: "#fef2f2",
+                    background: "var(--danger-soft)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
@@ -2196,8 +2196,8 @@ export default function UniversityDashboard({
                       style={{
                         padding: "4px 9px",
                         borderRadius: "12px",
-                        background: "#fee2e2",
-                        color: "#dc2626",
+                        background: "var(--danger-soft)",
+                        color: "var(--danger)",
                         fontSize: "12.5px",
                         fontWeight: 800,
                       }}
@@ -2206,7 +2206,7 @@ export default function UniversityDashboard({
                     </span>
                   </div>
                   <h3 style={{ margin: "4px 0 8px", fontSize: "17px", color: "var(--navy)" }}>{gap.skill}</h3>
-                  <p style={{ margin: 0, fontSize: "13.5px", color: "#475569", lineHeight: "1.5" }}>
+                  <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.5" }}>
                     <strong>Tavsiya:</strong> {gap.recommendation}
                   </p>
                 </div>
@@ -2222,7 +2222,7 @@ export default function UniversityDashboard({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", flexWrap: "wrap", gap: "12px" }}>
             <div>
               <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--navy)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <Icon name="alertTriangle" size={19} style={{ color: "#d97706" }} /> O‘quv Dasturi "Oq Dog‘lari" va AI Tavsiyalari
+                <Icon name="alertTriangle" size={19} style={{ color: "var(--warning)" }} /> O‘quv Dasturi "Oq Dog‘lari" va AI Tavsiyalari
               </h2>
               <p style={{ margin: "2px 0 0", fontSize: "13.5px", color: "var(--muted)" }}>
                 Talabalarning 5 qatlamli amaliy dalillari tahlili asosida o‘quv rejaga kiritilishi zarur bo‘lgan amaliy modullar.
@@ -2245,18 +2245,18 @@ export default function UniversityDashboard({
                 style={{
                   padding: "22px",
                   borderRadius: "12px",
-                  border: "1px solid #fecaca",
-                  background: "#fef2f2",
+                  border: "1px solid var(--danger-ring)",
+                  background: "var(--danger-soft)",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <span style={{ fontSize: "12px", fontWeight: 800, color: "#991b1b" }}>{gap.direction}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 800, color: "var(--danger-fg)" }}>{gap.direction}</span>
                   <span
                     style={{
                       padding: "4px 10px",
                       borderRadius: "12px",
-                      background: "#fee2e2",
-                      color: "#dc2626",
+                      background: "var(--danger-soft)",
+                      color: "var(--danger)",
                       fontSize: "12.5px",
                       fontWeight: 800,
                     }}
@@ -2265,7 +2265,7 @@ export default function UniversityDashboard({
                   </span>
                 </div>
                 <h3 style={{ margin: "4px 0 8px", fontSize: "18px", color: "var(--navy)" }}>{gap.skill}</h3>
-                <p style={{ margin: 0, fontSize: "13.5px", color: "#475569", lineHeight: "1.6" }}>
+                <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.6" }}>
                   <strong>AI Tavsiyasi:</strong> {gap.recommendation}
                 </p>
               </div>
@@ -2280,7 +2280,7 @@ export default function UniversityDashboard({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", flexWrap: "wrap", gap: "12px" }}>
             <div>
               <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--navy)", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <Icon name="trophy" size={19} style={{ color: "#2563eb" }} /> Malaka Taqsimoti (L1–L5) va Yo‘nalishlar Bozorga Tayyorligi
+                <Icon name="trophy" size={19} style={{ color: "var(--accent)" }} /> Malaka Taqsimoti (L1–L5) va Yo‘nalishlar Bozorga Tayyorligi
               </h2>
               <p style={{ margin: "2px 0 0", fontSize: "13.5px", color: "var(--muted)" }}>
                 Talabalarning amaliy ko‘nikma darajalari va fakultetlar kesimida bozorga tayyorlik ko‘rsatkichlari.
@@ -2306,7 +2306,7 @@ export default function UniversityDashboard({
                     style={{
                       padding: "16px",
                       borderRadius: "10px",
-                      background: "#f8fafc",
+                      background: "var(--surface-2)",
                       border: "1px solid var(--border)",
                     }}
                   >
@@ -2329,7 +2329,7 @@ export default function UniversityDashboard({
                             width: `${item.readinessPct}%`,
                             height: "100%",
                             borderRadius: "10px",
-                            background: "linear-gradient(90deg, #2563eb, #3b82f6)",
+                            background: "linear-gradient(90deg, var(--accent), var(--accent-400))",
                           }}
                         />
                       </div>
@@ -2373,12 +2373,12 @@ export default function UniversityDashboard({
                             lvl.level.includes("L5")
                               ? "#ec4899"
                               : lvl.level.includes("L4")
-                              ? "#10b981"
+                              ? "var(--success-400)"
                               : lvl.level.includes("L3")
-                              ? "#3b82f6"
+                              ? "var(--accent-400)"
                               : lvl.level.includes("L2")
-                              ? "#f59e0b"
-                              : "#94a3b8",
+                              ? "var(--warning-400)"
+                              : "var(--subtle)",
                         }}
                       />
                     </div>
@@ -2399,7 +2399,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -2428,7 +2428,7 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setShowAddTeacher(false)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
@@ -2436,7 +2436,7 @@ export default function UniversityDashboard({
 
             <form onSubmit={handleCreateTeacher} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   O‘qituvchi Ism-familiyasi:
                 </label>
                 <input
@@ -2457,7 +2457,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Ishchi Email manzili:
                 </label>
                 <input
@@ -2479,7 +2479,7 @@ export default function UniversityDashboard({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Ta’lim Yo‘nalishi:
                   </label>
                   <select
@@ -2501,7 +2501,7 @@ export default function UniversityDashboard({
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Ilmiy unvoni / Lavozimi:
                   </label>
                   <select
@@ -2525,7 +2525,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Aloqa telefoni:
                 </label>
                 <input
@@ -2574,7 +2574,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -2606,7 +2606,7 @@ export default function UniversityDashboard({
               <button
                 onClick={handleCloseAddGroup}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
@@ -2615,7 +2615,7 @@ export default function UniversityDashboard({
             <form onSubmit={handleCreateGroup} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Guruh Kodi / Nomi:
                   </label>
                   <input
@@ -2637,7 +2637,7 @@ export default function UniversityDashboard({
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     O‘quv Kursi:
                   </label>
                   <select
@@ -2661,7 +2661,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Ta’lim Yo‘nalishi:
                 </label>
                 <select
@@ -2687,8 +2687,8 @@ export default function UniversityDashboard({
                 style={{
                   padding: "12px",
                   borderRadius: "10px",
-                  background: "rgba(37, 99, 235, 0.06)",
-                  border: "1px solid rgba(37, 99, 235, 0.2)",
+                  background: "rgba(79, 70, 229, 0.06)",
+                  border: "1px solid rgba(79, 70, 229, 0.2)",
                 }}
               >
                 <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12.5px", fontWeight: 800, color: "var(--royal)", marginBottom: "6px" }}>
@@ -2714,7 +2714,7 @@ export default function UniversityDashboard({
                     </option>
                   ))}
                 </select>
-                <span style={{ fontSize: "11.5px", color: "#64748b", display: "block", marginTop: "4px" }}>
+                <span style={{ fontSize: "11.5px", color: "var(--muted)", display: "block", marginTop: "4px" }}>
                   {newGroupCuratorId
                     ? "Tanlangan o‘qituvchi o‘z panelida ushbu guruh talabalarini va ularning topshiriqlarini qabul qiladi."
                     : "Guruhni dastlab o‘qituvchisiz ochib, keyinchalik xohlagan vaqtda kurator biriktirishingiz mumkin."}
@@ -2751,7 +2751,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -2780,18 +2780,18 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setAssigningGroup(null)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
             </div>
 
-            <p style={{ margin: "0 0 16px", fontSize: "13.5px", color: "#475569" }}>
+            <p style={{ margin: "0 0 16px", fontSize: "13.5px", color: "var(--text-3)" }}>
               <strong>"{assigningGroup.code}"</strong> ({assigningGroup.directionName}) guruhi uchun mas’ul o‘qituvchini tanlang:
             </p>
 
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "6px" }}>
                 Mas’ul O‘qituvchi:
               </label>
               <select
@@ -2846,7 +2846,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -2878,7 +2878,7 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setShowAddStudent(false)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
@@ -2886,7 +2886,7 @@ export default function UniversityDashboard({
 
             <form onSubmit={handleCreateStudent} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Talaba Ism-familiyasi:
                 </label>
                 <input
@@ -2907,7 +2907,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Email manzili (Login):
                 </label>
                 <input
@@ -2928,7 +2928,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Akademik Guruh (Ixtiyoriy):
                 </label>
                 <select
@@ -2951,7 +2951,7 @@ export default function UniversityDashboard({
                     </option>
                   ))}
                 </select>
-                <span style={{ fontSize: "11.5px", color: "#64748b", display: "block", marginTop: "4px" }}>
+                <span style={{ fontSize: "11.5px", color: "var(--muted)", display: "block", marginTop: "4px" }}>
                   {newStudentGroupCode === "none"
                     ? "Talabani dastlab guruhsiz ro‘yxatga olib, keyinchalik istalgan guruhga biriktirish mumkin."
                     : "Talaba tanlangan guruh orqali avtomatik ravishda o‘qituvchiga va yo‘nalish o‘quv dasturiga bog‘lanadi."}
@@ -2962,7 +2962,7 @@ export default function UniversityDashboard({
               {newStudentGroupCode === "none" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                       Ta’lim yo‘nalishi:
                     </label>
                     <select
@@ -2984,7 +2984,7 @@ export default function UniversityDashboard({
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                       Kursi:
                     </label>
                     <select
@@ -3039,7 +3039,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -3073,14 +3073,14 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setAssigningStudent(null)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
             </div>
 
             <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "6px" }}>
                 Biriktiriladigan Akademik Guruh:
               </label>
               <select
@@ -3102,7 +3102,7 @@ export default function UniversityDashboard({
                   </option>
                 ))}
               </select>
-              <span style={{ fontSize: "11.5px", color: "#64748b", display: "block", marginTop: "5px" }}>
+              <span style={{ fontSize: "11.5px", color: "var(--muted)", display: "block", marginTop: "5px" }}>
                 Guruh tanlangach, talaba avtomatik tarzda guruh kuratoriga va o‘quv dasturiga biriktiriladi.
               </span>
             </div>
@@ -3137,7 +3137,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -3173,7 +3173,7 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setEditingTeacher(null)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
@@ -3181,7 +3181,7 @@ export default function UniversityDashboard({
 
             <form onSubmit={handleUpdateTeacher} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Ism-sharifi:
                 </label>
                 <input
@@ -3202,7 +3202,7 @@ export default function UniversityDashboard({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Ilmiy unvoni / Lavozimi:
                   </label>
                   <input
@@ -3222,7 +3222,7 @@ export default function UniversityDashboard({
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Mutaxassislik yo‘nalishi:
                   </label>
                   <select
@@ -3246,7 +3246,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Kafedrasi:
                 </label>
                 <input
@@ -3268,7 +3268,7 @@ export default function UniversityDashboard({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Email (Login):
                   </label>
                   <input
@@ -3287,7 +3287,7 @@ export default function UniversityDashboard({
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Telefon raqami:
                   </label>
                   <input
@@ -3337,7 +3337,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -3365,8 +3365,8 @@ export default function UniversityDashboard({
                   width: "42px",
                   height: "42px",
                   borderRadius: "10px",
-                  background: "#fee2e2",
-                  color: "#dc2626",
+                  background: "var(--danger-soft)",
+                  color: "var(--danger)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -3388,7 +3388,7 @@ export default function UniversityDashboard({
             <div
               style={{
                 padding: "14px",
-                background: "#f8fafc",
+                background: "var(--surface-2)",
                 borderRadius: "10px",
                 border: "1px solid var(--border)",
                 fontSize: "13.5px",
@@ -3401,11 +3401,11 @@ export default function UniversityDashboard({
               <div style={{ fontWeight: 700, color: "var(--navy)", fontSize: "15px" }}>
                 {deletingTeacher.name}
               </div>
-              <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
+              <div style={{ fontSize: "12.5px", color: "var(--muted)", marginTop: "2px" }}>
                 {deletingTeacher.title} · {deletingTeacher.department}
               </div>
               {deletingTeacher.assignedGroups.length > 0 && (
-                <div style={{ marginTop: "10px", padding: "8px 10px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fecaca", fontSize: "12px", color: "#991b1b" }}>
+                <div style={{ marginTop: "10px", padding: "8px 10px", background: "var(--danger-soft)", borderRadius: "6px", border: "1px solid var(--danger-ring)", fontSize: "12px", color: "var(--danger-fg)" }}>
                   Mazkur o‘qituvchiga <strong>{deletingTeacher.assignedGroups.join(", ")}</strong> guruhlari biriktirilgan. O‘chirilgandan so‘ng bu guruhlar kuratori <em>"Biriktirilmagan"</em> holatiga o‘tadi (guruhlar va talabalar saqlanadi).
                 </div>
               )}
@@ -3426,7 +3426,7 @@ export default function UniversityDashboard({
                   padding: "8px 18px",
                   borderRadius: "8px",
                   border: 0,
-                  background: "#dc2626",
+                  background: "var(--danger)",
                   color: "white",
                   fontWeight: 700,
                   fontSize: "13.5px",
@@ -3452,7 +3452,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -3486,7 +3486,7 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setEditingGroup(null)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
@@ -3495,7 +3495,7 @@ export default function UniversityDashboard({
             <form onSubmit={handleUpdateGroup} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Guruh kodi / Raqami:
                   </label>
                   <input
@@ -3516,7 +3516,7 @@ export default function UniversityDashboard({
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Bosqich (Kurs):
                   </label>
                   <select
@@ -3541,7 +3541,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Ta’lim yo‘nalishi:
                 </label>
                 <select
@@ -3564,7 +3564,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Mas’ul o‘qituvchi (Kurator):
                 </label>
                 <select
@@ -3587,7 +3587,7 @@ export default function UniversityDashboard({
                     </option>
                   ))}
                 </select>
-                <span style={{ fontSize: "11.5px", color: "#64748b", display: "block", marginTop: "4px" }}>
+                <span style={{ fontSize: "11.5px", color: "var(--muted)", display: "block", marginTop: "4px" }}>
                   Guruh kodi o‘zgartirilsa, unga tegishli barcha talabalar kodi avtomatik yangilanadi.
                 </span>
               </div>
@@ -3622,7 +3622,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -3650,8 +3650,8 @@ export default function UniversityDashboard({
                   width: "42px",
                   height: "42px",
                   borderRadius: "10px",
-                  background: "#fee2e2",
-                  color: "#dc2626",
+                  background: "var(--danger-soft)",
+                  color: "var(--danger)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -3673,7 +3673,7 @@ export default function UniversityDashboard({
             <div
               style={{
                 padding: "14px",
-                background: "#f8fafc",
+                background: "var(--surface-2)",
                 borderRadius: "10px",
                 border: "1px solid var(--border)",
                 fontSize: "13.5px",
@@ -3686,10 +3686,10 @@ export default function UniversityDashboard({
               <div style={{ fontWeight: 700, color: "var(--navy)", fontSize: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
                 <Icon name="users" size={16} /> {deletingGroup.code}
               </div>
-              <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
+              <div style={{ fontSize: "12.5px", color: "var(--muted)", marginTop: "2px" }}>
                 {deletingGroup.directionName} · {deletingGroup.course} · {deletingGroup.studentsCount} nafar talaba
               </div>
-              <div style={{ marginTop: "10px", padding: "8px 10px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fecaca", fontSize: "12px", color: "#991b1b" }}>
+              <div style={{ marginTop: "10px", padding: "8px 10px", background: "var(--danger-soft)", borderRadius: "6px", border: "1px solid var(--danger-ring)", fontSize: "12px", color: "var(--danger-fg)" }}>
                 Mazkur guruhdagi talabalar o‘chirilmaydi, ammo <em>"Guruhsiz"</em> maqomiga o‘tkaziladi va keyinroq yangi guruhga biriktirilishi mumkin.
               </div>
             </div>
@@ -3709,7 +3709,7 @@ export default function UniversityDashboard({
                   padding: "8px 18px",
                   borderRadius: "8px",
                   border: 0,
-                  background: "#dc2626",
+                  background: "var(--danger)",
                   color: "white",
                   fontWeight: 700,
                   fontSize: "13.5px",
@@ -3735,7 +3735,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -3771,7 +3771,7 @@ export default function UniversityDashboard({
               <button
                 onClick={() => setEditingStudent(null)}
                 aria-label="Yopish"
-                style={{ border: 0, background: "transparent", cursor: "pointer", color: "#94a3b8" }}
+                style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--subtle)" }}
               >
                 <Icon name="close" size={18} />
               </button>
@@ -3779,7 +3779,7 @@ export default function UniversityDashboard({
 
             <form onSubmit={handleUpdateStudent} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Talaba Ism-familiyasi:
                 </label>
                 <input
@@ -3799,7 +3799,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Email manzili (Login):
                 </label>
                 <input
@@ -3819,7 +3819,7 @@ export default function UniversityDashboard({
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                   Akademik Guruh:
                 </label>
                 <select
@@ -3847,7 +3847,7 @@ export default function UniversityDashboard({
               {(!editStudentGroupCode || editStudentGroupCode === "none") && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                       Ta’lim yo‘nalishi:
                     </label>
                     <select
@@ -3869,7 +3869,7 @@ export default function UniversityDashboard({
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                    <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                       Kursi:
                     </label>
                     <select
@@ -3896,7 +3896,7 @@ export default function UniversityDashboard({
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Amaliy malaka darajasi:
                   </label>
                   <select
@@ -3920,7 +3920,7 @@ export default function UniversityDashboard({
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "#475569", marginBottom: "5px" }}>
+                  <label style={{ display: "block", fontSize: "12.5px", fontWeight: 700, color: "var(--text-3)", marginBottom: "5px" }}>
                     Ko‘nikma bali (0-100):
                   </label>
                   <input
@@ -3973,7 +3973,7 @@ export default function UniversityDashboard({
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
+            background: "rgba(9, 9, 11, 0.65)",
             backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
@@ -4001,8 +4001,8 @@ export default function UniversityDashboard({
                   width: "42px",
                   height: "42px",
                   borderRadius: "10px",
-                  background: "#fee2e2",
-                  color: "#dc2626",
+                  background: "var(--danger-soft)",
+                  color: "var(--danger)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -4024,7 +4024,7 @@ export default function UniversityDashboard({
             <div
               style={{
                 padding: "14px",
-                background: "#f8fafc",
+                background: "var(--surface-2)",
                 borderRadius: "10px",
                 border: "1px solid var(--border)",
                 fontSize: "13.5px",
@@ -4037,10 +4037,10 @@ export default function UniversityDashboard({
               <div style={{ fontWeight: 700, color: "var(--navy)", fontSize: "15px", display: "flex", alignItems: "center", gap: "6px" }}>
                 <Icon name="student" size={16} /> {deletingStudent.name}
               </div>
-              <div style={{ fontSize: "12.5px", color: "#64748b", marginTop: "2px" }}>
+              <div style={{ fontSize: "12.5px", color: "var(--muted)", marginTop: "2px" }}>
                 {deletingStudent.email} · Guruhi: {deletingStudent.groupCode || "Guruhsiz"} ({deletingStudent.level}, {deletingStudent.score} ball)
               </div>
-              <div style={{ marginTop: "10px", padding: "8px 10px", background: "#fef2f2", borderRadius: "6px", border: "1px solid #fecaca", fontSize: "12px", color: "#991b1b" }}>
+              <div style={{ marginTop: "10px", padding: "8px 10px", background: "var(--danger-soft)", borderRadius: "6px", border: "1px solid var(--danger-ring)", fontSize: "12px", color: "var(--danger-fg)" }}>
                 Talabaning barcha diagnostika natijalari va Skill DNA ko‘rsatkichlari bazadan olib tashlanadi hamda tegishli guruh talabalar soni 1 taga kamayadi.
               </div>
             </div>
@@ -4060,7 +4060,7 @@ export default function UniversityDashboard({
                   padding: "8px 18px",
                   borderRadius: "8px",
                   border: 0,
-                  background: "#dc2626",
+                  background: "var(--danger)",
                   color: "white",
                   fontWeight: 700,
                   fontSize: "13.5px",
@@ -4085,11 +4085,11 @@ export default function UniversityDashboard({
             bottom: "24px",
             right: "24px",
             zIndex: 9999,
-            background: "#0f172a",
-            color: "#f8fafc",
+            background: "var(--ink)",
+            color: "var(--surface-2)",
             padding: "12px 18px",
             borderRadius: "10px",
-            border: "1px solid #10b981",
+            border: "1px solid var(--success-400)",
             boxShadow: "0 12px 30px rgba(0,0,0,0.4)",
             display: "flex",
             alignItems: "center",
@@ -4099,7 +4099,7 @@ export default function UniversityDashboard({
             maxWidth: "460px",
           }}
         >
-          <span style={{ display: "inline-flex", color: "#10b981", flexShrink: 0 }}>
+          <span style={{ display: "inline-flex", color: "var(--success-400)", flexShrink: 0 }}>
             <Icon name="checkCircle" size={20} />
           </span>
           <span>{toastMessage}</span>

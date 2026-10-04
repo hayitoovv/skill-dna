@@ -79,7 +79,7 @@ export default function CareerCoachModal({
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", display: "grid", placeItems: "center", color: "#fff" }}>
+          <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), var(--accent-hover))", display: "grid", placeItems: "center", color: "#fff" }}>
             <Icon name="briefcase" size={22} />
           </div>
           <div>
@@ -96,7 +96,7 @@ export default function CareerCoachModal({
             maxHeight: "340px",
             height: "300px",
             overflowY: "auto",
-            background: "#f8fafc",
+            background: "var(--surface-2)",
             padding: "16px",
             borderRadius: "12px",
             border: "1px solid var(--border)",
@@ -113,13 +113,13 @@ export default function CareerCoachModal({
                 alignSelf: m.role === "user" ? "flex-end" : "flex-start",
                 maxWidth: "85%",
                 background: m.role === "user" ? "var(--royal)" : "#ffffff",
-                color: m.role === "user" ? "#ffffff" : "#1e293b",
+                color: m.role === "user" ? "#ffffff" : "var(--ink-2)",
                 padding: "10px 14px",
                 borderRadius: "10px",
                 fontSize: "14px",
                 lineHeight: 1.5,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                border: m.role === "coach" ? "1px solid #e2e8f0" : "none",
+                border: m.role === "coach" ? "1px solid var(--border)" : "none",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "12px", opacity: 0.7, marginBottom: "3px" }}>
@@ -149,11 +149,11 @@ export default function CareerCoachModal({
               onClick={() => setInput(pill)}
               style={{
                 padding: "6px 12px",
-                background: "#f1f5f9",
+                background: "var(--surface-3)",
                 border: "1px solid var(--border)",
                 borderRadius: "14px",
                 fontSize: "12.5px",
-                color: "#475569",
+                color: "var(--text-3)",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
               }}

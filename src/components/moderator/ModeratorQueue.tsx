@@ -171,7 +171,7 @@ export default function ModeratorQueue({
           display: "flex",
           gap: "8px",
           marginBottom: "22px",
-          borderBottom: "1.5px solid #e2e8f0",
+          borderBottom: "1.5px solid var(--border)",
           paddingBottom: "10px",
           flexWrap: "wrap",
         }}
@@ -182,7 +182,7 @@ export default function ModeratorQueue({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "flags" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "flags" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "flags" ? "var(--navy)" : "#ffffff",
             color: currentTab === "flags" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -192,7 +192,7 @@ export default function ModeratorQueue({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "flags" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "flags" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="shield" size={16} />
@@ -201,8 +201,8 @@ export default function ModeratorQueue({
             style={{
               padding: "2px 7px",
               borderRadius: "10px",
-              background: currentTab === "flags" ? "rgba(255,255,255,0.2)" : "#fee2e2",
-              color: currentTab === "flags" ? "#ffffff" : "#dc2626",
+              background: currentTab === "flags" ? "rgba(255,255,255,0.2)" : "var(--danger-soft)",
+              color: currentTab === "flags" ? "#ffffff" : "var(--danger)",
               fontSize: "11px",
               fontWeight: 800,
             }}
@@ -217,7 +217,7 @@ export default function ModeratorQueue({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "transcripts" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "transcripts" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "transcripts" ? "var(--navy)" : "#ffffff",
             color: currentTab === "transcripts" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -227,7 +227,7 @@ export default function ModeratorQueue({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "transcripts" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "transcripts" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="file" size={16} />
@@ -236,8 +236,8 @@ export default function ModeratorQueue({
             style={{
               padding: "2px 7px",
               borderRadius: "10px",
-              background: currentTab === "transcripts" ? "rgba(255,255,255,0.2)" : "#eff6ff",
-              color: currentTab === "transcripts" ? "#ffffff" : "#2563eb",
+              background: currentTab === "transcripts" ? "rgba(255,255,255,0.2)" : "var(--accent-soft)",
+              color: currentTab === "transcripts" ? "#ffffff" : "var(--accent)",
               fontSize: "11px",
               fontWeight: 800,
             }}
@@ -252,7 +252,7 @@ export default function ModeratorQueue({
           style={{
             padding: "9px 18px",
             borderRadius: "10px",
-            border: currentTab === "rules" ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+            border: currentTab === "rules" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
             background: currentTab === "rules" ? "var(--navy)" : "#ffffff",
             color: currentTab === "rules" ? "#ffffff" : "var(--navy)",
             fontSize: "13px",
@@ -262,7 +262,7 @@ export default function ModeratorQueue({
             alignItems: "center",
             gap: "8px",
             transition: "all 0.15s ease",
-            boxShadow: currentTab === "rules" ? "0 4px 12px rgba(15, 39, 68, 0.12)" : "none",
+            boxShadow: currentTab === "rules" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
           }}
         >
           <Icon name="settings" size={16} />
@@ -271,8 +271,8 @@ export default function ModeratorQueue({
             style={{
               padding: "2px 7px",
               borderRadius: "10px",
-              background: currentTab === "rules" ? "rgba(255,255,255,0.2)" : "#f1f5f9",
-              color: currentTab === "rules" ? "#ffffff" : "#475569",
+              background: currentTab === "rules" ? "rgba(255,255,255,0.2)" : "var(--surface-3)",
+              color: currentTab === "rules" ? "#ffffff" : "var(--text-3)",
               fontSize: "11px",
               fontWeight: 800,
             }}
@@ -290,8 +290,8 @@ export default function ModeratorQueue({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#fee2e2",
-              color: "#dc2626",
+              background: "var(--danger-soft)",
+              color: "var(--danger)",
               display: "grid",
               placeItems: "center",
             }}
@@ -312,8 +312,8 @@ export default function ModeratorQueue({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#ecfdf5",
-              color: "#059669",
+              background: "var(--success-soft)",
+              color: "var(--success)",
               display: "grid",
               placeItems: "center",
             }}
@@ -334,8 +334,8 @@ export default function ModeratorQueue({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#fef3c7",
-              color: "#d97706",
+              background: "var(--warning-soft)",
+              color: "var(--warning)",
               display: "grid",
               placeItems: "center",
             }}
@@ -356,8 +356,8 @@ export default function ModeratorQueue({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#eff6ff",
-              color: "#2563eb",
+              background: "var(--accent-soft)",
+              color: "var(--accent)",
               display: "grid",
               placeItems: "center",
             }}
@@ -423,7 +423,7 @@ export default function ModeratorQueue({
                     border: "1.5px solid var(--border)",
                     fontSize: "13px",
                     outline: "none",
-                    background: "#f8fafc",
+                    background: "var(--surface-2)",
                     transition: "border-color 0.2s, background 0.2s",
                   }}
                 />
@@ -452,7 +452,7 @@ export default function ModeratorQueue({
                       fontSize: "12px",
                       fontWeight: 600,
                       cursor: "pointer",
-                      border: selectedSeverity === s.key ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+                      border: selectedSeverity === s.key ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
                       background: selectedSeverity === s.key ? "var(--navy)" : "#ffffff",
                       color: selectedSeverity === s.key ? "#ffffff" : "var(--navy)",
                       transition: "0.15s ease",
@@ -482,7 +482,7 @@ export default function ModeratorQueue({
                       fontSize: "12px",
                       fontWeight: 600,
                       cursor: "pointer",
-                      border: selectedStatus === st.key ? "1.5px solid var(--royal)" : "1.5px solid #e2e8f0",
+                      border: selectedStatus === st.key ? "1.5px solid var(--royal)" : "1.5px solid var(--border)",
                       background: selectedStatus === st.key ? "var(--royal)" : "#ffffff",
                       color: selectedStatus === st.key ? "#ffffff" : "var(--navy)",
                       transition: "0.15s ease",
@@ -542,7 +542,7 @@ export default function ModeratorQueue({
                   width: "54px",
                   height: "54px",
                   borderRadius: "50%",
-                  background: "#f1f5f9",
+                  background: "var(--surface-3)",
                   color: "var(--muted)",
                   display: "grid",
                   placeItems: "center",
@@ -574,10 +574,10 @@ export default function ModeratorQueue({
                     style={{
                       opacity: isResolved ? 0.72 : 1,
                       borderLeft: isHigh
-                        ? "4px solid #ef4444"
+                        ? "4px solid var(--danger-400)"
                         : isMed
-                        ? "4px solid #f59e0b"
-                        : "4px solid #94a3b8",
+                        ? "4px solid var(--warning-400)"
+                        : "4px solid var(--subtle)",
                     }}
                   >
                     {/* Top Row: Student info & Status */}
@@ -598,16 +598,16 @@ export default function ModeratorQueue({
                             minWidth: "44px",
                             borderRadius: "12px",
                             background: isHigh
-                              ? "linear-gradient(135deg, #7f1d1d, #991b1b)"
+                              ? "linear-gradient(135deg, var(--danger-strong), var(--danger-fg))"
                               : isMed
-                              ? "linear-gradient(135deg, #78350f, #92400e)"
-                              : "linear-gradient(135deg, #1e293b, #334155)",
+                              ? "linear-gradient(135deg, var(--warning-strong), var(--warning-fg))"
+                              : "linear-gradient(135deg, var(--ink-2), var(--text-2))",
                             color: "#ffffff",
                             display: "grid",
                             placeItems: "center",
                             fontWeight: 800,
                             fontSize: "15px",
-                            boxShadow: "0 2px 8px rgba(15, 23, 42, 0.15)",
+                            boxShadow: "0 2px 8px rgba(9, 9, 11, 0.15)",
                           }}
                         >
                           {flag.studentName
@@ -628,7 +628,7 @@ export default function ModeratorQueue({
                               style={{
                                 padding: "2px 7px",
                                 borderRadius: "6px",
-                                background: "#eff6ff",
+                                background: "var(--accent-soft)",
                                 color: "var(--royal)",
                                 fontSize: "11px",
                                 fontWeight: 700,
@@ -650,9 +650,9 @@ export default function ModeratorQueue({
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "5px",
-                          background: isResolved ? "#ecfdf5" : isHigh ? "#fee2e2" : "#fef3c7",
-                          color: isResolved ? "#059669" : isHigh ? "#b91c1c" : "#b45309",
-                          border: isResolved ? "1px solid #a7f3d0" : isHigh ? "1px solid #fecaca" : "1px solid #fde68a",
+                          background: isResolved ? "var(--success-soft)" : isHigh ? "var(--danger-soft)" : "var(--warning-soft)",
+                          color: isResolved ? "var(--success)" : isHigh ? "var(--danger-fg)" : "var(--warning-fg)",
+                          border: isResolved ? "1px solid var(--success-ring)" : isHigh ? "1px solid var(--danger-ring)" : "1px solid var(--warning-ring)",
                         }}
                       >
                         {isResolved ? (
@@ -661,7 +661,7 @@ export default function ModeratorQueue({
                           </>
                         ) : (
                           <>
-                            <span className="live-pulse-indicator" style={{ background: isHigh ? "#dc2626" : "#d97706" }} />
+                            <span className="live-pulse-indicator" style={{ background: isHigh ? "var(--danger)" : "var(--warning)" }} />
                             Kutilmoqda
                           </>
                         )}
@@ -677,8 +677,8 @@ export default function ModeratorQueue({
                           fontSize: "11px",
                           fontWeight: 800,
                           letterSpacing: "0.03em",
-                          background: isHigh ? "#fee2e2" : isMed ? "#fef3c7" : "#f1f5f9",
-                          color: isHigh ? "#dc2626" : isMed ? "#b45309" : "#475569",
+                          background: isHigh ? "var(--danger-soft)" : isMed ? "var(--warning-soft)" : "var(--surface-3)",
+                          color: isHigh ? "var(--danger)" : isMed ? "var(--warning-fg)" : "var(--text-3)",
                         }}
                       >
                         {flag.type.replace(/_/g, " ")} · {flag.severity.toUpperCase()}
@@ -698,7 +698,7 @@ export default function ModeratorQueue({
                           padding: "8px 12px",
                           borderRadius: "8px",
                           background: "#ffffff",
-                          border: "1px dashed #cbd5e1",
+                          border: "1px dashed var(--border-strong)",
                           marginBottom: "12px",
                           fontSize: "12px",
                         }}
@@ -711,7 +711,7 @@ export default function ModeratorQueue({
                             <span>
                               AI Viva (DEFEND): <strong>{flag.metrics.defendScore}%</strong>
                             </span>
-                            <span style={{ color: "#dc2626", fontWeight: 800 }}>
+                            <span style={{ color: "var(--danger)", fontWeight: 800 }}>
                               Farq: {flag.metrics.discrepancy} ball (≥ 35)
                             </span>
                           </div>
@@ -724,18 +724,18 @@ export default function ModeratorQueue({
                             <span>
                               Model #2: <strong>{flag.metrics.model2Score} b</strong>
                             </span>
-                            <span style={{ color: "#d97706", fontWeight: 800 }}>
+                            <span style={{ color: "var(--warning)", fontWeight: 800 }}>
                               Kelishmovchilik: {flag.metrics.discrepancy} b
                             </span>
                           </div>
                         )}
                         {flag.metrics.similarityPct !== undefined && (
-                          <div style={{ width: "100%", color: "#dc2626", fontWeight: 700 }}>
+                          <div style={{ width: "100%", color: "var(--danger)", fontWeight: 700 }}>
                             AST Daraxt o‘xshashligi: <strong>{flag.metrics.similarityPct}%</strong> (Plagiat xavfi)
                           </div>
                         )}
                         {flag.metrics.latencySeconds !== undefined && (
-                          <div style={{ width: "100%", color: "#b45309", fontWeight: 700 }}>
+                          <div style={{ width: "100%", color: "var(--warning-fg)", fontWeight: 700 }}>
                             Savoldan keyingi sukut davomiyligi: <strong>{flag.metrics.latencySeconds} soniya</strong>
                           </div>
                         )}
@@ -747,11 +747,11 @@ export default function ModeratorQueue({
                       style={{
                         padding: "12px 14px",
                         borderRadius: "10px",
-                        background: "#f8fafc",
-                        border: "1px solid #e2e8f0",
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--border)",
                         marginBottom: "16px",
                         fontSize: "12.5px",
-                        color: "#334155",
+                        color: "var(--text-2)",
                         lineHeight: "1.55",
                       }}
                     >
@@ -850,7 +850,7 @@ export default function ModeratorQueue({
                   border: "1.5px solid var(--border)",
                   fontSize: "13px",
                   outline: "none",
-                  background: "#f8fafc",
+                  background: "var(--surface-2)",
                 }}
               />
               <select
@@ -884,18 +884,18 @@ export default function ModeratorQueue({
                   key={t.id}
                   style={{
                     borderRadius: "14px",
-                    border: "1.5px solid #e2e8f0",
+                    border: "1.5px solid var(--border)",
                     background: "#ffffff",
                     overflow: "hidden",
-                    boxShadow: "0 2px 8px rgba(15, 23, 42, 0.03)",
+                    boxShadow: "0 2px 8px rgba(9, 9, 11, 0.03)",
                   }}
                 >
                   {/* Card Header Bar */}
                   <div
                     style={{
                       padding: "16px 20px",
-                      background: "#f8fafc",
-                      borderBottom: isExpanded ? "1px solid #e2e8f0" : "none",
+                      background: "var(--surface-2)",
+                      borderBottom: isExpanded ? "1px solid var(--border)" : "none",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -912,12 +912,12 @@ export default function ModeratorQueue({
                           height: "38px",
                           borderRadius: "50%",
                           border: "none",
-                          background: isPlaying ? "#dc2626" : "var(--royal)",
+                          background: isPlaying ? "var(--danger)" : "var(--royal)",
                           color: "#ffffff",
                           display: "grid",
                           placeItems: "center",
                           cursor: "pointer",
-                          boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)",
+                          boxShadow: "0 2px 6px rgba(79, 70, 229, 0.25)",
                           transition: "transform 0.15s ease",
                         }}
                         title={isPlaying ? "Audioni to‘xtatish" : "Audioni eshitish"}
@@ -937,16 +937,16 @@ export default function ModeratorQueue({
                               fontWeight: 700,
                               background:
                                 t.status === "verified"
-                                  ? "#ecfdf5"
+                                  ? "var(--success-soft)"
                                   : t.status === "flagged"
-                                  ? "#fee2e2"
-                                  : "#fef3c7",
+                                  ? "var(--danger-soft)"
+                                  : "var(--warning-soft)",
                               color:
                                 t.status === "verified"
-                                  ? "#059669"
+                                  ? "var(--success)"
                                   : t.status === "flagged"
-                                  ? "#dc2626"
-                                  : "#d97706",
+                                  ? "var(--danger)"
+                                  : "var(--warning)",
                             }}
                           >
                             {t.status === "verified"
@@ -956,7 +956,7 @@ export default function ModeratorQueue({
                               : "Qayta tahlil"}
                           </span>
                         </div>
-                        <div style={{ fontSize: "12.5px", color: "#475569", marginTop: "2px" }}>
+                        <div style={{ fontSize: "12.5px", color: "var(--text-3)", marginTop: "2px" }}>
                           {t.taskTitle} · <span style={{ color: "var(--muted)" }}>{t.date} ({t.duration})</span>
                         </div>
                       </div>
@@ -969,7 +969,7 @@ export default function ModeratorQueue({
                         </div>
                         <strong style={{ fontSize: "16px", color: "var(--royal)" }}>
                           {t.overallScore}/100{" "}
-                          <span style={{ fontSize: "12px", color: t.integrityScore < 70 ? "#dc2626" : "#059669" }}>
+                          <span style={{ fontSize: "12px", color: t.integrityScore < 70 ? "var(--danger)" : "var(--success)" }}>
                             ({t.integrityScore}% ishonch)
                           </span>
                         </strong>
@@ -981,7 +981,7 @@ export default function ModeratorQueue({
                         style={{
                           padding: "6px 12px",
                           borderRadius: "8px",
-                          border: "1px solid #cbd5e1",
+                          border: "1px solid var(--border-strong)",
                           background: "#ffffff",
                           fontSize: "12px",
                           fontWeight: 700,
@@ -999,7 +999,7 @@ export default function ModeratorQueue({
                     <div
                       style={{
                         padding: "12px 20px",
-                        background: "#0f2744",
+                        background: "var(--ink)",
                         color: "#ffffff",
                         display: "flex",
                         alignItems: "center",
@@ -1024,13 +1024,13 @@ export default function ModeratorQueue({
                           style={{
                             width: `${audioProgress}%`,
                             height: "100%",
-                            background: "#38bdf8",
+                            background: "var(--info-400)",
                             borderRadius: "4px",
                             transition: "width 0.3s ease",
                           }}
                         />
                       </div>
-                      <span style={{ fontSize: "11px", color: "#94a3b8" }}>03:45 / {t.duration}</span>
+                      <span style={{ fontSize: "11px", color: "var(--subtle)" }}>03:45 / {t.duration}</span>
                     </div>
                   )}
 
@@ -1044,8 +1044,8 @@ export default function ModeratorQueue({
                             style={{
                               padding: "14px 16px",
                               borderRadius: "10px",
-                              background: qa.flagRaised ? "#fff1f2" : "#f8fafc",
-                              border: qa.flagRaised ? "1.5px solid #fecdd3" : "1px solid #e2e8f0",
+                              background: qa.flagRaised ? "var(--rose-soft)" : "var(--surface-2)",
+                              border: qa.flagRaised ? "1.5px solid var(--rose-ring)" : "1px solid var(--border)",
                             }}
                           >
                             <div
@@ -1063,13 +1063,13 @@ export default function ModeratorQueue({
                                 style={{
                                   fontSize: "11.5px",
                                   fontWeight: 700,
-                                  color: qa.evaluatorScore < 50 ? "#dc2626" : "#059669",
+                                  color: qa.evaluatorScore < 50 ? "var(--danger)" : "var(--success)",
                                 }}
                               >
                                 Baho: {qa.evaluatorScore}/100 · Nutq ishonchliligi: {qa.audioConfidence}%
                               </span>
                             </div>
-                            <p style={{ margin: "0 0 8px", fontSize: "13px", color: "#1e293b", fontWeight: 600 }}>
+                            <p style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--ink-2)", fontWeight: 600 }}>
                               {qa.question}
                             </p>
 
@@ -1078,9 +1078,9 @@ export default function ModeratorQueue({
                                 padding: "10px 12px",
                                 borderRadius: "8px",
                                 background: "#ffffff",
-                                border: "1px solid #e2e8f0",
+                                border: "1px solid var(--border)",
                                 fontSize: "12.5px",
-                                color: "#334155",
+                                color: "var(--text-2)",
                                 fontStyle: "italic",
                               }}
                             >
@@ -1092,7 +1092,7 @@ export default function ModeratorQueue({
                                 style={{
                                   marginTop: "8px",
                                   fontSize: "12px",
-                                  color: "#b91c1c",
+                                  color: "var(--danger-fg)",
                                   fontWeight: 700,
                                   display: "flex",
                                   alignItems: "center",
@@ -1115,7 +1115,7 @@ export default function ModeratorQueue({
                           gap: "10px",
                           marginTop: "16px",
                           paddingTop: "14px",
-                          borderTop: "1px solid #f1f5f9",
+                          borderTop: "1px solid var(--surface-3)",
                         }}
                       >
                         <button
@@ -1130,7 +1130,7 @@ export default function ModeratorQueue({
                         <button
                           type="button"
                           className="candidate-invite-btn"
-                          style={{ maxWidth: "240px", background: "#dc2626" }}
+                          style={{ maxWidth: "240px", background: "var(--danger)" }}
                           onClick={() => handleTranscriptVerdict(t.id, "flagged", "Bayroq ro‘yxatiga kiritildi")}
                         >
                           <Icon name="shield" size={16} />
@@ -1191,8 +1191,8 @@ export default function ModeratorQueue({
                   style={{
                     padding: "20px 22px",
                     borderRadius: "14px",
-                    border: "1.5px solid #e2e8f0",
-                    background: rule.isActive ? "#ffffff" : "#f8fafc",
+                    border: "1.5px solid var(--border)",
+                    background: rule.isActive ? "#ffffff" : "var(--surface-2)",
                     opacity: rule.isActive ? 1 : 0.6,
                     transition: "all 0.2s ease",
                   }}
@@ -1214,8 +1214,8 @@ export default function ModeratorQueue({
                             borderRadius: "6px",
                             fontSize: "11px",
                             fontWeight: 800,
-                            background: isHigh ? "#fee2e2" : isMed ? "#fef3c7" : "#f1f5f9",
-                            color: isHigh ? "#dc2626" : isMed ? "#b45309" : "#475569",
+                            background: isHigh ? "var(--danger-soft)" : isMed ? "var(--warning-soft)" : "var(--surface-3)",
+                            color: isHigh ? "var(--danger)" : isMed ? "var(--warning-fg)" : "var(--text-3)",
                           }}
                         >
                           {rule.code} · {rule.severity.toUpperCase()}
@@ -1231,7 +1231,7 @@ export default function ModeratorQueue({
 
                     {/* Toggle Switch */}
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "12px", fontWeight: 700, color: rule.isActive ? "#059669" : "var(--muted)" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: rule.isActive ? "var(--success)" : "var(--muted)" }}>
                         {rule.isActive ? "FAOL" : "TO‘XTATILGAN"}
                       </span>
                       <button
@@ -1242,7 +1242,7 @@ export default function ModeratorQueue({
                           height: "26px",
                           borderRadius: "14px",
                           border: "none",
-                          background: rule.isActive ? "#059669" : "#cbd5e1",
+                          background: rule.isActive ? "var(--success)" : "var(--border-strong)",
                           position: "relative",
                           cursor: "pointer",
                           transition: "background 0.2s ease",
@@ -1266,7 +1266,7 @@ export default function ModeratorQueue({
                     </div>
                   </div>
 
-                  <p style={{ margin: "8px 0 14px", fontSize: "13px", color: "#334155", lineHeight: "1.5" }}>
+                  <p style={{ margin: "8px 0 14px", fontSize: "13px", color: "var(--text-2)", lineHeight: "1.5" }}>
                     {rule.description}
                   </p>
 
@@ -1275,8 +1275,8 @@ export default function ModeratorQueue({
                     style={{
                       padding: "14px 16px",
                       borderRadius: "10px",
-                      background: "#f8fafc",
-                      border: "1px solid #e2e8f0",
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -1316,9 +1316,9 @@ export default function ModeratorQueue({
                         padding: "8px 12px",
                         borderRadius: "8px",
                         background: "#ffffff",
-                        border: "1px solid #cbd5e1",
+                        border: "1px solid var(--border-strong)",
                         fontSize: "12px",
-                        color: "#475569",
+                        color: "var(--text-3)",
                         maxWidth: "380px",
                       }}
                     >
@@ -1353,8 +1353,8 @@ export default function ModeratorQueue({
               style={{
                 background:
                   activeFlag.severity === "high"
-                    ? "linear-gradient(135deg, #7f1d1d, #991b1b)"
-                    : "linear-gradient(135deg, #0f2744, #1e3a5f)",
+                    ? "linear-gradient(135deg, var(--danger-strong), var(--danger-fg))"
+                    : "linear-gradient(135deg, var(--ink), var(--ink-2))",
                 color: "white",
               }}
             >
@@ -1385,10 +1385,10 @@ export default function ModeratorQueue({
                 style={{
                   padding: "13px 15px",
                   borderRadius: "12px",
-                  background: "#fff1f2",
-                  border: "1px solid #fecdd3",
+                  background: "var(--rose-soft)",
+                  border: "1px solid var(--rose-ring)",
                   fontSize: "12.5px",
-                  color: "#9f1239",
+                  color: "var(--rose-fg)",
                   lineHeight: "1.55",
                 }}
               >
@@ -1401,7 +1401,7 @@ export default function ModeratorQueue({
                   style={{
                     padding: "15px",
                     borderRadius: "12px",
-                    background: "#f8fafc",
+                    background: "var(--surface-2)",
                     border: "1px solid var(--border)",
                     fontSize: "12.5px",
                   }}
@@ -1430,15 +1430,15 @@ export default function ModeratorQueue({
                       padding: "8px 10px",
                       borderRadius: "6px",
                       background: "#ffffff",
-                      border: "1px solid #e2e8f0",
-                      color: "#334155",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-2)",
                       fontStyle: "italic",
                     }}
                   >
                     🗣️ <strong>Talaba javobi:</strong> "{activeFlag.transcriptExcerpt.answer}"
                   </p>
 
-                  <div style={{ color: "#b91c1c", fontWeight: 700, fontSize: "12px" }}>
+                  <div style={{ color: "var(--danger-fg)", fontWeight: 700, fontSize: "12px" }}>
                     ⚖️ <strong>AI baholash xulosasi:</strong> {activeFlag.transcriptExcerpt.aiVerdict}
                   </div>
                 </div>
@@ -1492,7 +1492,7 @@ export default function ModeratorQueue({
               <button
                 type="button"
                 className="candidate-invite-btn"
-                style={{ flex: 1.2, background: "linear-gradient(135deg, #b91c1c, #991b1b)" }}
+                style={{ flex: 1.2, background: "linear-gradient(135deg, var(--danger-fg), var(--danger-fg))" }}
                 onClick={() =>
                   handleResolve(
                     activeFlag.id,

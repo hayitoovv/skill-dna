@@ -62,7 +62,7 @@ export default function EvidenceGraphModal({
         </button>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-          <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "grid", placeItems: "center", color: "#fff" }}>
+          <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, var(--success-400), var(--success))", display: "grid", placeItems: "center", color: "#fff" }}>
             <Icon name="dna" size={22} />
           </div>
           <div>
@@ -90,8 +90,8 @@ export default function EvidenceGraphModal({
                   alignItems: "center",
                   justifyContent: "space-between",
                   padding: "12px 16px",
-                  background: selectedNode?.id === node.id ? "#eff6ff" : "#f8fafc",
-                  border: selectedNode?.id === node.id ? "1.5px solid #3b82f6" : "1px solid var(--border)",
+                  background: selectedNode?.id === node.id ? "var(--accent-soft)" : "var(--surface-2)",
+                  border: selectedNode?.id === node.id ? "1.5px solid var(--accent-400)" : "1px solid var(--border)",
                   borderRadius: "9px",
                   cursor: "pointer",
                   transition: "0.15s ease",
@@ -103,7 +103,7 @@ export default function EvidenceGraphModal({
                       width: "30px",
                       height: "30px",
                       borderRadius: "50%",
-                      background: node.type === "score" ? "#10b981" : "#2563eb",
+                      background: node.type === "score" ? "var(--success-400)" : "var(--accent)",
                       color: "#fff",
                       fontSize: "12.5px",
                       fontWeight: 800,

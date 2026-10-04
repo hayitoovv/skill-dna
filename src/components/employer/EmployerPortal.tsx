@@ -60,8 +60,8 @@ export default function EmployerPortal() {
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#eff6ff",
-              color: "#2563eb",
+              background: "var(--accent-soft)",
+              color: "var(--accent)",
               display: "grid",
               placeItems: "center",
             }}
@@ -82,8 +82,8 @@ export default function EmployerPortal() {
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#ecfdf5",
-              color: "#059669",
+              background: "var(--success-soft)",
+              color: "var(--success)",
               display: "grid",
               placeItems: "center",
             }}
@@ -94,7 +94,7 @@ export default function EmployerPortal() {
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
               O‘rtacha moslik
             </div>
-            <strong style={{ fontSize: "19px", color: "#059669" }}>
+            <strong style={{ fontSize: "19px", color: "var(--success)" }}>
               {filteredCandidates.length > 0
                 ? `${Math.round(filteredCandidates.reduce((acc, c) => acc + c.matchScore, 0) / filteredCandidates.length)}%`
                 : "0%"}
@@ -108,8 +108,8 @@ export default function EmployerPortal() {
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#fef3c7",
-              color: "#d97706",
+              background: "var(--warning-soft)",
+              color: "var(--warning)",
               display: "grid",
               placeItems: "center",
             }}
@@ -130,8 +130,8 @@ export default function EmployerPortal() {
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              background: "#f5f3ff",
-              color: "#7c3aed",
+              background: "var(--violet-soft)",
+              color: "var(--violet)",
               display: "grid",
               placeItems: "center",
             }}
@@ -172,7 +172,7 @@ export default function EmployerPortal() {
                 border: "1.5px solid var(--border)",
                 fontSize: "13px",
                 outline: "none",
-                background: "#f8fafc",
+                background: "var(--surface-2)",
                 transition: "border-color 0.2s, background 0.2s",
               }}
               onFocus={(e) => {
@@ -181,7 +181,7 @@ export default function EmployerPortal() {
               }}
               onBlur={(e) => {
                 e.target.style.borderColor = "var(--border)";
-                e.target.style.background = "#f8fafc";
+                e.target.style.background = "var(--surface-2)";
               }}
             />
           </div>
@@ -203,7 +203,7 @@ export default function EmployerPortal() {
                   style={{
                     padding: "8px 16px",
                     borderRadius: "10px",
-                    border: active ? "1.5px solid var(--navy)" : "1.5px solid #e2e8f0",
+                    border: active ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
                     background: active ? "var(--navy)" : "#ffffff",
                     color: active ? "#ffffff" : "var(--navy)",
                     fontSize: "12.5px",
@@ -213,7 +213,7 @@ export default function EmployerPortal() {
                     alignItems: "center",
                     gap: "7px",
                     transition: "all 0.15s ease",
-                    boxShadow: active ? "0 4px 12px rgba(15, 39, 68, 0.15)" : "none",
+                    boxShadow: active ? "0 4px 12px rgba(9, 9, 11, 0.15)" : "none",
                   }}
                 >
                   <Icon name={dir.icon} size={14} />
@@ -231,7 +231,7 @@ export default function EmployerPortal() {
             gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
             gap: "24px",
             paddingTop: "14px",
-            borderTop: "1px solid #f1f5f9",
+            borderTop: "1px solid var(--surface-3)",
           }}
         >
           <div>
@@ -244,10 +244,10 @@ export default function EmployerPortal() {
                   fontSize: "12px",
                   fontWeight: 800,
                   color: "var(--royal)",
-                  background: "#eff6ff",
+                  background: "var(--accent-soft)",
                   padding: "3px 9px",
                   borderRadius: "6px",
-                  border: "1px solid #bfdbfe",
+                  border: "1px solid var(--accent-ring)",
                 }}
               >
                 {minScore} / 100 ball
@@ -277,11 +277,11 @@ export default function EmployerPortal() {
                 style={{
                   fontSize: "12px",
                   fontWeight: 800,
-                  color: "#059669",
-                  background: "#ecfdf5",
+                  color: "var(--success)",
+                  background: "var(--success-soft)",
                   padding: "3px 9px",
                   borderRadius: "6px",
-                  border: "1px solid #a7f3d0",
+                  border: "1px solid var(--success-ring)",
                 }}
               >
                 {minConfidence}% dalillar bilan
@@ -293,7 +293,7 @@ export default function EmployerPortal() {
               max="90"
               value={minConfidence}
               onChange={(e) => setMinConfidence(Number(e.target.value))}
-              style={{ width: "100%", accentColor: "#059669", cursor: "pointer" }}
+              style={{ width: "100%", accentColor: "var(--success)", cursor: "pointer" }}
             />
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--muted)", marginTop: "4px" }}>
               <span>50%</span>
@@ -338,7 +338,7 @@ export default function EmployerPortal() {
 
       {filteredCandidates.length === 0 ? (
         <div className="card" style={{ padding: "48px 24px", textAlign: "center", color: "var(--muted)" }}>
-          <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "#f1f5f9", color: "var(--muted)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+          <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "var(--surface-3)", color: "var(--muted)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
             <Icon name="search" size={24} />
           </div>
           <h3 style={{ margin: "0 0 6px", color: "var(--navy)", fontSize: "17px" }}>Mos nomzod topilmadi</h3>
@@ -359,13 +359,13 @@ export default function EmployerPortal() {
                       height: "48px",
                       minWidth: "48px",
                       borderRadius: "14px",
-                      background: "linear-gradient(135deg, #0f2744, #1e3a5f)",
+                      background: "linear-gradient(135deg, var(--ink), var(--ink-2))",
                       color: "#ffffff",
                       display: "grid",
                       placeItems: "center",
                       fontWeight: 800,
                       fontSize: "16px",
-                      boxShadow: "0 4px 14px rgba(15, 39, 68, 0.22)",
+                      boxShadow: "0 4px 14px rgba(9, 9, 11, 0.22)",
                       border: "1.5px solid rgba(255, 255, 255, 0.2)",
                     }}
                   >
@@ -382,11 +382,11 @@ export default function EmployerPortal() {
                         style={{
                           padding: "2px 8px",
                           borderRadius: "6px",
-                          background: "#eff6ff",
+                          background: "var(--accent-soft)",
                           color: "var(--royal)",
                           fontSize: "11px",
                           fontWeight: 700,
-                          border: "1px solid #bfdbfe",
+                          border: "1px solid var(--accent-ring)",
                         }}
                       >
                         {cand.level}
@@ -404,24 +404,24 @@ export default function EmployerPortal() {
                       gap: "7px",
                       padding: "6px 13px",
                       borderRadius: "20px",
-                      background: "#ecfdf5",
-                      color: "#059669",
+                      background: "var(--success-soft)",
+                      color: "var(--success)",
                       fontWeight: 800,
                       fontSize: "13px",
-                      border: "1px solid #a7f3d0",
+                      border: "1px solid var(--success-ring)",
                       boxShadow: "0 2px 6px rgba(5, 150, 105, 0.1)",
                     }}
                   >
                     <span className="live-pulse-indicator" />
                     <span>{cand.matchScore}% moslik</span>
                   </div>
-                  <div className="progress-track" style={{ height: "6px", margin: "7px 0 0", background: "#e2e8f0", borderRadius: "10px" }}>
+                  <div className="progress-track" style={{ height: "6px", margin: "7px 0 0", background: "var(--border)", borderRadius: "10px" }}>
                     <div
                       style={{
                         width: `${cand.matchScore}%`,
                         height: "100%",
                         borderRadius: "10px",
-                        background: "linear-gradient(90deg, #059669, #10b981)",
+                        background: "linear-gradient(90deg, var(--success), var(--success-400))",
                         transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
                       }}
                     />
@@ -434,12 +434,12 @@ export default function EmployerPortal() {
                 style={{
                   padding: "13px 15px",
                   borderRadius: "12px",
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
                   borderLeft: "3.5px solid var(--royal)",
                   marginBottom: "16px",
                   fontSize: "12.5px",
-                  color: "#334155",
+                  color: "var(--text-2)",
                   lineHeight: "1.55",
                 }}
               >
@@ -462,11 +462,11 @@ export default function EmployerPortal() {
                       style={{
                         padding: "5px 10px",
                         borderRadius: "8px",
-                        background: "#f1f5f9",
+                        background: "var(--surface-3)",
                         color: "var(--navy)",
                         fontSize: "11.5px",
                         fontWeight: 600,
-                        border: "1px solid #e2e8f0",
+                        border: "1px solid var(--border)",
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "4px",
@@ -479,11 +479,11 @@ export default function EmployerPortal() {
                     style={{
                       padding: "5px 10px",
                       borderRadius: "8px",
-                      background: "#fef3c7",
-                      color: "#92400e",
+                      background: "var(--warning-soft)",
+                      color: "var(--warning-fg)",
                       fontSize: "11.5px",
                       fontWeight: 700,
-                      border: "1px solid #fde68a",
+                      border: "1px solid var(--warning-ring)",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "5px",
@@ -540,7 +540,7 @@ export default function EmployerPortal() {
             <button className="modal-close" onClick={() => setSelectedCandidate(null)}>
               <Icon name="close" />
             </button>
-            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, #0f2744, #1e3a5f)", color: "white" }}>
+            <div className="modal-symbol" style={{ background: "linear-gradient(135deg, var(--ink), var(--ink-2))", color: "white" }}>
               <Icon name="shieldCheck" size={30} />
             </div>
             <p className="eyebrow" style={{ color: "var(--royal)" }}>VERIFIED CANDIDATE EVIDENCE · OB 3.0</p>
@@ -550,49 +550,49 @@ export default function EmployerPortal() {
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", textAlign: "left", marginBottom: "22px" }}>
-              <div style={{ padding: "14px 16px", borderRadius: "12px", background: "#f8fafc", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ padding: "14px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <strong style={{ fontSize: "13.5px", color: "var(--navy)" }}>Umumiy Skill Score:</strong>
                   <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>5 qatlamli tekshirilgan indeks</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--royal)" }}>{selectedCandidate.overallScore}/100</span>
-                  <div style={{ fontSize: "11.5px", color: "#059669", fontWeight: 700 }}>{selectedCandidate.confidence}% Ishonchlilik</div>
+                  <div style={{ fontSize: "11.5px", color: "var(--success)", fontWeight: 700 }}>{selectedCandidate.confidence}% Ishonchlilik</div>
                 </div>
               </div>
 
-              <div style={{ padding: "14px 16px", borderRadius: "12px", background: "#f8fafc", border: "1px solid var(--border)" }}>
+              <div style={{ padding: "14px 16px", borderRadius: "12px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <strong style={{ fontSize: "13.5px", color: "var(--navy)" }}>Qatlamlar bo‘yicha tekshiruv:</strong>
-                  <span style={{ padding: "3px 8px", borderRadius: "6px", background: "#eff6ff", color: "var(--royal)", fontSize: "11px", fontWeight: 800 }}>
+                  <span style={{ padding: "3px 8px", borderRadius: "6px", background: "var(--accent-soft)", color: "var(--royal)", fontSize: "11px", fontWeight: 800 }}>
                     {selectedCandidate.level} MUTAXASSIS
                   </span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px", textAlign: "center" }}>
-                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700 }}>KNOW</div>
-                    <strong style={{ fontSize: "13px", color: "#2563eb" }}>88%</strong>
+                    <strong style={{ fontSize: "13px", color: "var(--accent)" }}>88%</strong>
                   </div>
-                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700 }}>DO</div>
-                    <strong style={{ fontSize: "13px", color: "#059669" }}>85%</strong>
+                    <strong style={{ fontSize: "13px", color: "var(--success)" }}>85%</strong>
                   </div>
-                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700 }}>ADAPT</div>
-                    <strong style={{ fontSize: "13px", color: "#7c3aed" }}>78%</strong>
+                    <strong style={{ fontSize: "13px", color: "var(--violet)" }}>78%</strong>
                   </div>
-                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700 }}>DEFEND</div>
-                    <strong style={{ fontSize: "13px", color: "#d97706" }}>82%</strong>
+                    <strong style={{ fontSize: "13px", color: "var(--warning)" }}>82%</strong>
                   </div>
-                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                  <div style={{ padding: "6px 4px", borderRadius: "8px", background: "#ffffff", border: "1px solid var(--border)" }}>
                     <div style={{ fontSize: "10px", color: "var(--muted)", fontWeight: 700 }}>PROVE</div>
-                    <strong style={{ fontSize: "13px", color: "#e11d48" }}>80%</strong>
+                    <strong style={{ fontSize: "13px", color: "var(--rose)" }}>80%</strong>
                   </div>
                 </div>
               </div>
 
-              <div style={{ padding: "13px 15px", borderRadius: "12px", background: "#ecfdf5", border: "1px solid #a7f3d0", fontSize: "12.5px", color: "#065f46", display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ padding: "13px 15px", borderRadius: "12px", background: "var(--success-soft)", border: "1px solid var(--success-ring)", fontSize: "12.5px", color: "var(--success-fg)", display: "flex", alignItems: "center", gap: "10px" }}>
                 <Icon name="checkCircle" size={18} />
                 <span>
                   <strong>AI Integrity tekshiruvi:</strong> Viva transkripti, GitHub kodi va autotestlar to‘liq tasdiqlangan. Shubhali yoki plagiat dalillar mavjud emas.

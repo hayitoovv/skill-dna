@@ -53,9 +53,16 @@ export type IconName =
   | "checkCircle"
   | "gitBranch"
   | "star"
-  | "workflow";
+  | "workflow"
+  | "logout";
 
 export const iconPaths: Record<IconName, ReactNode> = {
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5M21 12H9" />
+    </>
+  ),
   grid: (
     <>
       <rect x="3" y="3" width="7" height="7" rx="2" />

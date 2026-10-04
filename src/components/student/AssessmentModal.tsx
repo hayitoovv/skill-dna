@@ -188,13 +188,13 @@ export default function AssessmentModal({
                 <p className="eyebrow" style={{ margin: 0 }}>DO QATLAMI · PYTHON SANDBOX</p>
                 <h2 style={{ fontSize: "18px", margin: "4px 0 0" }}>Rate Limiter (Token Bucket) yechimi</h2>
               </div>
-              <span style={{ fontSize: "11px", padding: "4px 10px", background: "#ecfdf5", color: "#059669", borderRadius: "6px", fontWeight: 700 }}>
+              <span style={{ fontSize: "11px", padding: "4px 10px", background: "var(--success-soft)", color: "var(--success)", borderRadius: "6px", fontWeight: 700 }}>
                 ● Sandbox faol
               </span>
             </div>
 
-            <div style={{ background: "#0a1c32", borderRadius: "10px", padding: "14px", marginBottom: "16px", color: "#e2e8f0" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", color: "#94a3b8", fontSize: "11px", marginBottom: "8px" }}>
+            <div style={{ background: "var(--ink)", borderRadius: "10px", padding: "14px", marginBottom: "16px", color: "var(--border)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", color: "var(--subtle)", fontSize: "11px", marginBottom: "8px" }}>
                 <span>solution.py</span>
                 <span>Python 3.12 · Isolated Container</span>
               </div>
@@ -204,8 +204,8 @@ export default function AssessmentModal({
                 style={{
                   width: "100%",
                   height: "220px",
-                  background: "#051323",
-                  color: "#6ee7b7",
+                  background: "var(--ink)",
+                  color: "var(--success-ring)",
                   fontFamily: "monospace",
                   fontSize: "13px",
                   border: "1px solid rgba(255,255,255,0.1)",
@@ -232,7 +232,7 @@ export default function AssessmentModal({
         {step === "viva" && (
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-              <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #059669)", display: "grid", placeItems: "center", color: "#fff" }}>
+              <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "linear-gradient(135deg, var(--success-400), var(--success))", display: "grid", placeItems: "center", color: "#fff" }}>
                 <Icon name="dna" size={22} />
               </div>
               <div>
@@ -242,7 +242,7 @@ export default function AssessmentModal({
             </div>
 
             {/* Chat History */}
-            <div style={{ maxHeight: "280px", overflowY: "auto", background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid var(--border)", marginBottom: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ maxHeight: "280px", overflowY: "auto", background: "var(--surface-2)", padding: "14px", borderRadius: "10px", border: "1px solid var(--border)", marginBottom: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
               {vivaTurns.map((turn, idx) => (
                 <div
                   key={idx}
@@ -250,13 +250,13 @@ export default function AssessmentModal({
                     alignSelf: turn.role === "student" ? "flex-end" : "flex-start",
                     maxWidth: "85%",
                     background: turn.role === "student" ? "var(--royal)" : "#ffffff",
-                    color: turn.role === "student" ? "#ffffff" : "#1e293b",
+                    color: turn.role === "student" ? "#ffffff" : "var(--ink-2)",
                     padding: "10px 14px",
                     borderRadius: "10px",
                     fontSize: "12.5px",
                     lineHeight: 1.5,
                     boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-                    border: turn.role === "examiner" ? "1px solid #e2e8f0" : "none",
+                    border: turn.role === "examiner" ? "1px solid var(--border)" : "none",
                   }}
                 >
                   <strong style={{ display: "block", fontSize: "10px", opacity: 0.8, marginBottom: "3px" }}>
@@ -292,25 +292,25 @@ export default function AssessmentModal({
         {/* STEP 4: COMPLETE */}
         {step === "complete" && (
           <div style={{ textAlign: "center", padding: "20px 10px" }}>
-            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#ecfdf5", color: "#059669", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "var(--success-soft)", color: "var(--success)", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
               <Icon name="check" size={32} />
             </div>
-            <p className="eyebrow" style={{ color: "#059669" }}>MUVAFFAQIYATLI HIMOYA QILINDI</p>
+            <p className="eyebrow" style={{ color: "var(--success)" }}>MUVAFFAQIYATLI HIMOYA QILINDI</p>
             <h2 style={{ fontSize: "22px", margin: "6px 0 10px" }}>Baho tasdiqlandi va dalil qo‘shildi!</h2>
             <p style={{ color: "var(--muted)", fontSize: "12px", maxWidth: "420px", margin: "0 auto 20px" }}>
               Kodingiz va AI Viva himoyangiz tekshirilib, Evidence Graph zanjiriga biriktirildi.
             </p>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
-              <div style={{ padding: "14px", background: "#f8fafc", borderRadius: "9px", border: "1px solid var(--border)" }}>
+              <div style={{ padding: "14px", background: "var(--surface-2)", borderRadius: "9px", border: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "10px", color: "var(--muted)" }}>To‘plangan ochko</span>
                 <strong style={{ display: "block", fontSize: "20px", color: "var(--navy)", marginTop: "4px" }}>+15 pts</strong>
               </div>
-              <div style={{ padding: "14px", background: "#f8fafc", borderRadius: "9px", border: "1px solid var(--border)" }}>
+              <div style={{ padding: "14px", background: "var(--surface-2)", borderRadius: "9px", border: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "10px", color: "var(--muted)" }}>Viva bahosi</span>
                 <strong style={{ display: "block", fontSize: "20px", color: "var(--emerald)", marginTop: "4px" }}>88/100</strong>
               </div>
-              <div style={{ padding: "14px", background: "#f8fafc", borderRadius: "9px", border: "1px solid var(--border)" }}>
+              <div style={{ padding: "14px", background: "var(--surface-2)", borderRadius: "9px", border: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "10px", color: "var(--muted)" }}>Yangi Skill Score</span>
                 <strong style={{ display: "block", fontSize: "20px", color: "var(--royal)", marginTop: "4px" }}>83.6</strong>
               </div>

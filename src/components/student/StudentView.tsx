@@ -469,7 +469,7 @@ export default function StudentView({
                     fontSize: "11px",
                     padding: "3px 8px",
                     borderRadius: "4px",
-                    background: tasks[0].aiMode === "AI-free" ? "#ef4444" : "#10b981",
+                    background: tasks[0].aiMode === "AI-free" ? "var(--danger-400)" : "var(--success-400)",
                     color: "white",
                     fontWeight: 700,
                   }}
@@ -655,7 +655,7 @@ export default function StudentView({
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                           <strong style={{ fontSize: "15px", color: "var(--navy)" }}>{sk.name}</strong>
                           {sk.isCore && (
-                            <span style={{ fontSize: "12px", color: "#f59e0b", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                            <span style={{ fontSize: "12px", color: "var(--warning-400)", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "3px" }}>
                               <Icon name="star" size={12} /> Core
                             </span>
                           )}
@@ -742,8 +742,8 @@ export default function StudentView({
                         fontSize: "11px",
                         padding: "3px 8px",
                         borderRadius: "4px",
-                        background: task.aiMode === "AI-free" ? "#fee2e2" : "#ecfdf5",
-                        color: task.aiMode === "AI-free" ? "#dc2626" : "#059669",
+                        background: task.aiMode === "AI-free" ? "var(--danger-soft)" : "var(--success-soft)",
+                        color: task.aiMode === "AI-free" ? "var(--danger)" : "var(--success)",
                         fontWeight: 700,
                       }}
                     >
@@ -1073,7 +1073,7 @@ export default function StudentView({
                       <input
                         value={currentDir.title}
                         readOnly
-                        style={{ background: "#f8fafc", cursor: "not-allowed" }}
+                        style={{ background: "var(--surface-2)", cursor: "not-allowed" }}
                       />
                     </label>
                     <label className="full-field">

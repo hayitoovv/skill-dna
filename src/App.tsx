@@ -284,32 +284,12 @@ export default function App() {
         <Logo showTagline={true} />
 
         {/* Role Selector Card */}
-        <div
-          style={{
-            margin: "24px 0 12px",
-            padding: "10px",
-            background: "rgba(255, 255, 255, 0.05)",
-            borderRadius: "10px",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-          }}
-        >
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", letterSpacing: "0.1em", marginBottom: "6px" }}>
-            FAOL ROL (PORTAL)
-          </div>
+        <div className="role-switcher">
+          <label htmlFor="role-select">Faol portal</label>
           <select
+            id="role-select"
             value={role}
             onChange={(e) => handleRoleChange(e.target.value as Role)}
-            style={{
-              width: "100%",
-              padding: "8px 11px",
-              borderRadius: "7px",
-              background: "#1e293b",
-              color: "#e2e8f0",
-              border: "1px solid #334155",
-              fontSize: "13.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
           >
             <option value="student">Talaba (Student)</option>
             <option value="teacher">O‘qituvchi (Teacher)</option>
@@ -321,7 +301,7 @@ export default function App() {
 
         {/* Navigation based on Role */}
         {role === "student" && (
-          <nav className="main-nav" aria-label="Asosiy navigatsiya" style={{ marginTop: "12px" }}>
+          <nav className="main-nav" aria-label="Asosiy navigatsiya">
             <div className="nav-label">TALABA PANELI</div>
             <button
               className={`nav-item ${activePage === "dashboard" ? "active" : ""}`}
@@ -355,7 +335,7 @@ export default function App() {
         )}
 
         {role === "teacher" && (
-          <nav className="main-nav" aria-label="O‘qituvchi navigatsiyasi" style={{ marginTop: "12px" }}>
+          <nav className="main-nav" aria-label="O‘qituvchi navigatsiyasi">
             <div className="nav-label">O‘QITUVCHI MODULLARI</div>
             <button
               className={`nav-item ${teacherTab === "heatmap" ? "active" : ""}`}
@@ -385,7 +365,7 @@ export default function App() {
         )}
 
         {role === "employer" && (
-          <nav className="main-nav" aria-label="Ish beruvchi navigatsiyasi" style={{ marginTop: "12px" }}>
+          <nav className="main-nav" aria-label="Ish beruvchi navigatsiyasi">
             <div className="nav-label">ISH BERUVCHI</div>
             <button className="nav-item active">
               <Icon name="search" /> Nomzodlar qidiruvi
@@ -400,7 +380,7 @@ export default function App() {
         )}
 
         {role === "university" && (
-          <nav className="main-nav" aria-label="Universitet navigatsiyasi" style={{ marginTop: "12px" }}>
+          <nav className="main-nav" aria-label="Universitet navigatsiyasi">
             <div className="nav-label">ASOSIY DASHBOARD</div>
             <button
               className={`nav-item ${univTab === "dashboard" || univTab === "analytics" ? "active" : ""}`}
@@ -452,7 +432,7 @@ export default function App() {
         )}
 
         {role === "moderator" && (
-          <nav className="main-nav" aria-label="Moderator navigatsiyasi" style={{ marginTop: "12px" }}>
+          <nav className="main-nav" aria-label="Moderator navigatsiyasi">
             <div className="nav-label">HALOLLIK NAZORATI</div>
             <button
               className={`nav-item ${moderatorTab === "flags" ? "active" : ""}`}
@@ -479,17 +459,12 @@ export default function App() {
         <div
           className="user-mini"
           onClick={() => goTo("settings")}
-          style={{ cursor: "pointer" }}
           title="Profil va sozlamalarga o‘tish"
         >
           <div className="avatar">{currentUser.avatar}</div>
-          <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-            <strong style={{ whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", display: "block" }}>
-              {currentUser.name}
-            </strong>
-            <span style={{ whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", display: "block" }}>
-              {displayOrg}
-            </span>
+          <div>
+            <strong>{currentUser.name}</strong>
+            <span>{displayOrg}</span>
           </div>
           <button
             aria-label="Hisobdan chiqish"
@@ -498,19 +473,8 @@ export default function App() {
               e.stopPropagation();
               handleLogout();
             }}
-            style={{
-              border: 0,
-              background: "transparent",
-              color: "#94a3b8",
-              cursor: "pointer",
-              marginLeft: "auto",
-              padding: "6px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
           >
-            <Icon name="close" size={15} />
+            <Icon name="logout" size={15} />
           </button>
         </div>
       </aside>
@@ -519,20 +483,20 @@ export default function App() {
       {role === "student" && (
         <nav className="mobile-nav" aria-label="Mobil navigatsiya">
           {[
-            ["dashboard", "grid"],
-            ["dna", "dna"],
-            ["tasks", "file"],
-            ["career", "briefcase"],
-            ["certificates", "award"],
-            ["settings", "settings"],
-          ].map(([page, icon]) => (
+            ["dashboard", "grid", "Panel"],
+            ["dna", "dna", "DNA"],
+            ["tasks", "file", "Vazifalar"],
+            ["career", "briefcase", "Karyera"],
+            ["certificates", "award", "Sertifikat"],
+            ["settings", "settings", "Sozlama"],
+          ].map(([page, icon, label]) => (
             <button
               key={page}
               className={activePage === page ? "active" : ""}
               onClick={() => goTo(page as PageKey)}
             >
               <Icon name={icon as any} />
-              <span>{page}</span>
+              <span>{label}</span>
             </button>
           ))}
         </nav>
@@ -545,39 +509,20 @@ export default function App() {
             <Logo size="sm" showTagline={false} />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div className="topbar-left">
             <div className="top-title">
+              <span>{displayOrg}</span>
+              <span className="crumb-sep">/</span>
               <strong>{currentRoleInfo.title}</strong>
-              <span> / {displayOrg}</span>
             </div>
 
             {/* 3 Pilot Directions Switcher for Students */}
             {role === "student" && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: "#f1f5f9",
-                  padding: "4px 8px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                <span style={{ fontSize: "12px", fontWeight: 800, color: "var(--muted)" }}>PILOT YO‘NALISHI:</span>
+              <div className="direction-switch">
+                <span>Yo‘nalish</span>
                 <select
                   value={direction}
                   onChange={(e) => handleDirectionChange(e.target.value as DirectionCode)}
-                  style={{
-                    background: "white",
-                    border: "1px solid var(--border)",
-                    borderRadius: "6px",
-                    padding: "5px 10px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    cursor: "pointer",
-                  }}
                 >
                   <option value="software">{directionLabels.software}</option>
                   <option value="computer">{directionLabels.computer}</option>
@@ -588,61 +533,24 @@ export default function App() {
           </div>
 
           <div className="top-actions">
+            {/* RBAC Security session badge */}
+            <div
+              className="session-badge"
+              title="RBAC Xavfsizlik protokoli: Sessiya JWT va server auditi orqali himoyalangan"
+            >
+              <i />
+              <span>Himoyalangan</span>
+            </div>
+
             <button className="icon-button" aria-label="Bildirishnomalar">
-              <Icon name="bell" />
+              <Icon name="bell" size={17} />
               <span className="notification-dot" />
             </button>
             <div className="top-avatar">{currentUser.avatar}</div>
 
-            {/* RBAC Security session badge */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "5px 12px",
-                borderRadius: "20px",
-                background: "rgba(16, 185, 129, 0.08)",
-                border: "1px solid rgba(16, 185, 129, 0.25)",
-                color: "#059669",
-                fontSize: "12px",
-                fontWeight: 700,
-              }}
-              title="RBAC Xavfsizlik protokoli: Sessiya JWT va server auditi orqali himoyalangan"
-            >
-              <span
-                style={{
-                  display: "inline-block",
-                  width: "7px",
-                  height: "7px",
-                  borderRadius: "50%",
-                  background: "#10b981",
-                  boxShadow: "0 0 6px #10b981",
-                }}
-              />
-              <span className="hidden sm:inline">RBAC: Himoyalangan</span>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
-                borderRadius: "8px",
-                border: "1px solid var(--border)",
-                background: "white",
-                color: "#475569",
-                fontSize: "13.5px",
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "0.2s",
-              }}
-              title="Hisobdan chiqish"
-            >
-              <Icon name="close" size={13} />
-              <span>Chiqish</span>
+            <button className="logout-button" onClick={handleLogout} title="Hisobdan chiqish">
+              <Icon name="logout" size={14} />
+              <span className="hidden sm:inline">Chiqish</span>
             </button>
           </div>
         </header>
@@ -696,29 +604,8 @@ export default function App() {
 
       {/* Role Switch Security Notification Toast */}
       {roleSwitchFeedback && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 9999,
-            background: "#0f172a",
-            color: "#f8fafc",
-            padding: "12px 18px",
-            borderRadius: "10px",
-            border: "1px solid #10b981",
-            boxShadow: "0 12px 30px rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            fontSize: "13.5px",
-            fontWeight: 600,
-            maxWidth: "460px",
-          }}
-        >
-          <span style={{ display: "inline-flex", color: "#10b981", flexShrink: 0 }}>
-            <Icon name="shieldCheck" size={20} />
-          </span>
+        <div className="app-toast" role="status">
+          <Icon name="shieldCheck" size={18} />
           <span>{roleSwitchFeedback}</span>
         </div>
       )}
