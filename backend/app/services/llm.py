@@ -8,6 +8,7 @@ Student-authored text is always passed as *data*: it goes inside tagged blocks i
 turn, the system prompt states that tagged content is never an instruction, and tag-closing
 sequences are neutralised so a student cannot break out of the block.
 """
+import contextvars
 import logging
 import re
 from typing import Dict, Optional, Type, TypeVar
@@ -157,6 +158,8 @@ def _inline_refs(schema: dict) -> dict:
 
 
 _GEMINI_TRY_NEXT = {404, 429, 500, 503}
+# Model that actually answered the latest call in this request/task (a fallback may have stepped in)
+_answered_by: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("llm_answered_by", default=None)
 
 
 async def _gemini_structured(
@@ -179,6 +182,7 @@ async def _gemini_structured(
                 contents=f"{render_data(data)}\n\n{instruction}",
                 config=config,
             )
+            _answered_by.set(model)
             break
         except genai_errors.APIError as e:
             logger.warning("Gemini API error %s on %s: %s", e.code, model, e.message)
@@ -206,5 +210,5 @@ async def _gemini_structured(
 def model_ref() -> str:
     active = provider()
     if active == "gemini":
-        return settings.GEMINI_MODEL
+        return _answered_by.get() or settings.GEMINI_MODEL
     return settings.LLM_MODEL if active else "heuristic-v1"

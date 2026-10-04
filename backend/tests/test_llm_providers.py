@@ -103,6 +103,7 @@ async def test_gemini_falls_over_to_next_model(keys, monkeypatch):
     out = await llm.structured(system="S", instruction="I", data={}, schema=CoachReply)
     assert out.reply == "ok"
     assert [c["model"] for c in models.calls] == ["busy-model", "spare-model"]
+    assert llm.model_ref() == "spare-model"  # audit records the model that actually answered
 
     monkeypatch.setattr(llm.settings, "GEMINI_FALLBACK_MODELS", "")
     with pytest.raises(llm.LLMUnavailable):  # no spare configured -> deterministic fallback
