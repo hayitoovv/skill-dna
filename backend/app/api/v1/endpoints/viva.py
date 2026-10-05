@@ -23,6 +23,7 @@ from app.models import (
     VivaSession, VivaTurn,
 )
 from app.services import assistant, audit, integrity, skill_service, viva_engine
+from app.services.notify import notify
 from app.worker.queue import enqueue
 
 router = APIRouter()
@@ -251,6 +252,8 @@ async def grade_finished_session(db: AsyncSession, session_id: uuid.UUID) -> dic
                        "skill": {"score": skill.score, "confidence": skill.confidence, "level": skill.level}}
     session.plan = state
     flag_modified(session, "plan")
+    notify(db, student.id, kind="viva_graded", title=f"AI Viva natijasi tayyor: {result['total']}/100",
+           body="Natija moderator tomonidan ko‘rib chiqiladi." if outcome["review_reason"] else None, link="student:tasks")
     await db.commit()
     return {"session_id": str(session.id), "score": result["total"]}
 

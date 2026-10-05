@@ -4,6 +4,7 @@ from app.models.ontology import Direction, Skill, Rubric
 from app.models.assessment import Task, TaskVariant, Attempt, Submission, AIUsageLog, VivaSession, VivaTurn, Evaluation
 from app.models.evidence import Evidence, EvidenceEdge, SkillScore, IntegrityFlag, Credential
 from app.models.career import CareerProfile, EmployerCriteria, EmployerInvite, Match, Appeal, AuditLog
+from app.models.notification import Notification
 
 __all__ = [
     "BaseModel",
@@ -35,4 +36,5 @@ __all__ = [
     "Match",
     "Appeal",
     "AuditLog",
+    "Notification",
 ]

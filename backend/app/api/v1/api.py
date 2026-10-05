@@ -1,7 +1,7 @@
 """API v1 routes — architecture document v2.0, section 12."""
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import assistant, auth, career, credentials, ontology, profile, staff, tasks, viva
+from app.api.v1.endpoints import assistant, auth, career, credentials, notifications, ontology, profile, staff, tasks, viva
 
 api_router = APIRouter()
 
@@ -16,6 +16,7 @@ api_router.include_router(profile.skills_router, tags=["Skill DNA & Evidence Gra
 api_router.include_router(career.router, prefix="/careers", tags=["Career DNA & AI Coach"])
 api_router.include_router(career.legacy_router, prefix="/career", tags=["Career DNA & AI Coach"])
 api_router.include_router(career.employer_router, prefix="/employer", tags=["Employer"])
+api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(staff.moderation_router, prefix="/moderation", tags=["Moderation (Integrity)"])
 api_router.include_router(staff.appeals_router, prefix="/appeals", tags=["Appeals"])
 api_router.include_router(staff.teacher_router, prefix="/teacher", tags=["Teacher"])

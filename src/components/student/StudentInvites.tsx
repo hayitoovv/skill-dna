@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../common/Icons";
 import { api, hasSession } from "../../services/api";
+import { NOTIFICATIONS_EVENT } from "../common/NotificationBell";
 
 interface Invite {
   id: string;
@@ -30,7 +31,11 @@ export default function StudentInvites() {
       .catch(() => setInvites([]));
 
   useEffect(() => {
-    if (hasSession()) void load();
+    if (!hasSession()) return;
+    void load();
+    const refresh = () => void load();
+    window.addEventListener(NOTIFICATIONS_EVENT, refresh);
+    return () => window.removeEventListener(NOTIFICATIONS_EVENT, refresh);
   }, []);
 
   if (invites.length === 0) return null;

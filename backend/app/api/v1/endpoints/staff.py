@@ -17,6 +17,7 @@ from app.core.database import get_db
 from app.models import (
     Appeal, Attempt, Direction, Evaluation, Evidence, IntegrityFlag, Skill, StudentProfile, Task, User, VivaSession,
 )
+from app.services.notify import notify
 from app.services import audit, challenges, integrity, skill_service
 
 moderation_router = APIRouter()
@@ -187,6 +188,9 @@ async def resolve_appeal(appeal_id: uuid.UUID, payload: AppealResolution, reques
 
     audit.record(db, actor_id=actor.id, action="appeal.resolve", entity="appeal", entity_id=appeal.id,
                  after={"decision": payload.decision, "new_score": payload.new_score}, ip=client_ip(request))
+    notify(db, appeal.user_id, kind="appeal_resolved",
+           title="E’tirozingiz qanoatlantirildi" if payload.decision == "approved" else "E’tirozingiz rad etildi",
+           body=payload.notes, link="student:dna")
     await db.flush()
     result = await skill_service.recompute(db, appeal.user_id, skill_id) if skill_id else None
     await db.commit()
@@ -337,6 +341,9 @@ async def verify_evidence(evidence_id: uuid.UUID, payload: Verification, request
                           total_score=payload.score, rationale=payload.notes, model_ref=f"human:{actor.id}"))
     audit.record(db, actor_id=actor.id, action="evidence.verify", entity="evidence", entity_id=e.id,
                  after={"approved": payload.approved, "score": payload.score}, ip=client_ip(request))
+    notify(db, e.user_id, kind="evidence_verified" if payload.approved else "evidence_rejected",
+           title=("O‘qituvchi ishingizni tasdiqladi" if payload.approved else "O‘qituvchi ishingizni qaytardi") + f": {e.title}",
+           body=payload.notes or (f"Ball: {payload.score}" if payload.score is not None else None), link="student:dna")
     await db.flush()
     result = await skill_service.recompute(db, e.user_id, e.skill_id)
     await db.commit()

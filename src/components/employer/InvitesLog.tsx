@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../common/Icons";
 import type { IconName } from "../common/Icons";
 import { api, hasSession } from "../../services/api";
+import { NOTIFICATIONS_EVENT } from "../common/NotificationBell";
 
 type DataMode = "loading" | "live" | "demo";
 type Status = "sent" | "accepted" | "declined" | "withdrawn";
@@ -69,7 +70,12 @@ export default function InvitesLog({ onFindCandidates }: { onFindCandidates?: ()
       .catch(() => setMode((m) => (m === "live" ? m : "demo")));
 
   useEffect(() => {
-    if (hasSession()) void load();
+    if (!hasSession()) return;
+    void load();
+    // A candidate's answer arrives as a notification: refresh the log without a manual reload
+    const refresh = () => void load();
+    window.addEventListener(NOTIFICATIONS_EVENT, refresh);
+    return () => window.removeEventListener(NOTIFICATIONS_EVENT, refresh);
   }, []);
 
   const isLive = mode === "live";

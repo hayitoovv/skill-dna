@@ -304,6 +304,11 @@ export const api = {
   respondInvite: (inviteId: string, decision: "accepted" | "declined") =>
     post<any>(`/career/invites/${inviteId}/respond`, { decision }),
 
+  // ---------- Notifications ----------
+  getNotifications: () => request<{ unread: number; items: any[] }>("/notifications"),
+  readNotification: (id: string) => post<any>(`/notifications/${id}/read`),
+  readAllNotifications: () => post<any>("/notifications/read-all"),
+
   // ---------- University ----------
   getUniversityAnalytics: () => request<any>("/university/analytics"),
 };

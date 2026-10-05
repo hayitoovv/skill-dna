@@ -36,7 +36,9 @@ async def record_result(
                           rationale=summary(details), model_ref="deterministic"))
     evidence = Evidence(
         user_id=attempt.user_id, skill_id=task.skill_id, attempt_id=attempt.id, layer=task.layer,
-        title=f"{task.layer}: {task.title}", source_ref=source_ref or f"attempt:{attempt.id}",
+        # Some task titles already carry the layer ("PROVE: ..."); don't repeat it
+        title=task.title if task.title.startswith(f"{task.layer}:") else f"{task.layer}: {task.title}",
+        source_ref=source_ref or f"attempt:{attempt.id}",
         score=score if score is not None else 0.0, verified_by=grader if score is not None else None,
         status=evidence_status,
     )

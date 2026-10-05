@@ -3,6 +3,7 @@ import { Icon, Logo } from "./components/common/Icons";
 import StudentView, { type PageKey } from "./components/student/StudentView";
 import TeacherPortal from "./components/teacher/TeacherPortal";
 import EmployerPortal from "./components/employer/EmployerPortal";
+import NotificationBell from "./components/common/NotificationBell";
 import type { EmployerTab } from "./components/employer/EmployerPortal";
 import UniversityDashboard from "./components/university/UniversityDashboard";
 import ModeratorQueue from "./components/moderator/ModeratorQueue";
@@ -295,6 +296,16 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Notification targets look like "student:career" / "employer:invites"; followed only in the matching portal
+  const openNotificationLink = (link: string) => {
+    const [portal, target] = link.split(":");
+    if (portal === "student" && role === "student") goTo(target as PageKey);
+    else if (portal === "employer" && role === "employer" && (target === "search" || target === "verified" || target === "invites")) {
+      handleEmployerTabChange(target);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const displayOrg = (currentUser.organization && !currentUser.organization.includes("TATU"))
     ? currentUser.organization
     : "BSTU";
@@ -577,10 +588,7 @@ export default function App() {
               <Icon name="shieldCheck" size={17} />
             </button>
             <LanguageSwitcher compact />
-            <button className="icon-button" aria-label={t("shell.notifications")}>
-              <Icon name="bell" size={17} />
-              <span className="notification-dot" />
-            </button>
+            <NotificationBell label={t("shell.notifications")} onNavigate={openNotificationLink} />
             <div className="top-avatar">{currentUser.avatar}</div>
 
             <button className="logout-button" onClick={handleLogout} title="Hisobdan chiqish">

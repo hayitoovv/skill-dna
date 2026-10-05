@@ -13,6 +13,7 @@ from app.core.database import get_db
 from app.models import (CareerProfile, Consent, Credential, Direction, EmployerCriteria, EmployerInvite, Evidence, Match,
                         Skill, StudentProfile, User)
 from app.services import audit, career, skill_service
+from app.services.notify import notify
 
 router = APIRouter()  # /careers
 legacy_router = APIRouter()  # /career (current student UI)
@@ -326,6 +327,8 @@ async def invite_candidate(candidate_id: uuid.UUID, request: Request, payload: O
     await db.flush()
     audit.record(db, actor_id=user.id, action="employer.invite", entity="employer_invite", entity_id=inv.id,
                  after={"candidate_id": str(candidate_id), "job_title": job_title}, ip=client_ip(request))
+    notify(db, candidate_id, kind="invite_received", title=f"Yangi ish taklifi: {job_title}",
+           body=f"{user.full_name} sizni suhbatga taklif qildi.", link="student:career")
     await db.commit()
     return {"status": "invited", "candidate_id": str(candidate_id), "invite_id": str(inv.id)}
 
@@ -357,6 +360,8 @@ async def withdraw_invite(invite_id: uuid.UUID, request: Request, user: User = D
     inv.responded_at = datetime.now(timezone.utc)
     audit.record(db, actor_id=user.id, action="employer.invite_withdraw", entity="employer_invite", entity_id=inv.id,
                  ip=client_ip(request))
+    notify(db, inv.candidate_id, kind="invite_withdrawn", title=f"Taklif qaytarib olindi: {inv.job_title}",
+           body=f"{user.full_name} taklifni qaytarib oldi.", link="student:career")
     await db.commit()
     return {"id": str(inv.id), "status": inv.status}
 
@@ -391,5 +396,8 @@ async def respond_invite(invite_id: uuid.UUID, payload: InviteResponse, request:
     inv.responded_at = datetime.now(timezone.utc)
     audit.record(db, actor_id=user.id, action=f"student.invite_{payload.decision}", entity="employer_invite",
                  entity_id=inv.id, ip=client_ip(request))
+    verb = "qabul qildi" if payload.decision == "accepted" else "rad etdi"
+    notify(db, inv.employer_id, kind="invite_answered", title=f"{user.full_name} taklifni {verb}",
+           body=f"Lavozim: {inv.job_title}", link="employer:invites")
     await db.commit()
     return {"id": str(inv.id), "status": inv.status}
