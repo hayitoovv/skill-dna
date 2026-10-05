@@ -54,9 +54,18 @@ export type IconName =
   | "gitBranch"
   | "star"
   | "workflow"
-  | "logout";
+  | "logout"
+  | "menu"
+  | "sidebar";
 
 export const iconPaths: Record<IconName, ReactNode> = {
+  menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+  sidebar: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <path d="M9 4v16" />
+    </>
+  ),
   logout: (
     <>
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

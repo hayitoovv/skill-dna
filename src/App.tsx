@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Icon, Logo } from "./components/common/Icons";
 import StudentView, { type PageKey } from "./components/student/StudentView";
 import TeacherPortal from "./components/teacher/TeacherPortal";
@@ -119,6 +119,25 @@ export default function App() {
     } catch {}
   };
   const isSuperAdmin = accountRole === "super_admin";
+
+  // Sidebar: collapsible icon rail on desktop (remembered), slide-in drawer on phones
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("skill_dna_sidebar_collapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      try {
+        localStorage.setItem("skill_dna_sidebar_collapsed", prev ? "0" : "1");
+      } catch {}
+      return !prev;
+    });
+  };
+  const sidebarRef = useRef<HTMLElement>(null);
 
   const [adminTab, setAdminTab] = useState<AdminTab>(() => {
     try {
@@ -282,6 +301,28 @@ export default function App() {
     if (window.confirm(t("shell.logoutConfirm"))) signOut();
   };
 
+  useEffect(() => {
+    const items = sidebarRef.current?.querySelectorAll<HTMLElement>(".nav-item, .user-mini");
+    items?.forEach((el) => {
+      if (sidebarCollapsed) {
+        // label only — leave out counters like the tasks badge
+        el.title = [...el.childNodes]
+          .filter((n) => !(n instanceof Element && n.classList.contains("nav-pill")))
+          .map((n) => n.textContent ?? "")
+          .join("")
+          .trim();
+      }
+      else if (el.classList.contains("nav-item")) el.removeAttribute("title");
+    });
+  });
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDrawerOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
   // Settings page changes (name, photo) update the shell right away
   useEffect(() => {
     const onProfile = (e: Event) => {
@@ -372,9 +413,17 @@ export default function App() {
     : "BSTU";
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${sidebarCollapsed ? " sidebar-collapsed" : ""}${drawerOpen ? " drawer-open" : ""}`}>
+      {drawerOpen && <div className="drawer-backdrop" onClick={() => setDrawerOpen(false)} aria-hidden="true" />}
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside
+        className="sidebar"
+        ref={sidebarRef}
+        onClick={(e) => {
+          // On phones, picking a menu item closes the drawer
+          if (drawerOpen && (e.target as HTMLElement).closest(".nav-item, .user-mini")) setDrawerOpen(false);
+        }}
+      >
         <Logo showTagline={true} />
 
         {/* Portal switcher: super admin only (other roles always see their own portal) */}
@@ -596,6 +645,17 @@ export default function App() {
           </button>
         </div>
       </aside>
+      {/* Outside the sidebar: its overflow would clip a button sitting on the edge */}
+      <button
+        type="button"
+        className="sidebar-toggle"
+        onClick={toggleSidebar}
+        title={sidebarCollapsed ? t("shell.expandSidebar") : t("shell.collapseSidebar")}
+        aria-label={sidebarCollapsed ? t("shell.expandSidebar") : t("shell.collapseSidebar")}
+        aria-expanded={!sidebarCollapsed}
+      >
+        <Icon name="sidebar" size={16} />
+      </button>
 
       {/* Mobile navigation for students */}
       {role === "student" && (
@@ -623,6 +683,9 @@ export default function App() {
       {/* Main Content Area */}
       <main className="main-content">
         <header className="topbar">
+          <button type="button" className="icon-button drawer-button" onClick={() => setDrawerOpen(true)} aria-label={t("shell.openMenu")}>
+            <Icon name="menu" size={18} />
+          </button>
           <div className="mobile-brand">
             <Logo size="sm" showTagline={false} />
           </div>
