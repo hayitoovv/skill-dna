@@ -1,6 +1,6 @@
 import logging
 import secrets
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
 
 logger = logging.getLogger(__name__)
@@ -71,9 +71,7 @@ class Settings(BaseSettings):
     CREDENTIAL_VERIFY_BASE_URL: str = "https://skilldna.uz/verify"
     CREDENTIAL_SIGNING_KEY_PATH: str = "credential_signing_key.pem"
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 settings = Settings()

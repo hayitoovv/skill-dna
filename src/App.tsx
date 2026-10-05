@@ -13,6 +13,7 @@ import ModeratorQueue from "./components/moderator/ModeratorQueue";
 import AuthScreen from "./components/auth/AuthScreen";
 import AssessmentModal from "./components/student/AssessmentModal";
 import SecurityModal from "./components/common/SecurityModal";
+import LogoutModal from "./components/common/LogoutModal";
 import type { DirectionCode, Role, User } from "./types";
 import { demoUsers } from "./data/ontology";
 import { api, hasSession, SESSION_EXPIRED_EVENT, PROFILE_UPDATED_EVENT } from "./services/api";
@@ -63,6 +64,7 @@ export default function App() {
 
   const [roleSwitchFeedback, setRoleSwitchFeedback] = useState<string | null>(null);
   const [securityOpen, setSecurityOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const [direction, setDirection] = useState<DirectionCode>(() => {
     try {
@@ -298,7 +300,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    if (window.confirm(t("shell.logoutConfirm"))) signOut();
+    setLogoutOpen(true);
   };
 
   useEffect(() => {
@@ -794,6 +796,16 @@ export default function App() {
       />
 
       {securityOpen && <SecurityModal onClose={() => setSecurityOpen(false)} />}
+      {logoutOpen && currentUser && (
+        <LogoutModal
+          user={currentUser}
+          onClose={() => setLogoutOpen(false)}
+          onConfirm={() => {
+            setLogoutOpen(false);
+            signOut();
+          }}
+        />
+      )}
 
       {/* In-page text editor (super admin only) */}
       {isSuperAdmin && <ContentEditor />}
