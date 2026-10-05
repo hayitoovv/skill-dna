@@ -5,6 +5,11 @@ import type { IconName } from "../common/Icons";
 import { employerCandidates } from "../../data/ontology";
 import type { EmployerCandidate, DirectionCode } from "../../types";
 import { api, ApiError, hasSession } from "../../services/api";
+import InviteModal from "./InviteModal";
+import VerifiedCandidates from "./VerifiedCandidates";
+import InvitesLog from "./InvitesLog";
+
+export type EmployerTab = "search" | "verified" | "invites";
 
 type DataMode = "loading" | "live" | "demo";
 
@@ -87,7 +92,12 @@ const initials = (name: string) =>
     .join("")
     .slice(0, 3) || "?";
 
-export default function EmployerPortal() {
+interface EmployerPortalProps {
+  activeTab?: EmployerTab;
+  onTabChange?: (tab: EmployerTab) => void;
+}
+
+export default function EmployerPortal({ activeTab = "search", onTabChange }: EmployerPortalProps = {}) {
   const [selectedDirection, setSelectedDirection] = useState<DirectionCode | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [minScore, setMinScore] = useState(75);
@@ -95,6 +105,7 @@ export default function EmployerPortal() {
   const [selectedCandidate, setSelectedCandidate] = useState<CardView | null>(null);
   const [invitedId, setInvitedId] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<{ id: string; message: string } | null>(null);
+  const [inviteFor, setInviteFor] = useState<CardView | null>(null);
 
   const [mode, setMode] = useState<DataMode>(() => (hasSession() ? "loading" : "demo"));
   const [searching, setSearching] = useState(false);
@@ -119,7 +130,7 @@ export default function EmployerPortal() {
 
   // Live search: criteria from the direction's pilot skill + slider thresholds, then consenting matches (debounced).
   useEffect(() => {
-    if (liveFailed.current) return;
+    if (liveFailed.current || activeTab !== "search") return;
     const seq = ++requestSeq.current;
     setSearching(true);
     const timer = setTimeout(async () => {
@@ -156,7 +167,7 @@ export default function EmployerPortal() {
     }, 400);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDirection, minScore, minConfidence]);
+  }, [selectedDirection, minScore, minConfidence, activeTab]);
 
   const isLive = mode === "live";
   const q = searchQuery.trim().toLowerCase();
@@ -236,21 +247,21 @@ export default function EmployerPortal() {
     }
   };
 
-  const handleInvite = async (cand: CardView) => {
-    setInviteError(null);
-    if (!cand.demo) {
-      try {
-        await api.inviteCandidate(cand.id);
-      } catch (err) {
-        setInviteError({ id: cand.id, message: err instanceof Error ? err.message : "Taklif yuborilmadi" });
-        setTimeout(() => setInviteError(null), 4000);
-        return;
-      }
-    }
-    setInvitedId(cand.id);
+  const markInvited = (id: string) => {
+    setInvitedId(id);
     setTimeout(() => {
       setInvitedId(null);
     }, 3000);
+  };
+
+  // Live candidates get the invite form (job title + message); demo cards just show the confirmation
+  const handleInvite = (cand: CardView) => {
+    setInviteError(null);
+    if (cand.demo) {
+      markInvited(cand.id);
+      return;
+    }
+    setInviteFor(cand);
   };
 
   const directionOptions: { key: DirectionCode | "all"; label: string; icon: IconName }[] = [
@@ -263,6 +274,9 @@ export default function EmployerPortal() {
   const humanVerifiedCount = profile
     ? profile.skills.reduce((acc, sk) => acc + sk.evidence.filter((e) => e.human_verified).length, 0)
     : 0;
+
+  if (activeTab === "verified") return <VerifiedCandidates />;
+  if (activeTab === "invites") return <InvitesLog onFindCandidates={onTabChange ? () => onTabChange("verified") : undefined} />;
 
   return (
     <div className="page">
@@ -974,7 +988,7 @@ export default function EmployerPortal() {
                 className="candidate-invite-btn"
                 style={{ flex: 1.5 }}
                 onClick={() => {
-                  void handleInvite(selectedCandidate);
+                  handleInvite(selectedCandidate);
                   setSelectedCandidate(null);
                 }}
               >
@@ -984,6 +998,16 @@ export default function EmployerPortal() {
             </div>
           </div>
         </div>
+      )}
+      {inviteFor && (
+        <InviteModal
+          candidateName={inviteFor.name}
+          onClose={() => setInviteFor(null)}
+          onSubmit={async (jobTitle, message) => {
+            await api.inviteCandidate(inviteFor.id, { job_title: jobTitle, message: message || undefined });
+            markInvited(inviteFor.id);
+          }}
+        />
       )}
     </div>
   );

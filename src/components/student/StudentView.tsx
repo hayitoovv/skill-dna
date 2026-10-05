@@ -6,6 +6,7 @@ import { api } from "../../services/api";
 import { printCredential } from "./certificatePrint";
 import CareerCoachModal from "./CareerCoachModal";
 import EvidenceGraphModal from "./EvidenceGraphModal";
+import StudentInvites from "./StudentInvites";
 
 export type PageKey = "dashboard" | "dna" | "tasks" | "career" | "certificates" | "settings";
 
@@ -1301,6 +1302,7 @@ export default function StudentView({
               </button>
             }
           />
+          <StudentInvites />
           {careerLive ? (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", margin: "0 0 12px" }}>

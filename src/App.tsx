@@ -3,6 +3,7 @@ import { Icon, Logo } from "./components/common/Icons";
 import StudentView, { type PageKey } from "./components/student/StudentView";
 import TeacherPortal from "./components/teacher/TeacherPortal";
 import EmployerPortal from "./components/employer/EmployerPortal";
+import type { EmployerTab } from "./components/employer/EmployerPortal";
 import UniversityDashboard from "./components/university/UniversityDashboard";
 import ModeratorQueue from "./components/moderator/ModeratorQueue";
 import AuthScreen from "./components/auth/AuthScreen";
@@ -95,6 +96,21 @@ export default function App() {
       localStorage.setItem("skill_dna_univ_tab", tab);
     } catch {}
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const [employerTab, setEmployerTab] = useState<EmployerTab>(() => {
+    try {
+      const saved = localStorage.getItem("skill_dna_employer_tab");
+      if (saved === "search" || saved === "verified" || saved === "invites") return saved;
+    } catch {}
+    return "search";
+  });
+
+  const handleEmployerTabChange = (tab: EmployerTab) => {
+    setEmployerTab(tab);
+    try {
+      localStorage.setItem("skill_dna_employer_tab", tab);
+    } catch {}
   };
 
   const [teacherTab, setTeacherTab] = useState<"heatmap" | "queue" | "remedial" | "viva">(() => {
@@ -373,13 +389,22 @@ export default function App() {
         {role === "employer" && (
           <nav className="main-nav" aria-label="Ish beruvchi navigatsiyasi">
             <div className="nav-label">{t("nav.employer")}</div>
-            <button className="nav-item active">
+            <button
+              className={`nav-item ${employerTab === "search" ? "active" : ""}`}
+              onClick={() => handleEmployerTabChange("search")}
+            >
               <Icon name="search" /> {t("nav.candidateSearch")}
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${employerTab === "verified" ? "active" : ""}`}
+              onClick={() => handleEmployerTabChange("verified")}
+            >
               <Icon name="shield" /> {t("nav.verified")}
             </button>
-            <button className="nav-item">
+            <button
+              className={`nav-item ${employerTab === "invites" ? "active" : ""}`}
+              onClick={() => handleEmployerTabChange("invites")}
+            >
               <Icon name="briefcase" /> {t("nav.offers")}
             </button>
           </nav>
@@ -584,7 +609,7 @@ export default function App() {
           />
         )}
 
-        {role === "employer" && <EmployerPortal />}
+        {role === "employer" && <EmployerPortal activeTab={employerTab} onTabChange={handleEmployerTabChange} />}
 
         {role === "university" && (
           <UniversityDashboard activeTab={univTab as any} onTabChange={handleUnivTabChange} />

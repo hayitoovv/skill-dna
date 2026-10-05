@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import EMPLOYER, client_ip, get_current_user, require_roles
 from app.core.database import get_db
-from app.models import CareerProfile, Consent, Direction, EmployerCriteria, Evidence, Match, Skill, StudentProfile, User
+from app.models import (CareerProfile, Consent, Credential, Direction, EmployerCriteria, EmployerInvite, Evidence, Match,
+                        Skill, StudentProfile, User)
 from app.services import audit, career, skill_service
 
 router = APIRouter()  # /careers
@@ -196,7 +197,7 @@ async def _candidate_summary(db: AsyncSession, student: User) -> dict:
     if profile and profile.direction_id:
         direction = (await db.execute(select(Direction).where(Direction.id == profile.direction_id))).scalars().first()
     return {"id": str(student.id), "name": student.full_name, "direction": direction.name if direction else None,
-            "course": profile.course if profile else None}
+            "direction_code": direction.code if direction else None, "course": profile.course if profile else None}
 
 
 @employer_router.get("/criteria/{criteria_id}/matches")
@@ -252,11 +253,143 @@ async def candidate_profile(candidate_id: uuid.UUID, request: Request, user: Use
     }
 
 
+def _level_rank(level: Optional[str]) -> int:
+    try:
+        return int((level or "L0")[1])
+    except (IndexError, ValueError):
+        return 0
+
+
+@employer_router.get("/verified-candidates")
+async def verified_candidates(user: User = Depends(require_roles(EMPLOYER)), db: AsyncSession = Depends(get_db)):
+    """Talent pool: consenting students with at least one verified skill level (L1+), strongest first."""
+    students = await _consenting_students(db)
+    if not students:
+        return []
+    ids = [s.id for s in students]
+    scores = await skill_service.latest_scores(db, ids)
+    skills = {s.id: s for s in (await db.execute(select(Skill))).scalars().all()}
+    evidence = (await db.execute(select(Evidence).where(Evidence.user_id.in_(ids), Evidence.status == "verified"))).scalars().all()
+    creds = (await db.execute(select(Credential).where(Credential.user_id.in_(ids), Credential.status == "issued"))).scalars().all()
+    out = []
+    for student in students:
+        own = [
+            {"code": skills[sid].code, "name": skills[sid].name, "score": sc.score, "confidence": sc.confidence, "level": sc.level}
+            for (uid, sid), sc in scores.items()
+            if uid == student.id and sid in skills and _level_rank(sc.level) >= 1
+        ]
+        if not own:
+            continue
+        own.sort(key=lambda k: (-_level_rank(k["level"]), -(k["score"] or 0)))
+        mine = [e for e in evidence if e.user_id == student.id]
+        out.append({
+            **await _candidate_summary(db, student),
+            "skills": own,
+            "best_level": own[0]["level"],
+            "evidence_verified": len(mine),
+            "human_verified": sum(1 for e in mine if skill_service.is_human_verified(e)),
+            "credentials": sum(1 for c in creds if c.user_id == student.id),
+        })
+    out.sort(key=lambda c: (-_level_rank(c["best_level"]), -(c["skills"][0]["score"] or 0)))
+    return out
+
+
+class InviteCreate(BaseModel):
+    job_title: str = Field(default="Umumiy taklif", min_length=2, max_length=255)
+    message: Optional[str] = Field(default=None, max_length=2000)
+
+
+def _invite_view(inv: EmployerInvite, other: Optional[User], extra: Optional[dict] = None) -> dict:
+    return {
+        "id": str(inv.id), "job_title": inv.job_title, "message": inv.message, "status": inv.status,
+        "created_at": inv.created_at.isoformat(), "responded_at": inv.responded_at.isoformat() if inv.responded_at else None,
+        "name": other.full_name if other else None, **(extra or {}),
+    }
+
+
 @employer_router.post("/candidates/{candidate_id}/invite")
-async def invite_candidate(candidate_id: uuid.UUID, request: Request, user: User = Depends(require_roles(EMPLOYER)),
-                           db: AsyncSession = Depends(get_db)):
+async def invite_candidate(candidate_id: uuid.UUID, request: Request, payload: Optional[InviteCreate] = None,
+                           user: User = Depends(require_roles(EMPLOYER)), db: AsyncSession = Depends(get_db)):
     if not any(s.id == candidate_id for s in await _consenting_students(db)):
         raise HTTPException(status_code=404, detail="Nomzod topilmadi")
-    audit.record(db, actor_id=user.id, action="employer.invite", entity="user", entity_id=candidate_id, ip=client_ip(request))
+    payload = payload or InviteCreate()
+    job_title = payload.job_title.strip()
+    open_invite = (await db.execute(select(EmployerInvite).where(
+        EmployerInvite.employer_id == user.id, EmployerInvite.candidate_id == candidate_id,
+        EmployerInvite.job_title == job_title, EmployerInvite.status == "sent",
+    ))).scalars().first()
+    if open_invite:
+        raise HTTPException(status_code=409, detail="Bu nomzodga shu lavozim bo‘yicha taklif allaqachon yuborilgan")
+    inv = EmployerInvite(employer_id=user.id, candidate_id=candidate_id, job_title=job_title,
+                         message=(payload.message or "").strip() or None)
+    db.add(inv)
+    await db.flush()
+    audit.record(db, actor_id=user.id, action="employer.invite", entity="employer_invite", entity_id=inv.id,
+                 after={"candidate_id": str(candidate_id), "job_title": job_title}, ip=client_ip(request))
     await db.commit()
-    return {"status": "invited", "candidate_id": str(candidate_id)}
+    return {"status": "invited", "candidate_id": str(candidate_id), "invite_id": str(inv.id)}
+
+
+@employer_router.get("/invites")
+async def list_invites(user: User = Depends(require_roles(EMPLOYER)), db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(select(EmployerInvite).where(EmployerInvite.employer_id == user.id)
+                             .order_by(EmployerInvite.created_at.desc()))).scalars().all()
+    ids = {r.candidate_id for r in rows}
+    people = {u.id: u for u in (await db.execute(select(User).where(User.id.in_(ids)))).scalars().all()} if ids else {}
+    out = []
+    for inv in rows:
+        cand = people.get(inv.candidate_id)
+        summary = await _candidate_summary(db, cand) if cand else {}
+        summary.pop("id", None)
+        out.append(_invite_view(inv, cand, {**summary, "candidate_id": str(inv.candidate_id)}))
+    return out
+
+
+@employer_router.post("/invites/{invite_id}/withdraw")
+async def withdraw_invite(invite_id: uuid.UUID, request: Request, user: User = Depends(require_roles(EMPLOYER)),
+                          db: AsyncSession = Depends(get_db)):
+    inv = (await db.execute(select(EmployerInvite).where(EmployerInvite.id == invite_id))).scalars().first()
+    if not inv or inv.employer_id != user.id:
+        raise HTTPException(status_code=404, detail="Taklif topilmadi")
+    if inv.status != "sent":
+        raise HTTPException(status_code=409, detail="Faqat javob kutilayotgan taklifni qaytarib olish mumkin")
+    inv.status = "withdrawn"
+    inv.responded_at = datetime.now(timezone.utc)
+    audit.record(db, actor_id=user.id, action="employer.invite_withdraw", entity="employer_invite", entity_id=inv.id,
+                 ip=client_ip(request))
+    await db.commit()
+    return {"id": str(inv.id), "status": inv.status}
+
+
+# ---- Student side: invitations received ----
+
+@legacy_router.get("/invites")
+async def my_invites(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(select(EmployerInvite).where(EmployerInvite.candidate_id == user.id,
+                                                          EmployerInvite.status != "withdrawn")
+                             .order_by(EmployerInvite.created_at.desc()))).scalars().all()
+    ids = {r.employer_id for r in rows}
+    people = {u.id: u for u in (await db.execute(select(User).where(User.id.in_(ids)))).scalars().all()} if ids else {}
+    return [_invite_view(inv, people.get(inv.employer_id),
+                         {"company": people[inv.employer_id].full_name if inv.employer_id in people else None})
+            for inv in rows]
+
+
+class InviteResponse(BaseModel):
+    decision: str = Field(pattern="^(accepted|declined)$")
+
+
+@legacy_router.post("/invites/{invite_id}/respond")
+async def respond_invite(invite_id: uuid.UUID, payload: InviteResponse, request: Request,
+                         user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    inv = (await db.execute(select(EmployerInvite).where(EmployerInvite.id == invite_id))).scalars().first()
+    if not inv or inv.candidate_id != user.id:
+        raise HTTPException(status_code=404, detail="Taklif topilmadi")
+    if inv.status != "sent":
+        raise HTTPException(status_code=409, detail="Bu taklifga allaqachon javob berilgan yoki u qaytarib olingan")
+    inv.status = payload.decision
+    inv.responded_at = datetime.now(timezone.utc)
+    audit.record(db, actor_id=user.id, action=f"student.invite_{payload.decision}", entity="employer_invite",
+                 entity_id=inv.id, ip=client_ip(request))
+    await db.commit()
+    return {"id": str(inv.id), "status": inv.status}

@@ -3,7 +3,7 @@ from app.models.user import Organization, User, StudentProfile, Consent, UserRol
 from app.models.ontology import Direction, Skill, Rubric
 from app.models.assessment import Task, TaskVariant, Attempt, Submission, AIUsageLog, VivaSession, VivaTurn, Evaluation
 from app.models.evidence import Evidence, EvidenceEdge, SkillScore, IntegrityFlag, Credential
-from app.models.career import CareerProfile, EmployerCriteria, Match, Appeal, AuditLog
+from app.models.career import CareerProfile, EmployerCriteria, EmployerInvite, Match, Appeal, AuditLog
 
 __all__ = [
     "BaseModel",
@@ -31,6 +31,7 @@ __all__ = [
     "Credential",
     "CareerProfile",
     "EmployerCriteria",
+    "EmployerInvite",
     "Match",
     "Appeal",
     "AuditLog",

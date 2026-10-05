@@ -294,7 +294,15 @@ export const api = {
   }) => post<any>("/employer/criteria", payload),
   getCriteriaMatches: (criteriaId: string) => request<any[]>(`/employer/criteria/${criteriaId}/matches`),
   getCandidate: (candidateId: string) => request<any>(`/employer/candidates/${candidateId}`),
-  inviteCandidate: (candidateId: string) => post<any>(`/employer/candidates/${candidateId}/invite`),
+  inviteCandidate: (candidateId: string, invite?: { job_title: string; message?: string }) =>
+    post<any>(`/employer/candidates/${candidateId}/invite`, invite),
+  getVerifiedCandidates: () => request<any[]>("/employer/verified-candidates"),
+  getEmployerInvites: () => request<any[]>("/employer/invites"),
+  withdrawInvite: (inviteId: string) => post<any>(`/employer/invites/${inviteId}/withdraw`),
+  // Student side of invitations
+  getMyInvites: () => request<any[]>("/career/invites"),
+  respondInvite: (inviteId: string, decision: "accepted" | "declined") =>
+    post<any>(`/career/invites/${inviteId}/respond`, { decision }),
 
   // ---------- University ----------
   getUniversityAnalytics: () => request<any>("/university/analytics"),

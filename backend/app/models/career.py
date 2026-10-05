@@ -26,6 +26,21 @@ class EmployerCriteria(BaseModel):
 
     employer = relationship("User")
 
+class EmployerInvite(BaseModel):
+    """An employer's invitation to a consenting candidate; the student accepts or declines it."""
+    __tablename__ = "employer_invites"
+
+    employer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    candidate_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    job_title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=True)
+    status = Column(String(20), default="sent", nullable=False)  # sent | accepted | declined | withdrawn
+    responded_at = Column(DateTime(timezone=True), nullable=True)
+
+    employer = relationship("User", foreign_keys=[employer_id])
+    candidate = relationship("User", foreign_keys=[candidate_id])
+
+
 class Match(BaseModel):
     __tablename__ = "matches"
 
