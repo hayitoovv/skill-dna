@@ -1062,8 +1062,6 @@ export default function StudentView({
                   <strong>{Math.round(evidenceCountVal * mainEase)} ta ↗</strong>
                 </div>
               </div>
-            </div>
-            <div className="profile-roadmap-row">
               <SkillRoadmap
                 currentLevel={levelVal}
                 currentScore={Math.round(overallScoreVal * mainEase)}
