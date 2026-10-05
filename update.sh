@@ -18,7 +18,7 @@ if command -v git-lfs &> /dev/null; then
 fi
 
 echo -e "\n📦 1. Frontend kutubxonalari tekshirilmoqda va build qilinmoqda..."
-npm install
+npm ci --no-audit --no-fund --loglevel=error  # exact lockfile install; never rewrites package-lock.json
 npm run build
 cp -r public/* dist/ 2>/dev/null || true
 ln -sfn dist skilldna
