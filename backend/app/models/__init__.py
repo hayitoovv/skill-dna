@@ -5,6 +5,7 @@ from app.models.assessment import Task, TaskVariant, Attempt, Submission, AIUsag
 from app.models.evidence import Evidence, EvidenceEdge, SkillScore, IntegrityFlag, Credential
 from app.models.career import CareerProfile, EmployerCriteria, EmployerInvite, Match, Appeal, AuditLog
 from app.models.notification import Notification
+from app.models.content import SiteText
 
 __all__ = [
     "BaseModel",
@@ -38,4 +39,5 @@ __all__ = [
     "Appeal",
     "AuditLog",
     "Notification",
+    "SiteText",
 ]

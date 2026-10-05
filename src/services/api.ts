@@ -310,6 +310,24 @@ export const api = {
   uploadPhoto: (dataUrl: string) => request<{ photo: string }>("/auth/me/photo", { method: "PUT", body: JSON.stringify({ data_url: dataUrl }) }),
   deletePhoto: () => request<{ photo: null }>("/auth/me/photo", { method: "DELETE" }),
 
+  // ---------- Site texts & super admin ----------
+  getSiteContent: () => request<{ version: string | null; items: { source: string; value: string }[] }>("/content"),
+  adminListTexts: () => request<any[]>("/admin/content"),
+  adminSaveText: (source: string, value: string) =>
+    request<any>("/admin/content", { method: "PUT", body: JSON.stringify({ source, value }) }),
+  adminRevertText: (source: string) => post<any>("/admin/content/revert", { source }),
+  adminDeleteText: (id: string) => request<any>(`/admin/content/${id}`, { method: "DELETE" }),
+  adminOverview: () => request<any>("/admin/overview"),
+  adminUsers: (q?: string, role?: string) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (role) params.set("role", role);
+    return request<any[]>(`/admin/users${params.toString() ? `?${params}` : ""}`);
+  },
+  adminUpdateUser: (id: string, patch: { role?: string; status?: string }) =>
+    request<any>(`/admin/users/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  adminAudit: (limit = 100) => request<any[]>(`/admin/audit?limit=${limit}`),
+
   // ---------- Notifications ----------
   getNotifications: () => request<{ unread: number; items: any[] }>("/notifications"),
   readNotification: (id: string) => post<any>(`/notifications/${id}/read`),

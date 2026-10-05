@@ -4,6 +4,9 @@ import StudentView, { type PageKey } from "./components/student/StudentView";
 import TeacherPortal from "./components/teacher/TeacherPortal";
 import EmployerPortal from "./components/employer/EmployerPortal";
 import NotificationBell from "./components/common/NotificationBell";
+import SuperAdminPortal from "./components/admin/SuperAdminPortal";
+import type { AdminTab } from "./components/admin/SuperAdminPortal";
+import ContentEditor, { setEditMode } from "./content/ContentEditor";
 import type { EmployerTab } from "./components/employer/EmployerPortal";
 import UniversityDashboard from "./components/university/UniversityDashboard";
 import ModeratorQueue from "./components/moderator/ModeratorQueue";
@@ -21,6 +24,7 @@ const roleLabels: Record<Role, { title: string; badge: string; icon: any }> = {
   employer: { title: "Ish beruvchi portali", badge: "EMPLOYER", icon: "briefcase" },
   university: { title: "Universitet tahlili", badge: "UNIVERSITY", icon: "building" },
   moderator: { title: "Moderatsiya (Integrity)", badge: "MODERATOR", icon: "shield" },
+  super_admin: { title: "Super Admin", badge: "SUPER ADMIN", icon: "shieldCheck" },
 };
 
 const directionLabels: Record<DirectionCode, string> = {
@@ -99,6 +103,38 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // The account's real role from the server; `role` below is only the portal being viewed (role switcher)
+  const [accountRole, setAccountRole] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("skill_dna_account_role");
+    } catch {
+      return null;
+    }
+  });
+  const rememberAccountRole = (r: string | null) => {
+    setAccountRole(r);
+    try {
+      if (r) localStorage.setItem("skill_dna_account_role", r);
+      else localStorage.removeItem("skill_dna_account_role");
+    } catch {}
+  };
+  const isSuperAdmin = accountRole === "super_admin";
+
+  const [adminTab, setAdminTab] = useState<AdminTab>(() => {
+    try {
+      const saved = localStorage.getItem("skill_dna_admin_tab");
+      if (saved === "overview" || saved === "content" || saved === "users" || saved === "audit") return saved;
+    } catch {}
+    return "overview";
+  });
+  const handleAdminTabChange = (tab: AdminTab) => {
+    setAdminTab(tab);
+    try {
+      localStorage.setItem("skill_dna_admin_tab", tab);
+    } catch {}
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const [employerTab, setEmployerTab] = useState<EmployerTab>(() => {
     try {
       const saved = localStorage.getItem("skill_dna_employer_tab");
@@ -165,6 +201,7 @@ export default function App() {
       api.getMe()
         .then((me) => {
           if (me && me.id && me.full_name) {
+            rememberAccountRole(me.role ?? null);
             // Check if user previously selected an explicit active role
             const savedActiveRole = localStorage.getItem("skill_dna_active_role") as Role | null;
             const validActive = (savedActiveRole && savedActiveRole.toLowerCase() in roleLabels)
@@ -209,6 +246,7 @@ export default function App() {
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
+    rememberAccountRole(user.role ?? null);
     const userRole = (user.role && user.role.toLowerCase() in roleLabels)
       ? (user.role.toLowerCase() as Role)
       : "student";
@@ -226,6 +264,8 @@ export default function App() {
   };
 
   const signOut = () => {
+    setEditMode(false);
+    rememberAccountRole(null);
     setCurrentUser(null);
     setActiveRole("student");
     try {
@@ -347,6 +387,7 @@ export default function App() {
             <option value="employer">{t("roleopt.employer")}</option>
             <option value="university">{t("roleopt.university")}</option>
             <option value="moderator">{t("roleopt.moderator")}</option>
+            {isSuperAdmin && <option value="super_admin">{t("roleopt.super_admin")}</option>}
           </select>
         </div>
 
@@ -411,6 +452,24 @@ export default function App() {
               onClick={() => handleTeacherTabChange("viva")}
             >
               <Icon name="file" /> {t("nav.vivaResults")}
+            </button>
+          </nav>
+        )}
+
+        {role === "super_admin" && isSuperAdmin && (
+          <nav className="main-nav" aria-label="Super admin navigatsiyasi">
+            <div className="nav-label">{t("nav.superAdmin")}</div>
+            <button className={`nav-item ${adminTab === "overview" ? "active" : ""}`} onClick={() => handleAdminTabChange("overview")}>
+              <Icon name="grid" /> {t("nav.adminOverview")}
+            </button>
+            <button className={`nav-item ${adminTab === "content" ? "active" : ""}`} onClick={() => handleAdminTabChange("content")}>
+              <Icon name="edit" /> {t("nav.adminContent")}
+            </button>
+            <button className={`nav-item ${adminTab === "users" ? "active" : ""}`} onClick={() => handleAdminTabChange("users")}>
+              <Icon name="users" /> {t("nav.adminUsers")}
+            </button>
+            <button className={`nav-item ${adminTab === "audit" ? "active" : ""}`} onClick={() => handleAdminTabChange("audit")}>
+              <Icon name="file" /> {t("nav.adminAudit")}
             </button>
           </nav>
         )}
@@ -606,6 +665,11 @@ export default function App() {
               <Icon name="shieldCheck" size={17} />
             </button>
             <LanguageSwitcher compact />
+            {isSuperAdmin && (
+              <button className="icon-button" title={t("shell.editTexts")} aria-label={t("shell.editTexts")} onClick={() => setEditMode(true)}>
+                <Icon name="edit" size={17} />
+              </button>
+            )}
             <NotificationBell label={t("shell.notifications")} onNavigate={openNotificationLink} />
             <div className="top-avatar">{currentUser.photo ? <img src={currentUser.photo} alt="" /> : currentUser.avatar}</div>
 
@@ -636,6 +700,9 @@ export default function App() {
         )}
 
         {role === "employer" && <EmployerPortal activeTab={employerTab} onTabChange={handleEmployerTabChange} />}
+        {role === "super_admin" && isSuperAdmin && (
+          <SuperAdminPortal activeTab={adminTab} onTabChange={handleAdminTabChange} meId={currentUser.id} />
+        )}
 
         {role === "university" && (
           <UniversityDashboard activeTab={univTab as any} onTabChange={handleUnivTabChange} />
@@ -659,6 +726,9 @@ export default function App() {
       />
 
       {securityOpen && <SecurityModal onClose={() => setSecurityOpen(false)} />}
+
+      {/* In-page text editor (super admin only) */}
+      {isSuperAdmin && <ContentEditor />}
 
       {/* Role Switch Security Notification Toast */}
       {roleSwitchFeedback && (

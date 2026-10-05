@@ -1149,7 +1149,8 @@ export const initialIntegrityRules: IntegrityRuleItem[] = [
   },
 ];
 
-export const demoUsers: Record<Role, User> = {
+// No demo super admin: that role is created only on the server (app/db/create_superadmin.py)
+export const demoUsers: Record<Exclude<Role, "super_admin">, User> = {
   student: {
     id: "usr-student-1",
     name: "Azizbek Sobirov",

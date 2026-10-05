@@ -1,6 +1,6 @@
 export type DirectionCode = "software" | "computer" | "ai";
 
-export type Role = "student" | "teacher" | "employer" | "university" | "moderator";
+export type Role = "student" | "teacher" | "employer" | "university" | "moderator" | "super_admin";
 
 export type LayerKey = "KNOW" | "DO" | "ADAPT" | "DEFEND" | "PROVE";
 
