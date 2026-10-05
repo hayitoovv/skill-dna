@@ -208,7 +208,7 @@ export default function SkillRoadmap({
   directionTitle = "Dasturiy injiniring",
   blockers = [],
 }: SkillRoadmapProps) {
-  const [viewMode, setViewMode] = useState<"hud" | "tree">("tree");
+  const [viewMode, setViewMode] = useState<"hud" | "tree">("hud");
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 

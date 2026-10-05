@@ -637,6 +637,17 @@ select { appearance: none; -webkit-appearance: none; background-image: url("data
 .profile-chart { padding: 25px 28px 10px; }
 .profile-chart .chart-shell { height: 300px; }
 .profile-stats { display: flex; flex-direction: column; justify-content: center; padding: 32px; border-left: 1px solid var(--border); background: linear-gradient(145deg, var(--surface), var(--surface-2)); }
+.profile-roadmap-row {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 20px 28px 24px;
+}
+.profile-roadmap-row .cyber-roadmap-widget {
+  margin-top: 0;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px -4px rgba(15, 39, 68, 0.04);
+}
 .big-score > span { display: block; color: var(--muted); font-size: 11.5px; font-weight: 800; letter-spacing: .13em; }
 .big-score > strong { display: block; margin: 9px 0 4px; color: var(--navy); font: 800 50px "Geist", sans-serif; letter-spacing: -.05em; }
 .big-score > strong small { color: var(--subtle); font-size: 16px; letter-spacing: 0; }
@@ -2077,10 +2088,7 @@ body.cms-editing [data-cms-ignore], body.cms-editing [data-cms-ignore] * { curso
   flex: 1;
   display: flex;
   align-items: center;
-}
-
-.cyber-step-wrapper:last-child {
-  flex: 0 0 auto;
+  justify-content: center;
 }
 
 .cyber-laser-beam {
