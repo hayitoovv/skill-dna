@@ -532,29 +532,29 @@ export default function SkillRoadmap({
               <defs>
                 {/* Cartographic topo grid pattern */}
                 <pattern id="topoGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(56, 189, 248, 0.05)" strokeWidth="1" />
-                  <circle cx="0" cy="0" r="1.5" fill="rgba(56, 189, 248, 0.15)" />
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(148, 163, 184, 0.15)" strokeWidth="1" />
+                  <circle cx="0" cy="0" r="1.5" fill="rgba(148, 163, 184, 0.3)" />
                 </pattern>
 
-                {/* Traversed road neon gradient */}
+                {/* Traversed road vibrant gradient */}
                 <linearGradient id="traversedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#10b981" />
                   <stop offset="70%" stopColor="#06b6d4" />
-                  <stop offset="100%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#0284c7" />
                 </linearGradient>
 
-                {/* Fog of war radial haze */}
+                {/* Fog of war soft morning mist */}
                 <radialGradient id="fogCloudGradient" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(15, 23, 42, 0.95)" />
-                  <stop offset="60%" stopColor="rgba(15, 23, 42, 0.75)" />
-                  <stop offset="100%" stopColor="rgba(15, 23, 42, 0)" />
+                  <stop offset="0%" stopColor="rgba(241, 245, 249, 0.95)" />
+                  <stop offset="60%" stopColor="rgba(241, 245, 249, 0.75)" />
+                  <stop offset="100%" stopColor="rgba(241, 245, 249, 0)" />
                 </radialGradient>
 
                 {/* Active radar beacon gradient */}
                 <radialGradient id="beaconWaveGradient" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(56, 189, 248, 0.6)" />
-                  <stop offset="50%" stopColor="rgba(56, 189, 248, 0.2)" />
-                  <stop offset="100%" stopColor="rgba(56, 189, 248, 0)" />
+                  <stop offset="0%" stopColor="rgba(2, 132, 199, 0.35)" />
+                  <stop offset="50%" stopColor="rgba(2, 132, 199, 0.12)" />
+                  <stop offset="100%" stopColor="rgba(2, 132, 199, 0)" />
                 </radialGradient>
               </defs>
 
@@ -562,7 +562,7 @@ export default function SkillRoadmap({
               <rect width="1000" height="520" fill="url(#topoGrid)" />
 
               {/* Topographical Latitude / Longitude lines */}
-              <g className="topo-coord-lines" stroke="rgba(148, 163, 184, 0.1)" strokeDasharray="3 3">
+              <g className="topo-coord-lines" stroke="rgba(148, 163, 184, 0.22)" strokeDasharray="3 3">
                 <line x1="200" y1="0" x2="200" y2="520" />
                 <line x1="400" y1="0" x2="400" y2="520" />
                 <line x1="600" y1="0" x2="600" y2="520" />
@@ -979,11 +979,11 @@ export default function SkillRoadmap({
             </div>
 
             <div className="cyber-modal-head">
-              <p className="eyebrow" style={{ color: "#38bdf8" }}>KASBIY EKSPEDITSIYA MODELI</p>
-              <h2 id="roadmap-modal-title" style={{ color: "#fff" }}>
+              <p className="eyebrow" style={{ color: "#0284c7" }}>KASBIY EKSPEDITSIYA MODELI</p>
+              <h2 id="roadmap-modal-title" style={{ color: "#0f2744" }}>
                 {directionTitle} — To‘liq Rivojlanish Yo‘l Xaritasi
               </h2>
-              <p style={{ color: "#94a3b8" }}>
+              <p style={{ color: "#64748b" }}>
                 Platformada kasbiy mahorat 5 ta rasmiy geografik sektor (L1–L5) orqali o‘lchanadi.
                 Har bir bosqich yangi amaliy qatlamlar va isbotlangan dalillar bilan ochiladi.
               </p>
@@ -1003,7 +1003,7 @@ export default function SkillRoadmap({
                 {nextMilestone && (
                   <>
                     <span>•</span>
-                    <span style={{ color: "#38bdf8" }}>
+                    <span style={{ color: "#0284c7" }}>
                       Maqsad: <b>{nextMilestone.code} · {nextMilestone.sectorName}</b> ({remainingScore} ball qoldi)
                     </span>
                   </>
@@ -1058,7 +1058,7 @@ export default function SkillRoadmap({
                       </div>
                       <div className="cyber-modal-req-box">
                         <span>Ochilgan imtiyoz:</span>
-                        <b style={{ color: "#38bdf8" }}>{m.rewardBadge}</b>
+                        <b style={{ color: "#0284c7" }}>{m.rewardBadge}</b>
                       </div>
                     </div>
 
