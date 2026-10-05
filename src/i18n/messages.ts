@@ -55,7 +55,6 @@ export const dictionary = {
   "nav.groups": { uz: "Guruhlar & Biriktirish", ru: "Группы и кураторы", en: "Groups & assignment" },
   "nav.teachers": { uz: "O‘qituvchilar bazasi", ru: "База преподавателей", en: "Teachers" },
   "nav.students": { uz: "Talabalar kontingenti", ru: "Контингент студентов", en: "Students" },
-  "nav.workflow": { uz: "Tuzilma & Ketma-ketlik", ru: "Структура и порядок", en: "Structure & workflow" },
   "nav.academicAnalysis": { uz: "AKADEMIK TAHLIL", ru: "АКАДЕМИЧЕСКИЙ АНАЛИЗ", en: "ACADEMIC ANALYTICS" },
   "nav.curriculum": { uz: "O‘quv dasturi oq dog‘lari", ru: "Пробелы учебной программы", en: "Curriculum gaps" },
   "nav.levels": { uz: "Malaka taqsimoti (L1–L5)", ru: "Распределение уровней (L1–L5)", en: "Level distribution (L1–L5)" },

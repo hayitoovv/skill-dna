@@ -414,12 +414,6 @@ export default function App() {
             >
               <Icon name="dna" /> {t("nav.students")} <span className="nav-pill">6</span>
             </button>
-            <button
-              className={`nav-item ${univTab === "workflow" ? "active" : ""}`}
-              onClick={() => handleUnivTabChange("workflow")}
-            >
-              <Icon name="lightning" /> {t("nav.workflow")}
-            </button>
 
             <div className="nav-label section">{t("nav.academicAnalysis")}</div>
             <button
