@@ -7,6 +7,7 @@ import { printCredential } from "./certificatePrint";
 import CareerCoachModal from "./CareerCoachModal";
 import EvidenceGraphModal from "./EvidenceGraphModal";
 import StudentInvites from "./StudentInvites";
+import SkillRoadmap from "./SkillRoadmap";
 
 export type PageKey = "dashboard" | "dna" | "tasks" | "career" | "certificates" | "settings";
 
@@ -1061,36 +1062,15 @@ export default function StudentView({
                   <strong>{Math.round(evidenceCountVal * mainEase)} ta ↗</strong>
                 </div>
               </div>
-              <div className="level-path">
-                <div className={isNewUser ? "level-current" : "level-done"} style={{ transform: "scale(1)" }}>
-                  {isNewUser ? "L0" : <Icon name="check" size={14} />}
-                </div>
-                <span className="level-line">
-                  <em style={{ width: isNewUser ? "0%" : `${Math.min(100, Math.max(0, (mainEase - 0.1) * 350))}%` }} />
-                </span>
-                <div className={isNewUser ? "" : "level-done"} style={{ transform: `scale(${mainEase > 0.35 && !isNewUser ? 1 : 0.85})` }}>
-                  {isNewUser ? "L1" : <Icon name="check" size={14} />}
-                </div>
-                <span className="level-line">
-                  <em style={{ width: isNewUser ? "0%" : `${Math.min(100, Math.max(0, (mainEase - 0.35) * 350))}%` }} />
-                </span>
-                <div className={isNewUser ? "" : "level-current"} style={{ transform: `scale(${mainEase > 0.6 && !isNewUser ? 1 : 0.85})` }}>
-                  {isNewUser ? "L2" : primarySkill.level}
-                </div>
-                <span className="level-line">
-                  <em style={{ width: "0%" }} />
-                </span>
-                <div>L4</div>
-                <span className="level-line">
-                  <em style={{ width: "0%" }} />
-                </span>
-                <div>L5</div>
-              </div>
-              <div className="level-labels">
-                <span>Boshlang‘ich</span>
-                <b>Mutaxassis</b>
-                <span>Master</span>
-              </div>
+              <SkillRoadmap
+                currentLevel={levelVal}
+                currentScore={Math.round(overallScoreVal * mainEase)}
+                confidence={Math.round(confidenceVal * mainEase)}
+                isNewUser={isNewUser}
+                onStartAssessment={onStartAssessment}
+                directionTitle={currentDir.title}
+                blockers={livePrimary?.level_blockers}
+              />
             </div>
           </section>
 
