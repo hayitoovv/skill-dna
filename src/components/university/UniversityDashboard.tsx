@@ -3,6 +3,7 @@ import { Icon } from "../common/Icons";
 import { api, hasSession } from "../../services/api";
 import { universityAnalyticsData } from "../../data/ontology";
 import type { DirectionCode } from "../../types";
+import { printRectorReport } from "./rectorReport";
 
 export type AdminTab = "dashboard" | "analytics" | "groups" | "teachers" | "students" | "curriculum" | "levels";
 
@@ -462,9 +463,23 @@ export default function UniversityDashboard({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // Rector's report from the figures currently on screen (live API data, or sample data marked as demo)
   const handleDownload = () => {
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 2500);
+    try {
+      printRectorReport({
+        orgName: orgName ?? universityAnalyticsData.universityName,
+        live: isLive,
+        kpis: { students: kpiStudents, score: kpiScore, confidence: kpiConfidence, openFlags: isLive ? analytics!.open_flags : null },
+        directions: directionViews,
+        levels: levelViews,
+        gaps: gapViews,
+        groups: groupsLive ? liveGroups!.map((g) => ({ id: g.group_id, students: g.students })) : null,
+      });
+      setDownloaded(true);
+      setTimeout(() => setDownloaded(false), 2500);
+    } catch (err: any) {
+      showToast(err?.message || "Hisobotni ochib bo‘lmadi.");
+    }
   };
 
   // Add Teacher
@@ -1631,7 +1646,7 @@ export default function UniversityDashboard({
           >
             {downloaded ? (
               <>
-                <Icon name="check" size={16} /> Hisobot olindi!
+                <Icon name="check" size={16} /> Hisobot ochildi
               </>
             ) : (
               <>
