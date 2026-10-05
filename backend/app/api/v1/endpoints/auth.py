@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,9 +19,9 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
-from app.models import Consent, Direction, Organization, StudentProfile, User, UserMFA
+from app.models import Consent, Direction, Organization, StudentProfile, User, UserMFA, UserPhoto
 from app.schemas.user import ConsentUpdate, Token, UserLogin, UserRegister
-from app.services import audit, totp
+from app.services import audit, photos, totp
 
 router = APIRouter()
 
@@ -44,7 +44,8 @@ async def _user_context(db: AsyncSession, user: User) -> dict:
     direction = None
     if profile and profile.direction_id:
         direction = (await db.execute(select(Direction).where(Direction.id == profile.direction_id))).scalars().first()
-    return {"org": org, "profile": profile, "direction": direction}
+    photo = (await db.execute(select(UserPhoto).where(UserPhoto.user_id == user.id))).scalars().first()
+    return {"org": org, "profile": profile, "direction": direction, "photo": photos.data_url(photo) if photo else None}
 
 
 async def _token_response(db: AsyncSession, user: User, mfa: bool = False) -> dict:
@@ -63,6 +64,7 @@ async def _token_response(db: AsyncSession, user: User, mfa: bool = False) -> di
             "direction": ctx["direction"].code if ctx["direction"] else "software",
             "organization": ctx["org"].name if ctx["org"] else "BSTU",
             "bio": user.bio or "",
+            "photo": ctx["photo"],
         },
     }
 
@@ -291,6 +293,7 @@ def _profile_payload(user: User, ctx: dict, consents: list[Consent]) -> dict:
         "course": profile.course if profile else None,
         "group": profile.group_id if profile else None,
         "avatar": _initials(user.full_name),
+        "photo": ctx["photo"],
         "consents": [
             {"id": str(c.id), "type": c.type, "granted": c.revoked_at is None, "granted_at": c.granted_at.isoformat() if c.granted_at else None}
             for c in consents
@@ -303,6 +306,40 @@ async def get_me(user: User = Depends(get_current_user), db: AsyncSession = Depe
     ctx = await _user_context(db, user)
     consents = (await db.execute(select(Consent).where(Consent.user_id == user.id))).scalars().all()
     return _profile_payload(user, ctx, list(consents))
+
+
+class PhotoUpload(BaseModel):
+    data_url: str = Field(max_length=4_000_000)  # base64 of a <= 2 MB image
+
+
+@router.put("/me/photo")
+async def upload_photo(payload: PhotoUpload, request: Request, user: User = Depends(get_current_user),
+                       db: AsyncSession = Depends(get_db)):
+    try:
+        jpeg = photos.normalize(payload.data_url)
+    except photos.PhotoError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    row = (await db.execute(select(UserPhoto).where(UserPhoto.user_id == user.id))).scalars().first()
+    if row:
+        row.data, row.content_type = jpeg, "image/jpeg"
+    else:
+        row = UserPhoto(user_id=user.id, content_type="image/jpeg", data=jpeg)
+        db.add(row)
+    audit.record(db, actor_id=user.id, action="profile.photo_update", entity="user", entity_id=user.id,
+                 after={"bytes": len(jpeg)}, ip=client_ip(request))
+    await db.commit()
+    return {"photo": photos.data_url(row)}
+
+
+@router.delete("/me/photo")
+async def delete_photo(request: Request, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    row = (await db.execute(select(UserPhoto).where(UserPhoto.user_id == user.id))).scalars().first()
+    if row:
+        await db.delete(row)
+        audit.record(db, actor_id=user.id, action="profile.photo_delete", entity="user", entity_id=user.id,
+                     ip=client_ip(request))
+        await db.commit()
+    return {"photo": None}
 
 
 @router.put("/me")

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, String, ForeignKey, Integer, JSON, DateTime
+from sqlalchemy import Boolean, Column, String, ForeignKey, Integer, JSON, DateTime, LargeBinary
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import enum
@@ -77,3 +77,12 @@ class UserMFA(BaseModel):
     enabled = Column(Boolean, default=False, nullable=False)
     last_used_step = Column(Integer, nullable=True)
     recovery_hashes = Column(JSON, default=list)
+
+
+class UserPhoto(BaseModel):
+    """Profile photo, re-encoded server-side as a small JPEG (metadata stripped). Separate table: no change to `users`."""
+    __tablename__ = "user_photos"
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False, index=True)
+    content_type = Column(String(50), nullable=False, default="image/jpeg")
+    data = Column(LargeBinary, nullable=False)

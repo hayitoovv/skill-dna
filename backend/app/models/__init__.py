@@ -1,5 +1,5 @@
 from app.models.base import BaseModel
-from app.models.user import Organization, User, StudentProfile, Consent, UserRole, UserMFA
+from app.models.user import Organization, User, StudentProfile, Consent, UserRole, UserMFA, UserPhoto
 from app.models.ontology import Direction, Skill, Rubric
 from app.models.assessment import Task, TaskVariant, Attempt, Submission, AIUsageLog, VivaSession, VivaTurn, Evaluation
 from app.models.evidence import Evidence, EvidenceEdge, SkillScore, IntegrityFlag, Credential
@@ -14,6 +14,7 @@ __all__ = [
     "Consent",
     "UserRole",
     "UserMFA",
+    "UserPhoto",
     "Direction",
     "Skill",
     "Rubric",

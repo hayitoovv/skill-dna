@@ -1,8 +1,8 @@
-import { useState, useEffect, type ReactNode, type CSSProperties } from "react";
+import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 import { Icon, Logo } from "../common/Icons";
 import { directionsData, sampleTasksByDirection } from "../../data/ontology";
 import type { DirectionCode, LayerKey, LayerItem, User } from "../../types";
-import { api } from "../../services/api";
+import { api, PROFILE_UPDATED_EVENT } from "../../services/api";
 import { printCredential } from "./certificatePrint";
 import CareerCoachModal from "./CareerCoachModal";
 import EvidenceGraphModal from "./EvidenceGraphModal";
@@ -469,6 +469,71 @@ export default function StudentView({
     user?.bio || "Dasturiy ta’minot va zamonaviy backend texnologiyalari bo‘yicha talaba."
   );
   const [profileAvatar, setProfileAvatar] = useState(user?.avatar || "TL");
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(user?.photo ?? null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
+
+  // Downscale in the browser (fast upload); the server re-encodes again and strips metadata
+  const shrinkImage = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = Math.min(512, side);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Brauzer rasmni qayta ishlay olmadi"));
+        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Fayl rasm emas yoki buzilgan"));
+      };
+      img.src = url;
+    });
+
+  const onPhotoPicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow picking the same file again
+    if (!file) return;
+    setPhotoError(null);
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setPhotoError("Faqat JPG, PNG yoki WebP rasm tanlang");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setPhotoError("Rasm hajmi 2 MB dan oshmasligi kerak");
+      return;
+    }
+    setPhotoBusy(true);
+    try {
+      const { photo } = await api.uploadPhoto(await shrinkImage(file));
+      setProfilePhoto(photo);
+      window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: { photo } }));
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Rasm yuklanmadi");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const removePhoto = async () => {
+    setPhotoError(null);
+    setPhotoBusy(true);
+    try {
+      await api.deletePhoto();
+      setProfilePhoto(null);
+      window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: { photo: null } }));
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Rasm o‘chirilmadi");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const userName = profileName ? profileName.trim().split(" ")[0] : (user?.name ? user.name.trim().split(" ")[0] : "Talaba");
   const isDemoStudent =
@@ -505,6 +570,7 @@ export default function StudentView({
             if (me.email) setProfileEmail(me.email);
             if (me.phone) setProfilePhone(me.phone);
             if (me.avatar) setProfileAvatar(me.avatar);
+            setProfilePhoto(me.photo ?? null);
             if (me.bio) setProfileBio(me.bio);
           }
         })
@@ -1877,11 +1943,22 @@ export default function StudentView({
               {settingsTab === "Profil" && (
                 <>
                   <div className="profile-photo-row">
-                    <div className="settings-avatar">{profileAvatar}</div>
+                    <div className="settings-avatar">{profilePhoto ? <img src={profilePhoto} alt="Profil rasmi" /> : profileAvatar}</div>
                     <div>
                       <strong>Profil rasmi</strong>
-                      <span>JPG yoki PNG, maksimal 2 MB</span>
-                      <button type="button">Rasmni almashtirish</button>
+                      <span>JPG, PNG yoki WebP, maksimal 2 MB</span>
+                      <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={onPhotoPicked} />
+                      <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+                        <button type="button" disabled={photoBusy} onClick={() => photoInput.current?.click()}>
+                          {photoBusy ? "Yuklanmoqda…" : profilePhoto ? "Rasmni almashtirish" : "Rasm yuklash"}
+                        </button>
+                        {profilePhoto && !photoBusy && (
+                          <button type="button" style={{ color: "var(--rose)" }} onClick={() => void removePhoto()}>
+                            O‘chirish
+                          </button>
+                        )}
+                      </div>
+                      {photoError && <span style={{ color: "var(--rose)", fontWeight: 600 }}>{photoError}</span>}
                     </div>
                   </div>
                   <div className="form-grid">
@@ -2060,6 +2137,7 @@ export default function StudentView({
                           avatar: newAvatar,
                         };
                         localStorage.setItem("skill_dna_user", JSON.stringify(updated));
+                        window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: { name: profileName, phone: profilePhone, bio: profileBio, avatar: newAvatar } }));
                       } catch (err) {
                         console.error("Profile update failed:", err);
                       }

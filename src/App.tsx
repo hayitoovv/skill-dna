@@ -12,7 +12,7 @@ import AssessmentModal from "./components/student/AssessmentModal";
 import SecurityModal from "./components/common/SecurityModal";
 import type { DirectionCode, Role, User } from "./types";
 import { demoUsers } from "./data/ontology";
-import { api, hasSession, SESSION_EXPIRED_EVENT } from "./services/api";
+import { api, hasSession, SESSION_EXPIRED_EVENT, PROFILE_UPDATED_EVENT } from "./services/api";
 import { LanguageSwitcher, useI18n } from "./i18n";
 
 const roleLabels: Record<Role, { title: string; badge: string; icon: any }> = {
@@ -188,6 +188,7 @@ export default function App() {
               direction: (me.direction_code as DirectionCode) || parsedUser?.direction || "software",
               organization: (me.organization && !me.organization.includes("TATU")) ? me.organization : "BSTU",
               avatar: me.avatar || (me.full_name ? me.full_name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() : "TL"),
+              photo: me.photo ?? null,
               bio: me.bio || parsedUser?.bio,
             };
             setCurrentUser(syncedUser);
@@ -239,6 +240,23 @@ export default function App() {
   const handleLogout = () => {
     if (window.confirm(t("shell.logoutConfirm"))) signOut();
   };
+
+  // Settings page changes (name, photo) update the shell right away
+  useEffect(() => {
+    const onProfile = (e: Event) => {
+      const patch = (e as CustomEvent<Partial<User>>).detail;
+      setCurrentUser((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...patch };
+        try {
+          localStorage.setItem("skill_dna_user", JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+    };
+    window.addEventListener(PROFILE_UPDATED_EVENT, onProfile);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, onProfile);
+  }, []);
 
   // A dead session (expired refresh token, rotated server key) returns to login instead of silently showing demo data
   useEffect(() => {
@@ -497,7 +515,7 @@ export default function App() {
           onClick={() => goTo("settings")}
           title={t("shell.profileHint")}
         >
-          <div className="avatar">{currentUser.avatar}</div>
+          <div className="avatar">{currentUser.photo ? <img src={currentUser.photo} alt="" /> : currentUser.avatar}</div>
           <div>
             <strong>{currentUser.name}</strong>
             <span>{displayOrg}</span>
@@ -589,7 +607,7 @@ export default function App() {
             </button>
             <LanguageSwitcher compact />
             <NotificationBell label={t("shell.notifications")} onNavigate={openNotificationLink} />
-            <div className="top-avatar">{currentUser.avatar}</div>
+            <div className="top-avatar">{currentUser.photo ? <img src={currentUser.photo} alt="" /> : currentUser.avatar}</div>
 
             <button className="logout-button" onClick={handleLogout} title="Hisobdan chiqish">
               <Icon name="logout" size={14} />

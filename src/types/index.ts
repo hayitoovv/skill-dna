@@ -141,6 +141,8 @@ export interface User {
   direction?: DirectionCode;
   organization?: string;
   avatar: string;
+  /** Profile photo as a data URL (null/undefined = show initials) */
+  photo?: string | null;
   course?: number;
   group?: string;
   bio?: string;

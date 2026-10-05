@@ -13,6 +13,8 @@ const TOKEN_KEY = "skill_dna_token";
 const REFRESH_KEY = "skill_dna_refresh";
 /** Fired on window when the session is dead and the app must return to the login screen. */
 export const SESSION_EXPIRED_EVENT = "skilldna:session-expired";
+/** Fired on window with a Partial<User> detail when the profile (name, photo) changes. */
+export const PROFILE_UPDATED_EVENT = "skilldna:profile-updated";
 
 export class ApiError extends Error {
   status: number;
@@ -303,6 +305,10 @@ export const api = {
   getMyInvites: () => request<any[]>("/career/invites"),
   respondInvite: (inviteId: string, decision: "accepted" | "declined") =>
     post<any>(`/career/invites/${inviteId}/respond`, { decision }),
+
+  // ---------- Profile photo ----------
+  uploadPhoto: (dataUrl: string) => request<{ photo: string }>("/auth/me/photo", { method: "PUT", body: JSON.stringify({ data_url: dataUrl }) }),
+  deletePhoto: () => request<{ photo: null }>("/auth/me/photo", { method: "DELETE" }),
 
   // ---------- Notifications ----------
   getNotifications: () => request<{ unread: number; items: any[] }>("/notifications"),

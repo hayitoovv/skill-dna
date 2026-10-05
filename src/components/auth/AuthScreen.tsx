@@ -324,6 +324,7 @@ export default function AuthScreen({
           direction: (res.user.direction as DirectionCode) || "software",
           organization: (res.user.organization && !res.user.organization.includes("TATU")) ? res.user.organization : "BSTU",
           avatar: initialsOf(res.user.full_name),
+          photo: res.user.photo ?? null,
           bio: res.user.bio || "",
         });
         return;
@@ -379,6 +380,7 @@ export default function AuthScreen({
         direction: (res.user.direction as DirectionCode) || "software",
         organization: res.user.organization || "BSTU",
         avatar: initialsOf(res.user.full_name),
+          photo: res.user.photo ?? null,
         bio: res.user.bio || "",
       });
     } catch (err: any) {
@@ -436,6 +438,7 @@ export default function AuthScreen({
           direction: regDirection as DirectionCode,
           organization: (res.user.organization && !res.user.organization.includes("TATU")) ? res.user.organization : "BSTU",
           avatar: initialsOf(res.user.full_name),
+          photo: res.user.photo ?? null,
           bio: "",
         });
         return;
