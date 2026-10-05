@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Icon } from "../common/Icons";
+import type { IconName } from "../common/Icons";
 
 export interface SkillRoadmapProps {
   currentLevel: string;
@@ -16,10 +17,12 @@ export interface Milestone {
   code: string;
   name: string;
   title: string;
-  subtitle: string;
+  roleTitle: string;
+  iconName: IconName;
   minScore: number;
   minConfidence: number;
   requiredLayers: { key: string; label: string; tone: string }[];
+  rewardBadge: string;
   description: string;
   nextTip: string;
 }
@@ -29,12 +32,14 @@ export const MILESTONES: Milestone[] = [
     level: 1,
     code: "L1",
     name: "KNOW",
-    title: "Nazariy bilim",
-    subtitle: "Bazaviy tushunchalar",
+    title: "Nazariy poydevor",
+    roleTitle: "Junior Nazariyotchi",
+    iconName: "bookOpen",
     minScore: 40,
     minConfidence: 0,
     requiredLayers: [{ key: "KNOW", label: "Nazariya", tone: "blue" }],
-    description: "Soha bo‘yicha nazariy asoslar, atamalar va test savollari orqali tushunchalarni egallash.",
+    rewardBadge: "Skill DNA Profili",
+    description: "Sohaning fundamental tamoyillari, atamalar va asosiy nazariy tushunchalar.",
     nextTip: "KNOW test sinovlaridan o‘tib, kamida 40 ball to‘plang.",
   },
   {
@@ -42,14 +47,16 @@ export const MILESTONES: Milestone[] = [
     code: "L2",
     name: "APPLY",
     title: "Amaliy ijro",
-    subtitle: "Kod va masalalar",
+    roleTitle: "Amaliy dasturchi",
+    iconName: "code",
     minScore: 55,
     minConfidence: 0,
     requiredLayers: [
       { key: "KNOW", label: "Nazariya", tone: "blue" },
       { key: "DO", label: "Amaliy ijro", tone: "emerald" },
     ],
-    description: "Nazariyani amaliyotda qo‘llash, toza kod yozish va amaliy topshiriqlarni mustaqil bajarish.",
+    rewardBadge: "Verified Pool (Ish beruvchilar)",
+    description: "Haqiqiy kod yozish, algoritmik masalalar va amaliy topshiriqlarni mustaqil bajarish.",
     nextTip: "DO topshiriqlarida kod yozing va umumiy ballni 55 ga yetkazing.",
   },
   {
@@ -57,22 +64,25 @@ export const MILESTONES: Milestone[] = [
     code: "L3",
     name: "ADAPT",
     title: "Moslashuvchanlik",
-    subtitle: "Real keyslar",
+    roleTitle: "Problem Solver",
+    iconName: "cpu",
     minScore: 70,
     minConfidence: 50,
     requiredLayers: [
       { key: "DO", label: "Amaliy ijro", tone: "emerald" },
       { key: "ADAPT", label: "Moslashuv", tone: "violet" },
     ],
-    description: "Kutilmagan sharoitlar, o‘zgaruvchan talablar va murakkab keyslarni muvaffaqiyatli yechish.",
-    nextTip: "ADAPT o‘zgaruvchan keyslarini yeching va ishonchlilikni 50% dan oshiring.",
+    rewardBadge: "Adaptive Solver",
+    description: "O‘zgaruvchan talablar, noaniq sharoitlar va murakkab ishlab chiqarish keyslarini yechish.",
+    nextTip: "ADAPT o‘zgaruvchan keyslarini yeching va ishonchni 50% dan oshiring.",
   },
   {
     level: 4,
     code: "L4",
     name: "CREATE",
     title: "Yaratuvchanlik",
-    subtitle: "Arxitektura & Himoya",
+    roleTitle: "Tizimlar arxitektori",
+    iconName: "layers",
     minScore: 82,
     minConfidence: 70,
     requiredLayers: [
@@ -80,15 +90,17 @@ export const MILESTONES: Milestone[] = [
       { key: "ADAPT", label: "Moslashuv", tone: "violet" },
       { key: "DEFEND", label: "Viva himoya", tone: "amber" },
     ],
+    rewardBadge: "AI Viva Certified",
     description: "Murakkab tizimlar arxitekturasini loyihalash va AI Viva suhbatida o‘z yechimini himoya qilish.",
-    nextTip: "AI Viva suhbatidan (DEFEND) o‘tib, ballni 82 ga, ishonchni 70% ga yetkazing.",
+    nextTip: "AI Viva (DEFEND) suhbatidan o‘tib, ballni 82 ga, ishonchni 70% ga chiqaring.",
   },
   {
     level: 5,
     code: "L5",
     name: "MASTER",
     title: "Ekspert daraja",
-    subtitle: "To‘liq isbotlangan mahorat",
+    roleTitle: "Bosh ekspert / Lead",
+    iconName: "award",
     minScore: 90,
     minConfidence: 85,
     requiredLayers: [
@@ -98,8 +110,9 @@ export const MILESTONES: Milestone[] = [
       { key: "DEFEND", label: "Viva himoya", tone: "amber" },
       { key: "PROVE", label: "Real dalillar", tone: "rose" },
     ],
-    description: "Barcha 5 qatlamni qamrab olgan, insoniy ekspertiza (PROVE), diplom va loyihalarda to‘liq tasdiqlangan mahorat.",
-    nextTip: "PROVE qatlamida o‘qituvchi yoki ekspert tasdiqlagan sertifikat va dalillarni taqdim eting.",
+    rewardBadge: "W3C / OB 3.0 Master",
+    description: "Barcha 5 qatlamni to‘liq qamragan, insoniy ekspertiza (PROVE) va diplom bilan isbotlangan mahorat.",
+    nextTip: "PROVE qatlamida ekspert tasdiqlagan diplom va loyiha dalillarini yuklang.",
   },
 ];
 
@@ -124,16 +137,16 @@ export default function SkillRoadmap({
   directionTitle = "Dasturiy injiniring",
   blockers = [],
 }: SkillRoadmapProps) {
+  const [viewMode, setViewMode] = useState<"hud" | "tree">("hud");
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 
   const currentRank = parseRank(currentLevel, isNewUser, currentScore);
 
-  // Next milestone info
   const nextMilestone = MILESTONES.find((m) => m.level > currentRank) ?? null;
   const currentMilestone = MILESTONES.find((m) => m.level === currentRank) ?? null;
 
-  // Segment progress percentage between milestone i and i + 1
+  // Progress percentage between level fromLevel and toLevel
   const getLineProgress = (fromLevel: number, toLevel: number): number => {
     if (currentRank >= toLevel) return 100;
     if (currentRank < fromLevel) return 0;
@@ -155,173 +168,291 @@ export default function SkillRoadmap({
   const remainingScore = nextMilestone ? Math.max(0, nextMilestone.minScore - currentScore) : 0;
   const remainingConf = nextMilestone ? Math.max(0, nextMilestone.minConfidence - confidence) : 0;
 
+  // Calculate overall next goal progress percentage
+  const nextProgressPct = nextMilestone
+    ? Math.min(
+        100,
+        Math.max(
+          12,
+          Math.round(
+            ((currentScore - (currentMilestone ? currentMilestone.minScore : 0)) /
+              (nextMilestone.minScore - (currentMilestone ? currentMilestone.minScore : 0))) *
+              100
+          )
+        )
+      )
+    : 100;
+
   return (
-    <div className="roadmap-widget">
-      <div className="roadmap-head">
-        <div className="roadmap-kicker">
-          <Icon name="dna" size={14} />
-          <span>KOMPETENSIYA YO‘L XARITASI</span>
+    <div className="cyber-roadmap-widget">
+      {/* Top HUD Control Bar */}
+      <div className="cyber-hud-top">
+        <div className="cyber-hud-brand">
+          <div className="cyber-hud-icon-box">
+            <Icon name="dna" size={16} />
+          </div>
+          <div>
+            <div className="cyber-hud-tag">KOMPETENSIYA YO‘L XARITASI</div>
+            <div className="cyber-hud-status">
+              <span className="cyber-live-dot" />
+              <strong>{currentLevel}</strong>
+              <span className="cyber-sub-score">• {currentScore} BALL</span>
+            </div>
+          </div>
         </div>
-        <button
-          type="button"
-          className="roadmap-detail-btn"
-          onClick={() => setModalOpen(true)}
-          title="To‘liq yo‘l xaritasi va talablarni ko‘rish"
-        >
-          <span>Batafsil xarita</span>
-          <Icon name="arrow" size={12} />
-        </button>
+
+        <div className="cyber-hud-controls">
+          <div className="cyber-toggle-group">
+            <button
+              type="button"
+              className={`cyber-toggle-btn ${viewMode === "hud" ? "active" : ""}`}
+              onClick={() => setViewMode("hud")}
+              title="Ixcham HUD rejimi"
+            >
+              <Icon name="grid" size={13} />
+              <span>HUD</span>
+            </button>
+            <button
+              type="button"
+              className={`cyber-toggle-btn ${viewMode === "tree" ? "active" : ""}`}
+              onClick={() => setViewMode("tree")}
+              title="Kengaytirilgan daraxt xaritasi"
+            >
+              <Icon name="workflow" size={13} />
+              <span>Xarita</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="cyber-expand-btn"
+            onClick={() => setModalOpen(true)}
+            title="Katta ekranda to‘liq ko‘rish"
+          >
+            <Icon name="external" size={14} />
+          </button>
+        </div>
       </div>
 
-      {/* Stepper Track */}
-      <div className="roadmap-stepper-container">
-        <div className="roadmap-track">
-          {MILESTONES.map((m, idx) => {
-            const isCompleted = currentRank > m.level;
-            const isCurrent = currentRank === m.level || (currentRank === 0 && m.level === 1);
-            const isLocked = currentRank < m.level && !isCurrent;
+      {/* MODE 1: Futuristic Laser Stepper (Compact HUD) */}
+      {viewMode === "hud" && (
+        <div className="cyber-hud-body">
+          <div className="cyber-stepper-track">
+            {MILESTONES.map((m, idx) => {
+              const isCompleted = currentRank > m.level;
+              const isCurrent = currentRank === m.level || (currentRank === 0 && m.level === 1);
+              const isLocked = currentRank < m.level && !isCurrent;
+              const lineProgress = idx > 0 ? getLineProgress(MILESTONES[idx - 1].level, m.level) : 0;
 
-            return (
-              <div key={m.code} className="roadmap-step-wrapper">
-                {idx > 0 && (
-                  <div className="roadmap-connector">
-                    <div
-                      className="roadmap-connector-fill"
-                      style={{
-                        width: `${getLineProgress(MILESTONES[idx - 1].level, m.level)}%`,
-                      }}
-                    />
-                  </div>
-                )}
-
-                <div
-                  className="roadmap-step"
-                  onClick={() => setActiveTooltip(activeTooltip === m.level ? null : m.level)}
-                  onMouseEnter={() => setActiveTooltip(m.level)}
-                  onMouseLeave={() => setActiveTooltip(null)}
-                >
-                  <div
-                    className={`roadmap-node ${
-                      isCompleted ? "completed" : isCurrent ? "current" : "locked"
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <Icon name="check" size={15} />
-                    ) : (
-                      <span>{m.code}</span>
-                    )}
-
-                    {isCurrent && <span className="roadmap-pulse-ring" />}
-                  </div>
-
-                  <div className="roadmap-labels">
-                    <strong className={`roadmap-step-code ${isCurrent ? "active-text" : ""}`}>
-                      {m.name}
-                    </strong>
-                    <span className="roadmap-step-score">{m.minScore}b</span>
-                  </div>
-
-                  {/* Popover Tooltip on Hover/Click */}
-                  {activeTooltip === m.level && (
-                    <div className="roadmap-tooltip" onClick={(e) => e.stopPropagation()}>
-                      <div className="roadmap-tooltip-head">
-                        <strong>{m.code} · {m.name}</strong>
-                        <span className={`roadmap-tooltip-badge ${isCompleted ? "badge-success" : isCurrent ? "badge-active" : "badge-locked"}`}>
-                          {isCompleted ? "O‘zlashtirilgan" : isCurrent ? "Joriy pog‘ona" : "Qulflangan"}
-                        </span>
-                      </div>
-                      <p className="roadmap-tooltip-desc">{m.title} — {m.description}</p>
-                      <div className="roadmap-tooltip-facts">
-                        <div>
-                          <span>Minimal ball:</span>
-                          <strong>{m.minScore} / 100</strong>
-                        </div>
-                        {m.minConfidence > 0 && (
-                          <div>
-                            <span>Ishonchlilik:</span>
-                            <strong>≥ {m.minConfidence}%</strong>
-                          </div>
+              return (
+                <div key={m.code} className="cyber-step-wrapper">
+                  {idx > 0 && (
+                    <div className="cyber-laser-beam">
+                      <div
+                        className="cyber-laser-fill"
+                        style={{ width: `${lineProgress}%` }}
+                      >
+                        {lineProgress > 0 && lineProgress < 100 && (
+                          <span className="cyber-laser-spark" />
                         )}
-                        <div>
-                          <span>Qatlamlar:</span>
-                          <strong>{m.requiredLayers.map((l) => l.key).join(", ")}</strong>
-                        </div>
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Dynamic Next Step / Goal Summary Card */}
-      <div className="roadmap-next-card" onClick={() => setModalOpen(true)}>
-        <div className="roadmap-next-icon">
-          {nextMilestone ? <Icon name="target" size={18} /> : <Icon name="award" size={18} />}
-        </div>
-        <div className="roadmap-next-content">
-          <div className="roadmap-next-title">
-            <span>
-              {nextMilestone
-                ? `Keyingi pog‘ona: ${nextMilestone.code} · ${nextMilestone.name}`
-                : "Eng yuqori pog‘ona: L5 · MASTER"}
-            </span>
-            {nextMilestone && remainingScore > 0 && (
-              <span className="roadmap-points-pill">{remainingScore} ball qoldi</span>
+                  <div
+                    className="cyber-node-group"
+                    onClick={() => setActiveTooltip(activeTooltip === m.level ? null : m.level)}
+                    onMouseEnter={() => setActiveTooltip(m.level)}
+                    onMouseLeave={() => setActiveTooltip(null)}
+                  >
+                    <div
+                      className={`cyber-node-badge ${
+                        isCompleted ? "is-completed" : isCurrent ? "is-current" : "is-locked"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Icon name="check" size={16} />
+                      ) : isCurrent ? (
+                        <span className="cyber-node-current-text">{m.code}</span>
+                      ) : (
+                        <span className="cyber-node-locked-text">{m.code}</span>
+                      )}
+
+                      {isCurrent && <span className="cyber-aura-ring" />}
+                    </div>
+
+                    <div className="cyber-node-meta">
+                      <strong className={`cyber-node-name ${isCurrent ? "active-glow" : ""}`}>
+                        {m.name}
+                      </strong>
+                      <span className="cyber-node-role">{m.roleTitle}</span>
+                      <span className="cyber-node-pts">≥{m.minScore}b</span>
+                    </div>
+
+                    {/* Interactive Glassmorphism Tooltip Popover */}
+                    {activeTooltip === m.level && (
+                      <div className="cyber-popover" onClick={(e) => e.stopPropagation()}>
+                        <div className="cyber-popover-header">
+                          <div className="cyber-popover-title">
+                            <strong>{m.code} · {m.name}</strong>
+                            <span>{m.title}</span>
+                          </div>
+                          <span
+                            className={`cyber-popover-status ${
+                              isCompleted ? "popover-done" : isCurrent ? "popover-now" : "popover-lock"
+                            }`}
+                          >
+                            {isCompleted ? "O‘zlashtirildi" : isCurrent ? "Hozirgi pog‘ona" : "Qulflangan"}
+                          </span>
+                        </div>
+                        <p className="cyber-popover-desc">{m.description}</p>
+                        <div className="cyber-popover-reqs">
+                          <div className="cyber-req-row">
+                            <span>Minimal ball:</span>
+                            <b>{m.minScore} / 100</b>
+                          </div>
+                          {m.minConfidence > 0 && (
+                            <div className="cyber-req-row">
+                              <span>Ishonchlilik:</span>
+                              <b>≥ {m.minConfidence}%</b>
+                            </div>
+                          )}
+                          <div className="cyber-req-row">
+                            <span>Kerakli qatlamlar:</span>
+                            <b>{m.requiredLayers.map((l) => l.key).join(", ")}</b>
+                          </div>
+                          <div className="cyber-req-row">
+                            <span>Imtiyoz:</span>
+                            <b className="cyber-reward-highlight">{m.rewardBadge}</b>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Gamified Quest & Next Target Banner */}
+          <div className="cyber-quest-card">
+            <div className="cyber-quest-left">
+              <div className="cyber-quest-icon">
+                {nextMilestone ? <Icon name={nextMilestone.iconName} size={20} /> : <Icon name="trophy" size={20} />}
+              </div>
+              <div className="cyber-quest-details">
+                <div className="cyber-quest-title">
+                  <span>
+                    {nextMilestone
+                      ? `KEYINGI MAQSAD: ${nextMilestone.code} · ${nextMilestone.name}`
+                      : "MAKSIMAL DARAJA: L5 · MASTER"}
+                  </span>
+                  {nextMilestone && remainingScore > 0 && (
+                    <span className="cyber-quest-pill">+{remainingScore} ball qoldi</span>
+                  )}
+                </div>
+                <div className="cyber-quest-desc">
+                  {nextMilestone
+                    ? blockers && blockers.length > 0
+                      ? blockers[0]
+                      : remainingScore > 0
+                      ? `${nextMilestone.title} darajasiga chiqish uchun yana ${remainingScore} ball to‘plang.`
+                      : remainingConf > 0
+                      ? `Ishonchlilikni yana ${remainingConf}% ga yetkazing.`
+                      : nextMilestone.nextTip
+                    : "Tabriklaymiz! Siz platformadagi barcha 5 qatlamni to‘liq zabt etdingiz."}
+                </div>
+
+                {nextMilestone && (
+                  <div className="cyber-meter-shell">
+                    <div className="cyber-meter-bar" style={{ width: `${nextProgressPct}%` }}>
+                      <span className="cyber-meter-shine" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {onStartAssessment && (
+              <button
+                type="button"
+                className="cyber-action-btn"
+                onClick={onStartAssessment}
+                title="Topshiriqni boshlash"
+              >
+                <span>Sinovdan o‘tish</span>
+                <Icon name="arrow" size={14} />
+              </button>
             )}
           </div>
-          <p className="roadmap-next-text">
-            {nextMilestone
-              ? blockers && blockers.length > 0
-                ? blockers[0]
-                : remainingScore > 0
-                ? `${nextMilestone.title} darajasiga o‘tish uchun yana ${remainingScore} ball to‘plang.`
-                : remainingConf > 0
-                ? `Ishonchlilikni yana ${remainingConf}% ga oshiring.`
-                : nextMilestone.nextTip
-              : "Barcha 5 qatlam to‘liq o‘zlashtirilgan va tasdiqlangan!"}
-          </p>
-
-          {nextMilestone && (
-            <div className="roadmap-mini-meter">
-              <div
-                className="roadmap-mini-fill"
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.max(
-                      10,
-                      Math.round(
-                        ((currentScore - (currentMilestone ? currentMilestone.minScore : 0)) /
-                          (nextMilestone.minScore - (currentMilestone ? currentMilestone.minScore : 0))) *
-                          100
-                      )
-                    )
-                  )}%`,
-                }}
-              />
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* Full Roadmap Modal */}
+      {/* MODE 2: Visual Interactive Skill Tree (Inline Expanded) */}
+      {viewMode === "tree" && (
+        <div className="cyber-tree-body">
+          <div className="cyber-tree-list">
+            {MILESTONES.map((m) => {
+              const isPassed = currentRank > m.level;
+              const isCurrent = currentRank === m.level || (currentRank === 0 && m.level === 1);
+              const isLocked = currentRank < m.level && !isCurrent;
+
+              return (
+                <div
+                  key={m.code}
+                  className={`cyber-tree-card ${isPassed ? "tree-passed" : isCurrent ? "tree-current" : "tree-locked"}`}
+                >
+                  <div className="cyber-tree-card-left">
+                    <div className="cyber-tree-badge-box">
+                      <Icon name={m.iconName} size={20} />
+                    </div>
+                    <div className="cyber-tree-code">{m.code}</div>
+                  </div>
+
+                  <div className="cyber-tree-card-mid">
+                    <div className="cyber-tree-header-row">
+                      <h4>{m.code} · {m.name} ({m.title})</h4>
+                      <span className={`cyber-tree-status-tag ${isPassed ? "tag-passed" : isCurrent ? "tag-current" : "tag-locked"}`}>
+                        {isPassed ? "O‘zlashtirilgan ✅" : isCurrent ? "Joriy pog‘ona 📍" : "Qulflangan 🔒"}
+                      </span>
+                    </div>
+                    <p className="cyber-tree-desc">{m.description}</p>
+                    <div className="cyber-tree-chips">
+                      <span className="cyber-chip">Ball: <b>≥{m.minScore}</b></span>
+                      {m.minConfidence > 0 && <span className="cyber-chip">Ishonch: <b>≥{m.minConfidence}%</b></span>}
+                      <span className="cyber-chip reward">Imtiyoz: <b>{m.rewardBadge}</b></span>
+                    </div>
+                  </div>
+
+                  <div className="cyber-tree-card-right">
+                    {isCurrent && onStartAssessment ? (
+                      <button type="button" className="cyber-tree-action-btn" onClick={onStartAssessment}>
+                        Topshiriqni yechish <Icon name="arrow" size={13} />
+                      </button>
+                    ) : isPassed ? (
+                      <span className="cyber-passed-badge"><Icon name="checkCircle" size={16} /> Tasdiqlangan</span>
+                    ) : (
+                      <span className="cyber-locked-badge"><Icon name="lock" size={14} /> Qulflangan</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Full Roadmap Modal (Opened via Expand button) */}
       {modalOpen && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setModalOpen(false)}>
           <div
-            className="modal roadmap-modal"
+            className="modal cyber-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="roadmap-modal-title"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <button
-              className="modal-close"
-              aria-label="Yopish"
-              onClick={() => setModalOpen(false)}
-            >
+            <button className="modal-close" aria-label="Yopish" onClick={() => setModalOpen(false)}>
               <Icon name="close" size={18} />
             </button>
 
@@ -329,30 +460,30 @@ export default function SkillRoadmap({
               <Icon name="dna" size={24} />
             </div>
 
-            <div className="roadmap-modal-header">
-              <p className="eyebrow">KOMPETENSIYA MODELI · 5 QATLAM</p>
-              <h2 id="roadmap-modal-title">{directionTitle} — Rivojlanish Yo‘l Xaritasi</h2>
-              <p>
-                SKILL DNA platformasida kasbiy malaka rasmiy 5 bosqich (L1–L5) orqali o‘lchanadi.
-                Har bir pog‘ona yangi amaliy qatlamlar va isbotlangan dalillar bilan ochiladi.
+            <div className="cyber-modal-head">
+              <p className="eyebrow" style={{ color: "#38bdf8" }}>KASBIY KOMPETENSIYA MODELI</p>
+              <h2 id="roadmap-modal-title" style={{ color: "#fff" }}>{directionTitle} — To‘liq Rivojlanish Yo‘l Xaritasi</h2>
+              <p style={{ color: "#94a3b8" }}>
+                Platformada kasbiy mahorat 5 ta rasmiy bosqich (L1–L5) orqali o‘lchanadi.
+                Har bir bosqich yangi amaliy qatlamlar va isbotlangan dalillar bilan ochiladi.
               </p>
             </div>
 
-            {/* Current Position Banner inside Modal */}
-            <div className="roadmap-modal-current">
-              <div className="roadmap-modal-current-badge">
-                <Icon name="sparkles" size={16} />
-                <span>Hozirgi holatingiz:</span>
+            {/* Current Position Summary */}
+            <div className="cyber-modal-pos-banner">
+              <div className="cyber-modal-pos-left">
+                <Icon name="sparkles" size={18} />
+                <span>Sizning joriy holatingiz:</span>
                 <strong>{currentLevel}</strong>
               </div>
-              <div className="roadmap-modal-stats">
-                <span>Skill Score: <b>{currentScore}/100</b></span>
-                <span className="sep">•</span>
+              <div className="cyber-modal-pos-right">
+                <span>Skill Score: <b>{currentScore} / 100</b></span>
+                <span>•</span>
                 <span>Ishonchlilik: <b>{confidence}%</b></span>
                 {nextMilestone && (
                   <>
-                    <span className="sep">•</span>
-                    <span style={{ color: "var(--accent)" }}>
+                    <span>•</span>
+                    <span style={{ color: "#38bdf8" }}>
                       Maqsad: <b>{nextMilestone.code} {nextMilestone.name}</b> ({remainingScore} ball qoldi)
                     </span>
                   </>
@@ -360,8 +491,8 @@ export default function SkillRoadmap({
               </div>
             </div>
 
-            {/* Timeline Cards for all 5 milestones */}
-            <div className="roadmap-timeline">
+            {/* All 5 Stage Cards in Modal */}
+            <div className="cyber-modal-timeline">
               {MILESTONES.map((m) => {
                 const isPassed = currentRank > m.level;
                 const isCurrent = currentRank === m.level || (currentRank === 0 && m.level === 1);
@@ -370,92 +501,73 @@ export default function SkillRoadmap({
                 return (
                   <div
                     key={m.code}
-                    className={`roadmap-card-item ${
-                      isPassed ? "is-passed" : isCurrent ? "is-current" : "is-locked"
-                    }`}
+                    className={`cyber-modal-card ${isPassed ? "modal-passed" : isCurrent ? "modal-current" : "modal-locked"}`}
                   >
-                    <div className="roadmap-card-status">
-                      <div className={`roadmap-card-pill ${isPassed ? "pill-passed" : isCurrent ? "pill-current" : "pill-locked"}`}>
-                        {isPassed ? (
-                          <><Icon name="checkCircle" size={15} /> O‘zlashtirildi</>
-                        ) : isCurrent ? (
-                          <><Icon name="target" size={15} /> Joriy daraja</>
-                        ) : (
-                          <><Icon name="lock" size={14} /> Qulflangan</>
-                        )}
+                    <div className="cyber-modal-card-top">
+                      <div className="cyber-modal-stage-num">{m.code}</div>
+                      <div>
+                        <h3>{m.code} · {m.name} — {m.title}</h3>
+                        <div className="cyber-modal-role-pill">{m.roleTitle}</div>
                       </div>
-                      <span className="roadmap-card-level-tag">{m.code}</span>
+                      <span className={`cyber-modal-state-badge ${isPassed ? "badge-done" : isCurrent ? "badge-active" : "badge-wait"}`}>
+                        {isPassed ? "O‘zlashtirildi" : isCurrent ? "Joriy pog‘ona" : "Qulflangan"}
+                      </span>
                     </div>
 
-                    <div className="roadmap-card-body">
-                      <div className="roadmap-card-title-row">
-                        <h3>{m.code} · {m.name} ({m.title})</h3>
-                        <span className="roadmap-card-sub">{m.subtitle}</span>
+                    <p className="cyber-modal-desc">{m.description}</p>
+
+                    <div className="cyber-modal-req-grid">
+                      <div className="cyber-modal-req-box">
+                        <span>Minimal ball:</span>
+                        <b>≥ {m.minScore} ball</b>
+                        <small>{currentScore >= m.minScore ? "✅ Yetarli" : `(${currentScore}/${m.minScore})`}</small>
                       </div>
-                      <p className="roadmap-card-desc">{m.description}</p>
-
-                      <div className="roadmap-card-requirements">
-                        <div className="roadmap-req-item">
-                          <span>Ball:</span>
-                          <strong>≥ {m.minScore} ball</strong>
-                          <small className={currentScore >= m.minScore ? "text-success" : "text-muted"}>
-                            (sizda: {currentScore})
-                          </small>
-                        </div>
-
-                        {m.minConfidence > 0 && (
-                          <div className="roadmap-req-item">
-                            <span>Ishonch:</span>
-                            <strong>≥ {m.minConfidence}%</strong>
-                            <small className={confidence >= m.minConfidence ? "text-success" : "text-muted"}>
-                              (sizda: {confidence}%)
-                            </small>
-                          </div>
-                        )}
-
-                        <div className="roadmap-req-item full">
-                          <span>Kerakli qatlamlar:</span>
-                          <div className="roadmap-req-layers">
-                            {m.requiredLayers.map((l) => (
-                              <span key={l.key} className={`layer-chip chip-${l.tone}`}>
-                                {l.key} ({l.label})
-                              </span>
-                            ))}
-                          </div>
+                      <div className="cyber-modal-req-box">
+                        <span>Ishonchlilik:</span>
+                        <b>≥ {m.minConfidence}%</b>
+                        <small>{confidence >= m.minConfidence ? "✅ Yetarli" : `(${confidence}/${m.minConfidence}%)`}</small>
+                      </div>
+                      <div className="cyber-modal-req-box">
+                        <span>Kerakli qatlamlar:</span>
+                        <div className="cyber-modal-chips">
+                          {m.requiredLayers.map((l) => (
+                            <span key={l.key} className={`chip-${l.tone}`}>{l.key}</span>
+                          ))}
                         </div>
                       </div>
+                      <div className="cyber-modal-req-box">
+                        <span>Ochilgan imtiyoz:</span>
+                        <b style={{ color: "#38bdf8" }}>{m.rewardBadge}</b>
+                      </div>
+                    </div>
 
-                      <div className="roadmap-card-action-box">
-                        <Icon name="arrow" size={14} />
+                    <div className="cyber-modal-action-row">
+                      <div className="cyber-modal-tip">
+                        <Icon name="arrow" size={13} />
                         <span><strong>Tavsiya:</strong> {m.nextTip}</span>
                       </div>
+                      {isCurrent && onStartAssessment && (
+                        <button
+                          type="button"
+                          className="primary-button"
+                          onClick={() => {
+                            setModalOpen(false);
+                            onStartAssessment();
+                          }}
+                        >
+                          Topshiriqni boshlash
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="roadmap-modal-actions">
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setModalOpen(false)}
-              >
+            <div className="cyber-modal-footer">
+              <button type="button" className="secondary-button" onClick={() => setModalOpen(false)}>
                 Yopish
               </button>
-              {onStartAssessment && (
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => {
-                    setModalOpen(false);
-                    onStartAssessment();
-                  }}
-                >
-                  <Icon name="arrow" size={16} />
-                  <span>Baholash topshiriqlarini bajarish</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
