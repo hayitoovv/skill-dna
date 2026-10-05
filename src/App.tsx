@@ -213,8 +213,9 @@ export default function App() {
               ? (me.role.toLowerCase() as Role)
               : null;
 
-            // Prioritize explicitly selected active role, then backend role, then parsed role
-            const effectiveRole: Role = validActive || backendRole || (parsedUser?.role as Role) || "student";
+            // Only a super admin may view another portal; everyone else is always in their own role's portal
+            const effectiveRole: Role =
+              me.role === "super_admin" ? validActive || "super_admin" : backendRole || "student";
 
             const syncedUser: User = {
               id: me.id,
@@ -309,15 +310,17 @@ export default function App() {
     return <AuthScreen onLogin={handleLogin} />;
   }
 
-  const role: Role = (activeRole in roleLabels)
-    ? activeRole
-    : (currentUser?.role && currentUser.role.toLowerCase() in roleLabels)
-      ? (currentUser.role.toLowerCase() as Role)
-      : "student";
+  const pinnedRole = accountRole && accountRole !== "super_admin" && accountRole in roleLabels ? (accountRole as Role) : null;
+  const role: Role = pinnedRole
+    ?? ((activeRole in roleLabels)
+      ? activeRole
+      : (currentUser?.role && currentUser.role.toLowerCase() in roleLabels)
+        ? (currentUser.role.toLowerCase() as Role)
+        : "student");
   const currentRoleInfo = roleLabels[role] || roleLabels.student;
 
   const handleRoleChange = async (newRole: Role) => {
-    if (!newRole || !(newRole in roleLabels)) return;
+    if (!isSuperAdmin || !newRole || !(newRole in roleLabels)) return;
 
     setActiveRole(newRole);
     localStorage.setItem("skill_dna_active_role", newRole);
@@ -374,7 +377,8 @@ export default function App() {
       <aside className="sidebar">
         <Logo showTagline={true} />
 
-        {/* Role Selector Card */}
+        {/* Portal switcher: super admin only (other roles always see their own portal) */}
+        {isSuperAdmin && (
         <div className="role-switcher">
           <label htmlFor="role-select">{t("shell.activePortal")}</label>
           <select
@@ -387,9 +391,10 @@ export default function App() {
             <option value="employer">{t("roleopt.employer")}</option>
             <option value="university">{t("roleopt.university")}</option>
             <option value="moderator">{t("roleopt.moderator")}</option>
-            {isSuperAdmin && <option value="super_admin">{t("roleopt.super_admin")}</option>}
+            <option value="super_admin">{t("roleopt.super_admin")}</option>
           </select>
         </div>
+        )}
 
         {/* Navigation based on Role */}
         {role === "student" && (
