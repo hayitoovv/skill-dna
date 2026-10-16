@@ -6,10 +6,13 @@ import { employerCandidates } from "../../data/ontology";
 import type { EmployerCandidate, DirectionCode } from "../../types";
 import { api, ApiError, hasSession } from "../../services/api";
 import InviteModal from "./InviteModal";
+import EmployerVacancies from "./EmployerVacancies";
+import EmployerSponsorship from "./EmployerSponsorship";
+import { FEATURES } from "../../config/features";
 import VerifiedCandidates from "./VerifiedCandidates";
 import InvitesLog from "./InvitesLog";
 
-export type EmployerTab = "search" | "verified" | "invites";
+export type EmployerTab = "search" | "verified" | "vacancies" | "sponsorship" | "invites";
 
 type DataMode = "loading" | "live" | "demo";
 
@@ -276,7 +279,9 @@ export default function EmployerPortal({ activeTab = "search", onTabChange }: Em
     : 0;
 
   if (activeTab === "verified") return <VerifiedCandidates />;
-  if (activeTab === "invites") return <InvitesLog onFindCandidates={onTabChange ? () => onTabChange("verified") : undefined} />;
+  if (activeTab === "vacancies") return <EmployerVacancies />;
+  if (activeTab === "sponsorship" && FEATURES.sponsorships) return <EmployerSponsorship />;
+  if (activeTab === "invites") return <InvitesLog onFindCandidates={onTabChange ? () => onTabChange("search") : undefined} />;
 
   return (
     <div className="page">
@@ -284,7 +289,7 @@ export default function EmployerPortal({ activeTab = "search", onTabChange }: Em
       <section className="welcome-row">
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <p className="eyebrow" style={{ margin: 0 }}>ISH BERUVCHI PANELI · TALENT SEARCH</p>
+            <p className="eyebrow" style={{ margin: 0 }}>TALENT SEARCH</p>
             <span
               title={
                 isLive
@@ -315,101 +320,6 @@ export default function EmployerPortal({ activeTab = "search", onTabChange }: Em
           <p className="subtitle">
             Rezyumega emas, 5 qatlamli tekshirilgan dalillar (Evidence Graph)ga asoslangan ishonchli saralash.
           </p>
-        </div>
-      </section>
-
-      {/* Quick Summary Stats Bar */}
-      <section className="employer-stats-row">
-        <div className="employer-stat-pill">
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
-              background: "var(--accent-soft)",
-              color: "var(--accent)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="users" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-              Mos nomzodlar
-            </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>{filteredCandidates.length} ta mutaxassis</strong>
-          </div>
-        </div>
-
-        <div className="employer-stat-pill">
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
-              background: "var(--success-soft)",
-              color: "var(--success)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="award" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-              O‘rtacha moslik
-            </div>
-            <strong style={{ fontSize: "19px", color: "var(--success)" }}>
-              {filteredCandidates.length > 0
-                ? `${Math.round(filteredCandidates.reduce((acc, c) => acc + c.matchScore, 0) / filteredCandidates.length)}%`
-                : "0%"}
-            </strong>
-          </div>
-        </div>
-
-        <div className="employer-stat-pill">
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
-              background: "var(--warning-soft)",
-              color: "var(--warning)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="shieldCheck" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-              Ishonchlilik kafolati
-            </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>5 Qatlamli Viva</strong>
-          </div>
-        </div>
-
-        <div className="employer-stat-pill">
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
-              background: "var(--violet-soft)",
-              color: "var(--violet)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="workflow" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-              Raqamli sertifikat
-            </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>Open Badges 3.0</strong>
-          </div>
         </div>
       </section>
 

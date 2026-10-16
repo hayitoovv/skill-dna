@@ -4,8 +4,10 @@ import { api, hasSession } from "../../services/api";
 import { universityAnalyticsData } from "../../data/ontology";
 import type { DirectionCode } from "../../types";
 import { printRectorReport } from "./rectorReport";
+import UniversityRating from "./UniversityRating";
+import UniversityCompanies from "./UniversityCompanies";
 
-export type AdminTab = "dashboard" | "analytics" | "groups" | "teachers" | "students" | "curriculum" | "levels";
+export type AdminTab = "dashboard" | "analytics" | "groups" | "teachers" | "students" | "curriculum" | "levels" | "companies";
 
 export interface UniversityDashboardProps {
   activeTab?: AdminTab;
@@ -1262,6 +1264,8 @@ export default function UniversityDashboard({
       ? analyticsStatus
       : activeTab === "groups"
       ? groupsStatus
+      : activeTab === "companies"
+      ? "live"
       : "demo";
 
   const renderDirectionsAndLevels = () => (
@@ -1383,7 +1387,7 @@ export default function UniversityDashboard({
     </div>
   );
 
-  const renderGapGrid = (variant: "compact" | "full") => {
+  const renderGapGrid = () => {
     if (gapViews.length === 0) {
       return (
         <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}>
@@ -1391,23 +1395,22 @@ export default function UniversityDashboard({
         </p>
       );
     }
-    const full = variant === "full";
     return (
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(auto-fit, minmax(${full ? 340 : 320}px, 1fr))`,
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
           gap: "16px",
         }}
       >
         {gapViews.map((gap) => (
           <div
             key={gap.key}
-            className={full ? "card" : undefined}
+            className="card"
             style={{
-              padding: full ? "22px" : "20px",
+              padding: "22px",
               borderRadius: "12px",
-              border: full && gap.severe ? "1px solid var(--danger-ring)" : "1px solid var(--border)",
+              border: gap.severe ? "1px solid var(--danger-ring)" : "1px solid var(--border)",
               background: gap.severe ? "var(--danger-soft)" : "var(--surface-2)",
             }}
           >
@@ -1416,16 +1419,16 @@ export default function UniversityDashboard({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: full ? "10px" : "8px",
+                marginBottom: "10px",
                 gap: "8px",
               }}
             >
-              <span style={{ fontSize: "12px", fontWeight: 800, color: full && gap.severe ? "var(--danger-fg)" : "var(--muted)" }}>
+              <span style={{ fontSize: "12px", fontWeight: 800, color: gap.severe ? "var(--danger-fg)" : "var(--muted)" }}>
                 {gap.direction}
               </span>
               <span
                 style={{
-                  padding: full ? "4px 10px" : "4px 9px",
+                  padding: "4px 10px",
                   borderRadius: "12px",
                   background: gap.severe ? "var(--danger-soft)" : "var(--surface-3)",
                   color: gap.severe ? "var(--danger)" : "var(--text-3)",
@@ -1436,13 +1439,13 @@ export default function UniversityDashboard({
                 {gap.badge}
               </span>
             </div>
-            <h3 style={{ margin: "4px 0 8px", fontSize: full ? "18px" : "17px", color: "var(--navy)" }}>{gap.skill}</h3>
+            <h3 style={{ margin: "4px 0 8px", fontSize: "18px", color: "var(--navy)" }}>{gap.skill}</h3>
             {gap.meta && (
-              <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: full ? "1.6" : "1.5" }}>{gap.meta}</p>
+              <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.6" }}>{gap.meta}</p>
             )}
             {gap.recommendation && (
-              <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: full ? "1.6" : "1.5" }}>
-                <strong>{full ? "AI Tavsiyasi:" : "Tavsiya:"}</strong> {gap.recommendation}
+              <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-3)", lineHeight: "1.6" }}>
+                <strong>AI Tavsiyasi:</strong> {gap.recommendation}
               </p>
             )}
           </div>
@@ -1450,19 +1453,6 @@ export default function UniversityDashboard({
       </div>
     );
   };
-
-  const renderGapsSection = () => (
-    <section className="card" style={{ padding: "26px" }}>
-      <div className="card-heading" style={{ marginBottom: "18px" }}>
-        <div>
-          <p className="card-kicker">O‘QUV DASTURI TAVSIYALARI</p>
-          <h2>Aniqlangan "Oq dog‘lar" va o‘quv rejasi yangilanishlari</h2>
-        </div>
-        <span className="level-badge">{isLive ? "Eng past o‘rtacha ballli ko‘nikmalar" : "AI Tahlil natijasi"}</span>
-      </div>
-      {renderGapGrid("compact")}
-    </section>
-  );
 
   const renderLiveGroupsPanel = () => {
     if (!groupsLive) return null;
@@ -2338,7 +2328,14 @@ export default function UniversityDashboard({
               marginBottom: "26px",
             }}
           >
-            <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
+            <div
+              className="card overview-stat"
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveTab("students")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveTab("students"); } }}
+              style={{ padding: "14px 12px", gap: "10px", cursor: "pointer" }}
+            >
               <div className="stat-icon blue" style={{ flexShrink: 0 }}>
                 <Icon name="users" />
               </div>
@@ -2374,7 +2371,14 @@ export default function UniversityDashboard({
                 <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{isLive ? `${analytics!.open_flags} ta` : `${universityAnalyticsData.verifiedCredentialsIssued} ta`}</strong>
               </div>
             </div>
-            <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
+            <div
+              className="card overview-stat"
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveTab("teachers")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveTab("teachers"); } }}
+              style={{ padding: "14px 12px", gap: "10px", cursor: "pointer" }}
+            >
               <div className="stat-icon blue" style={{ flexShrink: 0 }}>
                 <Icon name="user" />
               </div>
@@ -2383,7 +2387,14 @@ export default function UniversityDashboard({
                 <strong style={{ fontSize: "17px", whiteSpace: "nowrap" }}>{teachers.length} nafar{isLive ? " (demo)" : " (faol)"}</strong>
               </div>
             </div>
-            <div className="card overview-stat" style={{ padding: "14px 12px", gap: "10px" }}>
+            <div
+              className="card overview-stat"
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveTab("groups")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveTab("groups"); } }}
+              style={{ padding: "14px 12px", gap: "10px", cursor: "pointer" }}
+            >
               <div className="stat-icon emerald" style={{ flexShrink: 0 }}>
                 <Icon name="users" />
               </div>
@@ -2394,75 +2405,29 @@ export default function UniversityDashboard({
             </div>
           </div>
 
-          {groupsLive ? (
-            renderLiveGroupsPanel()
-          ) : (
-          <>
-          {/* Academic Groups & Curators Status Overview (demo / local data) */}
-          <div className="card" style={{ padding: "22px", marginBottom: "26px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
-              <div>
-                <p className="card-kicker">GURUHLAR VA BIRIKTIRUVLAR HOLATI</p>
-                <h3 style={{ margin: "4px 0 0", fontSize: "17px", color: "var(--navy)" }}>
-                  Akademik Guruhlar va Mas’ul O‘qituvchilar Holati
-                </h3>
-              </div>
+          {/* Quick links to owner tabs (no duplicated data) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px" }}>
+            {([
+              { tab: "groups", icon: "users", title: "Guruhlar", desc: "Guruhlar, kuratorlar va talabalar biriktiruvi" },
+              { tab: "curriculum", icon: "alertTriangle", title: "O‘quv reja va oq dog‘lar", desc: "Zaif ko‘nikmalar va AI tavsiyalari" },
+              { tab: "levels", icon: "trophy", title: "Darajalar taqsimoti", desc: "L1–L5 malaka va yo‘nalishlar tayyorligi" },
+            ] as const).map((l) => (
               <button
-                onClick={() => setActiveTab("groups")}
-                style={{
-                  background: "transparent",
-                  border: 0,
-                  color: "var(--royal)",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                key={l.tab}
+                type="button"
+                className="card"
+                onClick={() => setActiveTab(l.tab)}
+                style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", textAlign: "left", font: "inherit", color: "inherit" }}
               >
-                Barcha guruhlarni boshqarish ({groups.length}) →
+                <Icon name={l.icon} size={18} style={{ color: "var(--royal)", flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <strong style={{ display: "block", fontSize: "14px", color: "var(--navy)" }}>{l.title}</strong>
+                  <span style={{ display: "block", fontSize: "12.5px", color: "var(--muted)" }}>{l.desc}</span>
+                </span>
+                <Icon name="arrow" size={16} style={{ color: "var(--royal)", flexShrink: 0 }} />
               </button>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "12px" }}>
-              {groups.map((g) => (
-                <div
-                  key={g.id}
-                  style={{
-                    padding: "14px",
-                    borderRadius: "10px",
-                    background: "var(--surface-2)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                    <strong style={{ fontSize: "15px", color: "var(--navy)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                      <Icon name="users" size={15} /> {g.code}
-                    </strong>
-                    <span className="level-badge">{g.course}</span>
-                  </div>
-                  <div style={{ fontSize: "12.5px", color: "var(--muted)", marginBottom: "4px" }}>
-                    Yo‘nalish: <strong style={{ color: "var(--navy)" }}>{g.directionName}</strong>
-                  </div>
-                  <div style={{ fontSize: "12.5px", color: "var(--text-3)", marginBottom: "8px" }}>
-                    Kurator:{" "}
-                    <strong style={{ color: g.curatorId && g.curatorName && g.curatorName !== "Biriktirilmagan" ? "var(--royal)" : "var(--warning-fg)" }}>
-                      {g.curatorName && g.curatorName !== "Biriktirilmagan" ? g.curatorName : "Biriktirilmagan"}
-                    </strong>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", borderTop: "1px solid var(--border)", paddingTop: "8px" }}>
-                    <span>Talabalar: <strong>{g.studentsCount} nafar</strong></span>
-                    <span>O‘rtacha: <strong style={{ color: "var(--success-400)" }}>{g.avgScore ? `${g.avgScore} ball` : "Yangi"}</strong></span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-          </>
-          )}
-
-          {/* Directions comparison & Level distribution */}
-          {renderDirectionsAndLevels()}
-
-          {renderGapsSection()}
         </div>
       )}
 
@@ -2478,16 +2443,9 @@ export default function UniversityDashboard({
                 Talabalarning 5 qatlamli amaliy dalillari tahlili asosida o‘quv rejaga kiritilishi zarur bo‘lgan amaliy modullar.
               </p>
             </div>
-            <button
-              className="primary-button"
-              onClick={handleDownload}
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-            >
-              <Icon name="download" size={16} /> Tavsiyalar hisobotini olish (PDF)
-            </button>
           </div>
 
-          {renderGapGrid("full")}
+          {renderGapGrid()}
         </div>
       )}
 
@@ -2506,8 +2464,11 @@ export default function UniversityDashboard({
           </div>
 
           {renderDirectionsAndLevels()}
+          {isLive && <UniversityRating />}
         </div>
       )}
+
+      {activeTab === "companies" && <UniversityCompanies />}
 
       {/* MODAL 1: ADD TEACHER */}
       {showAddTeacher && (

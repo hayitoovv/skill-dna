@@ -10,6 +10,7 @@ import ContentEditor, { setEditMode } from "./content/ContentEditor";
 import type { EmployerTab } from "./components/employer/EmployerPortal";
 import UniversityDashboard from "./components/university/UniversityDashboard";
 import ModeratorQueue from "./components/moderator/ModeratorQueue";
+import QuestionBank from "./components/teacher/QuestionBank";
 import AuthScreen from "./components/auth/AuthScreen";
 import AssessmentModal from "./components/student/AssessmentModal";
 import SecurityModal from "./components/common/SecurityModal";
@@ -18,6 +19,7 @@ import type { DirectionCode, Role, User } from "./types";
 import { demoUsers } from "./data/ontology";
 import { api, hasSession, SESSION_EXPIRED_EVENT, PROFILE_UPDATED_EVENT } from "./services/api";
 import { LanguageSwitcher, useI18n } from "./i18n";
+import { FEATURES } from "./config/features";
 
 const roleLabels: Record<Role, { title: string; badge: string; icon: any }> = {
   student: { title: "Talaba kabineti", badge: "STUDENT", icon: "dna" },
@@ -81,7 +83,7 @@ export default function App() {
       const saved = localStorage.getItem("skill_dna_page");
       if (
         saved &&
-        ["dashboard", "dna", "tasks", "career", "certificates", "settings"].includes(saved)
+        ["dashboard", "dna", "tasks", "rating", "career", "companies", "certificates", "settings"].includes(saved)
       ) {
         return saved as PageKey;
       }
@@ -159,7 +161,7 @@ export default function App() {
   const [employerTab, setEmployerTab] = useState<EmployerTab>(() => {
     try {
       const saved = localStorage.getItem("skill_dna_employer_tab");
-      if (saved === "search" || saved === "verified" || saved === "invites") return saved;
+      if (saved === "search" || saved === "verified" || saved === "vacancies" || (saved === "sponsorship" && FEATURES.sponsorships) || saved === "invites") return saved;
     } catch {}
     return "search";
   });
@@ -171,17 +173,17 @@ export default function App() {
     } catch {}
   };
 
-  const [teacherTab, setTeacherTab] = useState<"heatmap" | "queue" | "remedial" | "viva">(() => {
+  const [teacherTab, setTeacherTab] = useState<"heatmap" | "queue" | "remedial" | "viva" | "questions">(() => {
     try {
       const saved = localStorage.getItem("skill_dna_teacher_tab");
-      if (saved && ["heatmap", "queue", "remedial", "viva"].includes(saved)) {
-        return saved as "heatmap" | "queue" | "remedial" | "viva";
+      if (saved && ["heatmap", "queue", "remedial", "viva", "questions"].includes(saved)) {
+        return saved as "heatmap" | "queue" | "remedial" | "viva" | "questions";
       }
     } catch {}
     return "heatmap";
   });
 
-  const handleTeacherTabChange = (tab: "heatmap" | "queue" | "remedial" | "viva") => {
+  const handleTeacherTabChange = (tab: "heatmap" | "queue" | "remedial" | "viva" | "questions") => {
     setTeacherTab(tab);
     try {
       localStorage.setItem("skill_dna_teacher_tab", tab);
@@ -189,17 +191,17 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const [moderatorTab, setModeratorTab] = useState<"flags" | "transcripts" | "rules">(() => {
+  const [moderatorTab, setModeratorTab] = useState<"flags" | "transcripts" | "rules" | "questions">(() => {
     try {
       const saved = localStorage.getItem("skill_dna_moderator_tab");
-      if (saved && ["flags", "transcripts", "rules"].includes(saved)) {
-        return saved as "flags" | "transcripts" | "rules";
+      if (saved && ["flags", "transcripts", "rules", "questions"].includes(saved)) {
+        return saved as "flags" | "transcripts" | "rules" | "questions";
       }
     } catch {}
     return "flags";
   });
 
-  const handleModeratorTabChange = (tab: "flags" | "transcripts" | "rules") => {
+  const handleModeratorTabChange = (tab: "flags" | "transcripts" | "rules" | "questions") => {
     setModeratorTab(tab);
     try {
       localStorage.setItem("skill_dna_moderator_tab", tab);
@@ -461,10 +463,16 @@ export default function App() {
               <Icon name="dna" /> {t("nav.myDna")}
             </button>
             <button className={`nav-item ${activePage === "tasks" ? "active" : ""}`} onClick={() => goTo("tasks")}>
-              <Icon name="file" /> {t("nav.tasks")} <span className="nav-pill">5</span>
+              <Icon name="file" /> {t("nav.tasks")}
+            </button>
+            <button className={`nav-item ${activePage === "rating" ? "active" : ""}`} onClick={() => goTo("rating")}>
+              <Icon name="trophy" /> {t("nav.rating")}
             </button>
             <button className={`nav-item ${activePage === "career" ? "active" : ""}`} onClick={() => goTo("career")}>
               <Icon name="briefcase" /> {t("nav.career")}
+            </button>
+            <button className={`nav-item ${activePage === "companies" ? "active" : ""}`} onClick={() => goTo("companies")}>
+              <Icon name="building" /> {t("nav.companies")}
             </button>
             <div className="nav-label section">{t("nav.profileSettings")}</div>
             <button
@@ -509,6 +517,12 @@ export default function App() {
             >
               <Icon name="file" /> {t("nav.vivaResults")}
             </button>
+            <button
+              className={`nav-item ${teacherTab === "questions" ? "active" : ""}`}
+              onClick={() => handleTeacherTabChange("questions")}
+            >
+              <Icon name="bookOpen" /> {t("nav.questionBank")}
+            </button>
           </nav>
         )}
 
@@ -546,6 +560,20 @@ export default function App() {
               <Icon name="shield" /> {t("nav.verified")}
             </button>
             <button
+              className={`nav-item ${employerTab === "vacancies" ? "active" : ""}`}
+              onClick={() => handleEmployerTabChange("vacancies")}
+            >
+              <Icon name="file" /> {t("nav.vacancies")}
+            </button>
+            {FEATURES.sponsorships && (
+              <button
+                className={`nav-item ${employerTab === "sponsorship" ? "active" : ""}`}
+                onClick={() => handleEmployerTabChange("sponsorship")}
+              >
+                <Icon name="award" /> {t("nav.sponsorship")}
+              </button>
+            )}
+            <button
               className={`nav-item ${employerTab === "invites" ? "active" : ""}`}
               onClick={() => handleEmployerTabChange("invites")}
             >
@@ -569,19 +597,19 @@ export default function App() {
               className={`nav-item ${univTab === "groups" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("groups")}
             >
-              <Icon name="users" /> {t("nav.groups")} <span className="nav-pill">4</span>
+              <Icon name="users" /> {t("nav.groups")}
             </button>
             <button
               className={`nav-item ${univTab === "teachers" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("teachers")}
             >
-              <Icon name="user" /> {t("nav.teachers")} <span className="nav-pill">4</span>
+              <Icon name="user" /> {t("nav.teachers")}
             </button>
             <button
               className={`nav-item ${univTab === "students" ? "active" : ""}`}
               onClick={() => handleUnivTabChange("students")}
             >
-              <Icon name="dna" /> {t("nav.students")} <span className="nav-pill">6</span>
+              <Icon name="dna" /> {t("nav.students")}
             </button>
 
             <div className="nav-label section">{t("nav.academicAnalysis")}</div>
@@ -596,6 +624,12 @@ export default function App() {
               onClick={() => handleUnivTabChange("levels")}
             >
               <Icon name="award" /> {t("nav.levels")}
+            </button>
+            <button
+              className={`nav-item ${univTab === "companies" ? "active" : ""}`}
+              onClick={() => handleUnivTabChange("companies")}
+            >
+              <Icon name="building" /> {t("nav.companies")}
             </button>
           </nav>
         )}
@@ -620,6 +654,12 @@ export default function App() {
               onClick={() => handleModeratorTabChange("rules")}
             >
               <Icon name="settings" /> {t("nav.ontology")}
+            </button>
+            <button
+              className={`nav-item ${moderatorTab === "questions" ? "active" : ""}`}
+              onClick={() => handleModeratorTabChange("questions")}
+            >
+              <Icon name="bookOpen" /> {t("nav.questionBank")}
             </button>
           </nav>
         )}
@@ -741,12 +781,6 @@ export default function App() {
               </button>
             )}
             <NotificationBell label={t("shell.notifications")} onNavigate={openNotificationLink} />
-            <div className="top-avatar">{currentUser.photo ? <img src={currentUser.photo} alt="" /> : currentUser.avatar}</div>
-
-            <button className="logout-button" onClick={handleLogout} title="Hisobdan chiqish">
-              <Icon name="logout" size={14} />
-              <span className="hidden sm:inline">{t("shell.logout")}</span>
-            </button>
           </div>
         </header>
 
@@ -759,15 +793,16 @@ export default function App() {
             goToPage={goTo}
             user={currentUser}
             assessmentKey={assessmentScoreVersion}
+            onAssessmentCompleted={() => setAssessmentScoreVersion((v) => v + 1)}
           />
         )}
 
-        {role === "teacher" && (
-          <TeacherPortal
-            activeTab={teacherTab}
-            onTabChange={handleTeacherTabChange}
-          />
-        )}
+        {role === "teacher" &&
+          (teacherTab === "questions" ? (
+            <QuestionBank role="teacher" />
+          ) : (
+            <TeacherPortal activeTab={teacherTab} onTabChange={handleTeacherTabChange} />
+          ))}
 
         {role === "employer" && <EmployerPortal activeTab={employerTab} onTabChange={handleEmployerTabChange} />}
         {role === "super_admin" && isSuperAdmin && (
@@ -778,12 +813,12 @@ export default function App() {
           <UniversityDashboard activeTab={univTab as any} onTabChange={handleUnivTabChange} />
         )}
 
-        {role === "moderator" && (
-          <ModeratorQueue
-            activeTab={moderatorTab}
-            onTabChange={handleModeratorTabChange}
-          />
-        )}
+        {role === "moderator" &&
+          (moderatorTab === "questions" ? (
+            <QuestionBank role="moderator" />
+          ) : (
+            <ModeratorQueue activeTab={moderatorTab} onTabChange={handleModeratorTabChange} />
+          ))}
       </main>
 
       {/* Interactive Assessment & AI Viva Modal */}

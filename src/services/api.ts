@@ -109,6 +109,139 @@ const post = <T>(endpoint: string, body?: unknown) =>
 
 export type Layer = "KNOW" | "DO" | "ADAPT" | "DEFEND" | "PROVE";
 
+export type RatingScope = "university" | "direction" | "group";
+export type RatingPlace = { rank: number; total: number; top_pct: number | null } | null;
+export type RatingSummary = {
+  score: number;
+  university: RatingPlace;
+  direction: RatingPlace;
+  group: RatingPlace;
+  direction_name: string | null;
+  group_id: string | null;
+};
+export type RatingEntry = { rank: number; score: number; name: string; group: string | null; is_me: boolean; user_id: string | null };
+export type RatingBoard = { scope: RatingScope; total: number; top: RatingEntry[]; me: RatingEntry | null; groups: string[] | null };
+
+export type CareerRecommendation = {
+  id: string;
+  roleName: string;
+  description: string | null;
+  direction: string | null;
+  inclination: number;
+  readiness: number;
+  interest: number;
+  matchPct: number | null;
+  reasons: string[];
+  vacancies?: { count: number; openings: number; companies: string[] };
+};
+
+export type CompanyCard = {
+  id: string;
+  name: string;
+  industry: string | null;
+  region: string | null;
+  website: string | null;
+  about: string | null;
+  demo: boolean;
+  open_vacancies: number;
+  openings: number;
+  hires_last_year: { year: number; hired: number };
+};
+export type EmploymentType = "full_time" | "part_time" | "internship";
+export type Vacancy = {
+  id: string;
+  title: string;
+  career_id: string;
+  career: string | null;
+  openings: number;
+  employment_type: EmploymentType;
+  city: string | null;
+  salary_note: string | null;
+  description: string | null;
+  status: "open" | "closed";
+  created_at: string | null;
+  readiness?: number;
+  matchPct?: number | null;
+};
+export type HiringYear = { year: number; hired: number; manual: number | null; platform: number };
+export type CompanyDetail = CompanyCard & { vacancies: Vacancy[]; hires: HiringYear[] };
+export type EmployerPlan = { tier: "free" | "pro"; label: string; limit: number; used: number; left: number; resets_on: string };
+export type CompanyProfileInput = { name: string; industry?: string | null; region?: string | null; website?: string | null; about?: string | null };
+export type VacancyInput = {
+  title: string;
+  career_id: string;
+  openings?: number;
+  employment_type?: EmploymentType;
+  city?: string | null;
+  salary_note?: string | null;
+  description?: string | null;
+};
+export type VacancyCandidate = {
+  id: string;
+  name: string;
+  direction: string | null;
+  course: string | null;
+  matchPct: number | null;
+  readiness: number;
+  missing_must: string[];
+};
+
+export type ChallengeCard = {
+  id: string;
+  title: string;
+  description: string | null;
+  company: string | null;
+  company_id: string;
+  prize_note: string | null;
+  task_count: number;
+  starts_at: string;
+  ends_at: string;
+  status: "active" | "closed";
+  participants: number;
+  me: { rank: number; total: number; score: number } | null;
+};
+export type ChallengeDetail = ChallengeCard & {
+  tasks: { id: string; title: string; layer: string; skill: string; duration_minutes: number }[];
+  leaderboard: { rank: number; score: number; name: string; is_me: boolean }[];
+};
+export type ScholarshipCard = {
+  id: string;
+  title: string;
+  company: string | null;
+  university: string | null;
+  university_id: string;
+  amount_note: string | null;
+  slots: number;
+  direction: string | null;
+  description: string | null;
+  deadline: string | null;
+  status: "open" | "awarded" | "closed";
+  awarded: number;
+  me: { rank: number; total: number; within_slots: boolean; awarded: boolean } | null;
+};
+export type ScholarshipCandidate = { user_id: string | null; rank: number; score: number; group: string | null; name: string; awarded: boolean };
+
+export type BankQuestion = {
+  id: string;
+  skill_id: string;
+  skill_code: string | null;
+  skill: string | null;
+  text: string;
+  options: string[];
+  answer_index: number;
+  explanation: string | null;
+  difficulty: string;
+  source: "seed" | "manual" | "ai" | "import";
+  status: "draft" | "approved" | "rejected";
+  review_note: string | null;
+  author: string | null;
+  author_id: string | null;
+  created_at: string | null;
+};
+export type BankStat = { skill_id: string; code: string; name: string; approved: number; draft: number; target: number };
+export type QuestionInput = { skill_id: string; text: string; options: string[]; answer_index: number; explanation?: string | null; difficulty?: string };
+export type ImportReport = { valid: number; created: number; errors: { line: number | null; errors: string[] }[]; header: string[]; skill_codes: string[] };
+
 export const api = {
   async checkHealth() {
     try {
@@ -158,6 +291,66 @@ export const api = {
   getMe: () => request<any>("/auth/me"),
   updateMe: (data: { full_name?: string; phone?: string; bio?: string }) =>
     request<any>("/auth/me", { method: "PUT", body: JSON.stringify(data) }),
+  // ---------- Companies & vacancies ----------
+  getCompanies: (careerId?: string) => request<CompanyCard[]>(`/companies${careerId ? `?career_id=${careerId}` : ""}`),
+  getCompany: (id: string) => request<CompanyDetail>(`/companies/${id}`),
+  createCompany: (body: CompanyProfileInput) => post<{ id: string; name: string }>("/companies", body),
+  recordHiringStat: (companyId: string, body: { year: number; hired_count: number; note?: string | null }) =>
+    post<{ id: string; hires: HiringYear[] }>(`/companies/${companyId}/hiring-stats`, body),
+  getMyCompany: () => request<CompanyCard & { plan: EmployerPlan }>("/companies/me"),
+  updateMyCompany: (body: CompanyProfileInput) =>
+    request<CompanyCard>("/companies/me", { method: "PUT", body: JSON.stringify(body) }),
+  getMyVacancies: () => request<Vacancy[]>("/companies/me/vacancies"),
+  createVacancy: (body: VacancyInput) => post<Vacancy>("/companies/me/vacancies", body),
+  updateVacancy: (id: string, body: Partial<Omit<VacancyInput, "career_id">> & { status?: "open" | "closed" }) =>
+    request<Vacancy>(`/companies/me/vacancies/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  getVacancyCandidates: (id: string) =>
+    request<{ vacancy: Vacancy; candidates: VacancyCandidate[] }>(`/companies/me/vacancies/${id}/candidates`),
+
+  // ---------- Sponsored challenges & scholarships ----------
+  getChallenges: () => request<ChallengeCard[]>("/sponsorships/challenges"),
+  getChallenge: (id: string) => request<ChallengeDetail>(`/sponsorships/challenges/${id}`),
+  createChallenge: (body: { title: string; description?: string | null; career_id?: string | null; task_ids?: string[]; prize_note?: string | null; days?: number }) =>
+    post<{ id: string; task_count: number }>("/sponsorships/challenges", body),
+  closeChallenge: (id: string) => post<{ status: string }>(`/sponsorships/challenges/${id}/close`),
+  getScholarships: () => request<ScholarshipCard[]>("/sponsorships/scholarships"),
+  getSponsorshipTargets: () =>
+    request<{ universities: { id: string; name: string }[]; directions: { id: string; name: string }[] }>("/sponsorships/universities"),
+  createScholarship: (body: { university_org_id: string; title: string; amount_note?: string | null; slots?: number; direction_id?: string | null; description?: string | null; deadline_days?: number | null }) =>
+    post<{ id: string }>("/sponsorships/scholarships", body),
+  getScholarshipCandidates: (id: string) =>
+    request<{ slots: number; status: string; candidates: ScholarshipCandidate[] }>(`/sponsorships/scholarships/${id}/candidates`),
+  awardScholarship: (id: string, userIds: string[]) =>
+    post<{ status: string; awarded: number }>(`/sponsorships/scholarships/${id}/award`, { user_ids: userIds }),
+
+  // ---------- Question bank (teachers, moderators) ----------
+  getBankStats: () => request<BankStat[]>("/questions/stats"),
+  getBankQuestions: (filters: { skillId?: string; status?: string; q?: string } = {}) => {
+    const p = new URLSearchParams();
+    if (filters.skillId) p.set("skill_id", filters.skillId);
+    if (filters.status) p.set("status", filters.status);
+    if (filters.q) p.set("q", filters.q);
+    const qs = p.toString();
+    return request<BankQuestion[]>(`/questions${qs ? `?${qs}` : ""}`);
+  },
+  createBankQuestion: (body: QuestionInput) => post<BankQuestion>("/questions", body),
+  updateBankQuestion: (id: string, body: Omit<QuestionInput, "skill_id">) =>
+    request<BankQuestion>(`/questions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteBankQuestion: (id: string) => request<{ status: string }>(`/questions/${id}`, { method: "DELETE" }),
+  reviewBankQuestion: (id: string, action: "approve" | "reject", note?: string) =>
+    post<{ id: string; status: string }>(`/questions/${id}/review`, { action, note }),
+  generateBankQuestions: (body: { skill_id: string; count?: number; difficulty?: string; topic?: string | null }) =>
+    post<{ created: BankQuestion[]; skipped: number }>("/questions/generate", body),
+  importBankQuestions: (csv: string, dryRun = false) => post<ImportReport>("/questions/import", { csv, dry_run: dryRun }),
+
+  // ---------- Rating ----------
+  getMyRating: () => request<RatingSummary>("/rating/me"),
+  getRating: (scope: RatingScope = "university", opts: { groupId?: string; limit?: number } = {}) => {
+    const q = new URLSearchParams({ scope, limit: String(opts.limit ?? 10) });
+    if (opts.groupId) q.set("group_id", opts.groupId);
+    return request<RatingBoard>(`/rating?${q.toString()}`);
+  },
+
   getConsents: () => request<{ type: string; granted: boolean; granted_at: string | null }[]>("/auth/consents"),
   setConsent: (type: string, granted: boolean) => post<any>("/auth/consents", { type, granted }),
 
@@ -258,6 +451,8 @@ export const api = {
 
   // ---------- Career ----------
   getCareers: () => request<any[]>("/careers"),
+  getCareerRecommendations: (limit = 3) =>
+    request<{ items: CareerRecommendation[]; hint: string | null }>(`/careers/recommendations?limit=${limit}`),
   getCareerMatch: (careerId: string) => request<any>(`/careers/${careerId}/match`),
   getCareerTarget: () => request<any>("/career/target"),
   chatWithCoach: (message: string, careerId?: string) => post<any>("/career/coach-chat", { message, career_id: careerId }),

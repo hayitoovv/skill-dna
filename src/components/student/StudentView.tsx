@@ -2,23 +2,17 @@ import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from 
 import { Icon, Logo } from "../common/Icons";
 import { directionsData, sampleTasksByDirection } from "../../data/ontology";
 import type { DirectionCode, LayerKey, LayerItem, User } from "../../types";
-import { api, PROFILE_UPDATED_EVENT } from "../../services/api";
+import { api, PROFILE_UPDATED_EVENT, type CareerRecommendation } from "../../services/api";
 import { printCredential } from "./certificatePrint";
 import CareerCoachModal from "./CareerCoachModal";
 import EvidenceGraphModal from "./EvidenceGraphModal";
 import StudentInvites from "./StudentInvites";
 import SkillRoadmap from "./SkillRoadmap";
+import RatingPage, { RatingTeaser } from "./RatingPage";
+import StudentCompanies from "./StudentCompanies";
+import KnowQuizModal from "./KnowQuizModal";
 
-export type PageKey = "dashboard" | "dna" | "tasks" | "career" | "certificates" | "settings";
-
-const pageTitles: Record<PageKey, string> = {
-  dashboard: "Boshqaruv paneli",
-  dna: "Mening Skill DNA’m",
-  tasks: "Topshiriqlar",
-  career: "Karyera yo‘li",
-  certificates: "Sertifikatlar",
-  settings: "Sozlamalar",
-};
+export type PageKey = "dashboard" | "dna" | "tasks" | "rating" | "career" | "companies" | "certificates" | "settings";
 
 function PageIntro({
   kicker,
@@ -448,6 +442,7 @@ export default function StudentView({
   goToPage,
   user,
   assessmentKey,
+  onAssessmentCompleted,
 }: {
   direction: DirectionCode;
   activePage: PageKey;
@@ -455,6 +450,7 @@ export default function StudentView({
   goToPage: (page: PageKey) => void;
   user?: User | null;
   assessmentKey?: number;
+  onAssessmentCompleted?: () => void;
 }) {
   const validDirection: DirectionCode = (direction && ["software", "computer", "ai"].includes(direction))
     ? direction
@@ -619,7 +615,6 @@ export default function StudentView({
   const overallScoreVal = isNewUser ? 0 : primarySkill.score;
   const confidenceVal = isNewUser ? 0 : primarySkill.confidence;
   const evidenceCountVal = isNewUser ? 0 : live ? live.evidence_count : primarySkill.evidenceCount;
-  const verifiedCountVal = isNewUser ? 0 : primarySkill.verifiedCount;
   const levelVal = isNewUser ? "L0 · BOSHLANG‘ICH" : livePrimary ? livePrimary.level.replace(" ", " · ") : `${primarySkill.level} · MUTAXASSIS`;
 
   // Coverage = share of layer weight that has any evidence (section 6.3)
@@ -642,6 +637,7 @@ export default function StudentView({
   const [evidenceModalOpen, setEvidenceModalOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
   const [infoTask, setInfoTask] = useState<any>(null);
+  const [quizTask, setQuizTask] = useState<any>(null);
 
   // ---------- Live tasks for the direction's skills ----------
   const [liveTasks, setLiveTasks] = useState<any[] | null>(null);
@@ -674,10 +670,21 @@ export default function StudentView({
   const [careerData, setCareerData] = useState<any>(null);
   const [careerList, setCareerList] = useState<any[]>([]);
   const [careerLoading, setCareerLoading] = useState(false);
+  const [companyFilter, setCompanyFilter] = useState<{ id: string; name: string } | null>(null);
+  const [careerRecs, setCareerRecs] = useState<{ items: CareerRecommendation[]; hint: string | null } | null>(null);
   useEffect(() => {
     if (!user) return;
+    // The most inclined profession becomes the target; without recommendations fall back to the best direction match
     api
-      .getCareerTarget()
+      .getCareerRecommendations(3)
+      .then((recs) => {
+        setCareerRecs(recs);
+        return recs.items.length ? api.getCareerMatch(recs.items[0].id) : api.getCareerTarget();
+      })
+      .catch(() => {
+        setCareerRecs(null);
+        return api.getCareerTarget();
+      })
       .then(setCareerData)
       .catch(() => setCareerData(null));
     api
@@ -817,7 +824,6 @@ export default function StudentView({
   };
 
   const animatedConfidenceScore = Math.round(confidenceVal * mainEase);
-  const animatedConfidenceWidth = (confidenceVal * mainEase).toFixed(1);
   const animatedCoverage = Math.round(coverageVal * mainEase);
 
   return (
@@ -835,10 +841,7 @@ export default function StudentView({
                   : "5 qatlamli amaliy dalillar orqali o‘lchanmoqda."}
               </p>
             </div>
-            <button className="primary-button" onClick={onStartAssessment}>
-              {isNewUser ? "Baholashni boshlash" : "Baholashni davom ettirish"}{" "}
-              <Icon name="arrow" size={18} />
-            </button>
+            <RatingTeaser onOpen={() => goToPage("rating")} refreshKey={assessmentKey} />
           </section>
 
           <section className="summary-grid">
@@ -850,56 +853,16 @@ export default function StudentView({
                 </div>
                 <span className="level-badge">{levelVal}</span>
               </div>
-              <div className="dna-body">
-                <SkillChart
-                  selected={selectedLayer}
-                  layerScores={layerScores}
-                  trigger={`${activePage}_${direction}_${isNewUser}`}
-                />
-                <div className="score-summary">
-                  <div className="confidence-head">
-                    <span>
-                      Ishonchlilik (Confidence)
-                      {live && livePrimary && (
-                      <button
-                        type="button"
-                        onClick={() => setWhyOpen(true)}
-                        title="Ball qanday hisoblangan?"
-                        style={{ marginLeft: "8px", border: "1px solid var(--border)", background: "var(--surface-2)", color: "var(--accent)", borderRadius: "999px", padding: "1px 9px", fontSize: "11.5px", fontWeight: 800, cursor: "pointer" }}
-                      >
-                        nega?
-                      </button>
-                    )}
-                    </span>
-                    <strong>{animatedConfidenceScore}%</strong>
-                  </div>
-                  <div className="progress-track">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${animatedConfidenceWidth}%` }}
-                    />
-                  </div>
-                  <p>
-                    {isNewUser
-                      ? "Hali dalillar mavjud emas · 0 ta dalil qayd etilgan"
-                      : `${confidenceVal >= 70 ? "Yuqori" : confidenceVal >= 40 ? "O‘rtacha" : "Past"} ishonchlilik · ${evidenceCountVal} ta dalil, ${verifiedCountVal} tasdiqlangan`}
-                  </p>
-                  <div className="selected-layer">
-                    <div className={`layer-icon ${selected.tone}`}>
-                      <Icon name={selected.icon as any} />
-                    </div>
-                    <div>
-                      <span>Tanlangan qatlam</span>
-                      <strong>
-                        {selected.key} · {selected.label}
-                      </strong>
-                    </div>
-                    <b>{selected.score}</b>
-                  </div>
-                  <button className="text-button" onClick={() => goToPage("dna")}>
-                    To‘liq profilni ko‘rish <Icon name="arrow" size={16} />
-                  </button>
+              <div className="score-summary">
+                <div className="confidence-head">
+                  <span>
+                    Umumiy natija <strong>{Math.round(overallScoreVal * mainEase)}/100</strong> · Ishonchlilik
+                  </span>
+                  <strong>{animatedConfidenceScore}%</strong>
                 </div>
+                <button className="text-button" onClick={() => goToPage("dna")}>
+                  To‘liq profilni ko‘rish <Icon name="arrow" size={16} />
+                </button>
               </div>
             </article>
 
@@ -948,49 +911,21 @@ export default function StudentView({
               </button>
             </article>
           </section>
-
-          <section className="layers-section">
-            <div className="section-heading">
-              <div>
-                <h2>5 qatlamli baholash modeli</h2>
-                <p>Har bir qatlam ko‘nikmangizning alohida jihatini isbotlaydi.</p>
-              </div>
-              <span>
-                Umumiy qamrov <strong>{animatedCoverage}%</strong>
-              </span>
-            </div>
-            <div className="layer-grid">
-              {layers.map((layer, index) => {
-                const lProgress = getLayerProgress(index);
-                const layerDisplayScore = Math.round(layer.score * lProgress);
-                const layerWidth = (layer.score * lProgress).toFixed(1);
-
-                return (
-                  <button
-                    key={layer.key}
-                    className={`layer-card ${selectedLayer === layer.key ? "selected" : ""}`}
-                    onClick={() => setSelectedLayer(layer.key)}
-                  >
-                    <div className={`layer-icon ${layer.tone}`}>
-                      <Icon name={layer.icon as any} />
-                    </div>
-                    <div className="layer-name">
-                      <strong>{layer.key}</strong>
-                      <span>{layer.label}</span>
-                    </div>
-                    <div className="layer-score">
-                      <strong>{layerDisplayScore}</strong>
-                      <span>Vazn: {layer.weight}</span>
-                    </div>
-                    <div className="mini-track">
-                      <span style={{ width: `${layerWidth}%` }} />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
         </div>
+      )}
+
+      {activePage === "rating" && (
+        <RatingPage
+          refreshKey={assessmentKey}
+          onOpenSettings={() => {
+            setSettingsTab("Rozilik (Consent)");
+            goToPage("settings");
+          }}
+        />
+      )}
+
+      {activePage === "companies" && (
+        <StudentCompanies careerFilter={companyFilter} onClearFilter={() => setCompanyFilter(null)} />
       )}
 
       {activePage === "dna" && (
@@ -1040,17 +975,6 @@ export default function StudentView({
                   {Math.round(overallScoreVal * mainEase)}
                   <small>/100</small>
                 </strong>
-                <p>
-                  {live
-                    ? livePrimary?.level_blockers?.length
-                      ? livePrimary.level_blockers[0]
-                      : isNewUser
-                      ? "Birinchi dalilni qo‘shing — L1 UNDERSTAND darajasi ochiladi"
-                      : "Keyingi daraja uchun to‘siqlar yo‘q"
-                    : isNewUser
-                    ? "Keyingi darajagacha 20 ball (L1 UNDERSTAND)"
-                    : "Keyingi darajagacha 9 ball (L4 CREATE)"}
-                </p>
               </div>
               <div className="stat-pair">
                 <div>
@@ -1067,10 +991,51 @@ export default function StudentView({
                 currentScore={Math.round(overallScoreVal * mainEase)}
                 confidence={Math.round(confidenceVal * mainEase)}
                 isNewUser={isNewUser}
-                onStartAssessment={onStartAssessment}
                 directionTitle={currentDir.title}
                 blockers={livePrimary?.level_blockers}
               />
+            </div>
+          </section>
+
+          <section className="layers-section">
+            <div className="section-heading">
+              <div>
+                <h2>5 qatlamli baholash modeli</h2>
+                <p>Har bir qatlam ko‘nikmangizning alohida jihatini isbotlaydi.</p>
+              </div>
+              <span>
+                Umumiy qamrov <strong>{animatedCoverage}%</strong>
+              </span>
+            </div>
+            <div className="layer-grid">
+              {layers.map((layer, index) => {
+                const lProgress = getLayerProgress(index);
+                const layerDisplayScore = Math.round(layer.score * lProgress);
+                const layerWidth = (layer.score * lProgress).toFixed(1);
+
+                return (
+                  <button
+                    key={layer.key}
+                    className={`layer-card ${selectedLayer === layer.key ? "selected" : ""}`}
+                    onClick={() => setSelectedLayer(layer.key)}
+                  >
+                    <div className={`layer-icon ${layer.tone}`}>
+                      <Icon name={layer.icon as any} />
+                    </div>
+                    <div className="layer-name">
+                      <strong>{layer.key}</strong>
+                      <span>{layer.label}</span>
+                    </div>
+                    <div className="layer-score">
+                      <strong>{layerDisplayScore}</strong>
+                      <span>Vazn: {layer.weight}</span>
+                    </div>
+                    <div className="mini-track">
+                      <span style={{ width: `${layerWidth}%` }} />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
@@ -1159,15 +1124,11 @@ export default function StudentView({
                 <strong>{selected.score}</strong>
               </div>
               <div className="detail-metric">
-                <span>Topshirilganlar</span>
-                <strong>{primarySkill.evidenceCount} ta</strong>
-              </div>
-              <div className="detail-metric">
                 <span>Oxirgi faoliyat</span>
                 <strong>{live ? fmtDate(livePrimary?.computed_at) : "Bugun"}</strong>
               </div>
-              <button className="dark-outline" onClick={onStartAssessment}>
-                Qatlamni rivojlantirish <Icon name="arrow" size={16} />
+              <button className="dark-outline" onClick={() => goToPage("tasks")}>
+                Topshiriqlarga o‘tish <Icon name="arrow" size={16} />
               </button>
             </aside>
           </section>
@@ -1265,9 +1226,15 @@ export default function StudentView({
                             <button
                               className={task.layer === "DO" ? "primary-button full" : "dark-outline"}
                               style={task.layer === "DO" ? undefined : { width: "100%", justifyContent: "center" }}
-                              onClick={() => (task.layer === "DO" ? onStartAssessment() : setInfoTask(task))}
+                              onClick={() =>
+                                task.layer === "DO" ? onStartAssessment() : task.layer === "KNOW" ? setQuizTask(task) : setInfoTask(task)
+                              }
                             >
-                              {task.layer === "DO" ? (layerScore == null ? "Topshiriqni boshlash" : "Qayta topshirish") : "Batafsil"}
+                              {task.layer === "DO" || task.layer === "KNOW"
+                                ? layerScore == null
+                                  ? task.layer === "KNOW" ? "Testni boshlash" : "Topshiriqni boshlash"
+                                  : "Qayta topshirish"
+                                : "Batafsil"}
                               <Icon name="arrow" size={16} />
                             </button>
                           </article>
@@ -1351,34 +1318,82 @@ export default function StudentView({
           <StudentInvites />
           {careerLive ? (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", margin: "0 0 12px" }}>
-                <SourceBadge live />
-                {careerList.length > 1 && (
-                  <>
-                    <span style={{ fontSize: "12.5px", color: "var(--muted)", marginLeft: "6px" }}>Boshqa rollar:</span>
+              {careerRecs && (
+                <section style={{ marginBottom: "18px" }}>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", margin: "0 0 10px" }}>
+                    <h2 style={{ margin: 0, fontSize: "17px", color: "var(--navy)" }}>Sizga mos kasblar</h2>
+                    <span style={{ fontSize: "12.5px", color: "var(--muted)" }}>Natijalaringiz va qaysi topshiriqlarni bajarayotganingiz asosida</span>
+                  </div>
+                  {careerRecs.items.length === 0 ? (
+                    <p className="card" style={{ margin: 0, padding: "18px 20px", fontSize: "14px", color: "var(--muted)" }}>{careerRecs.hint}</p>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px" }}>
+                      {careerRecs.items.map((r, i) => {
+                        const active = r.id === careerData.id;
+                        return (
+                          <div
+                            key={r.id}
+                            className="card"
+                            style={{
+                              padding: "16px 18px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                              border: active ? "1.5px solid var(--accent-400)" : undefined,
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => selectCareer(r.id)}
+                              disabled={careerLoading}
+                              aria-pressed={active}
+                              style={{ all: "unset", cursor: "pointer", display: "flex", flexDirection: "column", gap: "8px" }}
+                            >
+                              <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                                <span className="card-kicker">{i === 0 ? "ENG MOS" : `${i + 1}-TAVSIYA`}</span>
+                                <span className="level-badge">{Math.round(r.inclination)}% moyillik</span>
+                              </span>
+                              <strong style={{ fontSize: "16px", color: "var(--navy)" }}>{r.roleName}</strong>
+                              {r.direction && <span style={{ fontSize: "12.5px", color: "var(--muted)" }}>{r.direction}</span>}
+                              {r.reasons.map((line) => (
+                                <span key={line} style={{ fontSize: "13px", color: "var(--text-3)", lineHeight: 1.45 }}>
+                                  {line}
+                                </span>
+                              ))}
+                            </button>
+                            {r.vacancies && r.vacancies.count > 0 && (
+                              <button
+                                type="button"
+                                className="text-button"
+                                style={{ alignSelf: "flex-start", textAlign: "left" }}
+                                onClick={() => {
+                                  setCompanyFilter({ id: r.id, name: r.roleName });
+                                  goToPage("companies");
+                                }}
+                              >
+                                {r.vacancies.count} ta vakansiya · {r.vacancies.companies.join(", ")} <Icon name="arrow" size={14} />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              )}
+              {careerList.length > 1 && (
+                <div className="filter-row" style={{ margin: "0 0 12px" }}>
+                  <select value={careerData.id ?? ""} onChange={(e) => selectCareer(e.target.value)} disabled={careerLoading} aria-label="Boshqa kasbni tanlash">
+                    {!careerList.some((c) => c.id === careerData.id) && careerData.id && <option value={careerData.id}>{careerData.roleName}</option>}
                     {careerList.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => selectCareer(c.id)}
-                        disabled={careerLoading}
-                        style={{
-                          padding: "5px 11px",
-                          borderRadius: "14px",
-                          fontSize: "12.5px",
-                          cursor: "pointer",
-                          border: c.id === careerData.id ? "1.5px solid var(--accent-400)" : "1px solid var(--border)",
-                          background: c.id === careerData.id ? "var(--accent-soft)" : "var(--surface-2)",
-                          color: "var(--ink-2)",
-                          fontWeight: c.id === careerData.id ? 700 : 500,
-                        }}
-                      >
+                      <option key={c.id} value={c.id}>
                         {c.roleName} · {c.matchPct == null ? "—" : `${round1(c.matchPct)}%`}
-                      </button>
+                      </option>
                     ))}
-                  </>
-                )}
-              </div>
+                  </select>
+                  <SourceBadge live />
+                </div>
+              )}
               <section className="career-hero card">
                 <div>
                   <span className="small-badge">
@@ -1813,8 +1828,8 @@ export default function StudentView({
               <p style={{ maxWidth: "540px", margin: "0 auto 24px", color: "var(--muted)", fontSize: "14px", lineHeight: "1.6" }}>
                 Skill DNA sertifikatlari va Open Badges 3.0 nishonlari ko‘nikmalaringizni 5 qatlamli amaliy topshiriqlar va AI Viva orqali tasdiqlaganingizdan so‘ng avtomatik tarzda shakllanadi.
               </p>
-              <button className="primary-button" style={{ margin: "0 auto", display: "inline-flex" }} onClick={onStartAssessment}>
-                Birinchi topshiriqni boshlash <Icon name="arrow" size={16} />
+              <button className="primary-button" style={{ margin: "0 auto", display: "inline-flex" }} onClick={() => goToPage("tasks")}>
+                Topshiriqlarga o‘tish <Icon name="arrow" size={16} />
               </button>
             </section>
           ) : (
@@ -2006,6 +2021,11 @@ export default function StudentView({
                         title: "Tasdiqlangan Skill DNA profilimni ish beruvchilarga ko‘rsatish",
                         desc: "Ish beruvchilar faqat shu rozilikni bergan talabalarni qidiruvda ko‘radi.",
                       },
+                      {
+                        type: "rating_public",
+                        title: "Reytingda ismimni boshqa talabalarga ko‘rsatish",
+                        desc: "Rozilik bo‘lmasa, boshqa talabalar sizni “Talaba #…” deb ko‘radi. O‘qituvchi va universitet har doim ko‘radi.",
+                      },
                     ].map((item) => {
                       const c = consents.find((x) => x.type === item.type);
                       const granted = !!c?.granted;
@@ -2162,6 +2182,14 @@ export default function StudentView({
       )}
 
       {infoTask && <TaskInfoModal task={infoTask} skillName={skillNames[infoTask.skill_id]} onClose={() => setInfoTask(null)} />}
+      {quizTask && (
+        <KnowQuizModal
+          task={quizTask}
+          skillName={skillNames[quizTask.skill_id]}
+          onClose={() => setQuizTask(null)}
+          onFinished={onAssessmentCompleted}
+        />
+      )}
     </>
   );
 }
