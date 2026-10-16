@@ -215,7 +215,6 @@ function errText(e: unknown, fallback: string): string {
 
 export default function ModeratorQueue({
   activeTab = "flags",
-  onTabChange,
 }: ModeratorQueueProps) {
   // Local or controlled tab
   const [currentTab, setCurrentTab] = useState<"flags" | "transcripts" | "rules">(activeTab);
@@ -223,13 +222,6 @@ export default function ModeratorQueue({
   useEffect(() => {
     setCurrentTab(activeTab);
   }, [activeTab]);
-
-  const setTab = (tab: "flags" | "transcripts" | "rules") => {
-    setCurrentTab(tab);
-    if (onTabChange) {
-      onTabChange(tab);
-    }
-  };
 
   // Data mode: live backend vs. demo fallback
   const [mode, setMode] = useState<DataMode>("loading");
@@ -503,9 +495,11 @@ export default function ModeratorQueue({
   /* ---------------- Derived data ---------------- */
 
   const flagViews: FlagView[] = isLive ? liveFlags.map(liveToView) : flags.map(demoToView);
+  // Live viva-linked flags live on the transcripts tab; the flags queue shows the rest
+  const queueFlags = isLive ? flagViews.filter((f) => !f.vivaSessionId) : flagViews;
 
   // Filtered Flags
-  const filteredFlags = flagViews.filter((f) => {
+  const filteredFlags = queueFlags.filter((f) => {
     const q = searchQuery.toLowerCase();
     const matchesSearch =
       searchQuery.trim() === "" ||
@@ -551,16 +545,11 @@ export default function ModeratorQueue({
     return matchesSearch && matchesStatus;
   });
 
-  const openCount = flagViews.filter((f) => f.status === "open").length;
-  const resolvedCount = flagViews.filter((f) => f.status === "resolved").length;
-  const highRiskCount = flagViews.filter((f) => f.severity === "high" && f.status === "open").length;
+  const openCount = queueFlags.filter((f) => f.status === "open").length;
+  const resolvedCount = queueFlags.filter((f) => f.status === "resolved").length;
+  const highRiskCount = queueFlags.filter((f) => f.severity === "high" && f.status === "open").length;
   const pendingAppeals = (appeals || []).filter((a) => a.status === "pending" || a.status === "under_review");
   const ontologyLive = directions !== null;
-  const liveSkillCount = (directions || []).reduce((n, d) => n + (d.skills?.length || 0), 0);
-  const typeCounts = liveFlags.reduce<Record<string, number>>((acc, f) => {
-    acc[f.type] = (acc[f.type] || 0) + 1;
-    return acc;
-  }, {});
 
   const activeIsViva =
     !!activeFlag && (VIVA_TYPES.includes(activeFlag.type) || !!activeFlag.vivaSessionId);
@@ -779,29 +768,13 @@ export default function ModeratorQueue({
     );
   };
 
-  const tabButtonStyle = (active: boolean) => ({
-    padding: "9px 18px",
-    borderRadius: "10px",
-    border: active ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
-    background: active ? "var(--navy)" : "#ffffff",
-    color: active ? "#ffffff" : "var(--navy)",
-    fontSize: "13px",
-    fontWeight: 700,
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    transition: "all 0.15s ease",
-    boxShadow: active ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
-  });
-
   return (
     <div className="page">
       {/* Top Welcome Row */}
       <section className="welcome-row">
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <p className="eyebrow" style={{ margin: 0 }}>INTEGRITY & HALOLLIK TIZIMI · MODERATSIYA ISH STOLI</p>
+            <p className="eyebrow" style={{ margin: 0 }}>INTEGRITY & HALOLLIK TIZIMI</p>
             {modeBadge(mode)}
             {isLive && (
               <button
@@ -831,95 +804,9 @@ export default function ModeratorQueue({
         </div>
       </section>
 
-      {/* Internal Navigation Tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "22px",
-          borderBottom: "1.5px solid var(--border)",
-          paddingBottom: "10px",
-          flexWrap: "wrap",
-        }}
-      >
-        <button type="button" onClick={() => setTab("flags")} style={tabButtonStyle(currentTab === "flags")}>
-          <Icon name="shield" size={16} />
-          <span>Bayroqlar navbati</span>
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "10px",
-              background: currentTab === "flags" ? "rgba(255,255,255,0.2)" : "var(--danger-soft)",
-              color: currentTab === "flags" ? "#ffffff" : "var(--danger)",
-              fontSize: "11px",
-              fontWeight: 800,
-            }}
-          >
-            {openCount}
-          </span>
-        </button>
-
-        <button type="button" onClick={() => setTab("transcripts")} style={tabButtonStyle(currentTab === "transcripts")}>
-          <Icon name="file" size={16} />
-          <span>Viva Transkript tekshiruvi</span>
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "10px",
-              background: currentTab === "transcripts" ? "rgba(255,255,255,0.2)" : "var(--accent-soft)",
-              color: currentTab === "transcripts" ? "#ffffff" : "var(--accent)",
-              fontSize: "11px",
-              fontWeight: 800,
-            }}
-          >
-            {isLive ? vivaFlags.length : mode === "demo" ? transcripts.length : 0}
-          </span>
-        </button>
-
-        <button type="button" onClick={() => setTab("rules")} style={tabButtonStyle(currentTab === "rules")}>
-          <Icon name="settings" size={16} />
-          <span>Ontologiya & Rubrikalar</span>
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "10px",
-              background: currentTab === "rules" ? "rgba(255,255,255,0.2)" : "var(--surface-3)",
-              color: currentTab === "rules" ? "#ffffff" : "var(--text-3)",
-              fontSize: "11px",
-              fontWeight: 800,
-            }}
-          >
-            {ontologyLive ? `${liveSkillCount} ko‘nikma` : `${rules.filter((r) => r.isActive).length} faol`}
-          </span>
-        </button>
-      </div>
-
       {/* Summary Stats Row */}
-      <section className="employer-stats-row">
-        <div className="employer-stat-pill">
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
-              background: "var(--danger-soft)",
-              color: "var(--danger)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="alert" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-              Ochiq bayroqlar
-            </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>
-              {mode === "loading" ? "…" : `${openCount} ta holat`}
-            </strong>
-          </div>
-        </div>
-
+      {currentTab === "flags" && (
+        <section className="employer-stats-row">
         <div className="employer-stat-pill">
           <div
             style={{
@@ -968,36 +855,8 @@ export default function ModeratorQueue({
           </div>
         </div>
 
-        <div className="employer-stat-pill">
-          <div
-            style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
-              background: "var(--accent-soft)",
-              color: "var(--accent)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="workflow" size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-              {isLive ? "Ochiq e’tirozlar" : "Avtomatik Rubrikalar"}
-            </div>
-            <strong style={{ fontSize: "19px", color: "var(--navy)" }}>
-              {isLive
-                ? appeals === null
-                  ? "—"
-                  : `${pendingAppeals.length} ta e’tiroz`
-                : mode === "loading"
-                ? "…"
-                : "5 ta faol filtr"}
-            </strong>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* TAB 1: BAYROQLAR NAVBATI (FLAGS QUEUE) */}
       {currentTab === "flags" && (
@@ -1094,9 +953,9 @@ export default function ModeratorQueue({
                   HOLAT:
                 </span>
                 {[
-                  { key: "all", label: `Barchasi (${flagViews.length})` },
+                  { key: "all", label: `Barchasi (${queueFlags.length})` },
                   { key: "open", label: `⏳ Kutilmoqda (${openCount})` },
-                  { key: "resolved", label: `✅ Hal qilingan (${resolvedCount})` },
+                  { key: "resolved", label: `✅ Hal qilingan` },
                 ].map((st) => (
                   <button
                     key={st.key}
@@ -1230,14 +1089,14 @@ export default function ModeratorQueue({
                 <Icon name="checkCircle" size={26} />
               </div>
               <h3 style={{ margin: "0 0 6px", color: "var(--navy)", fontSize: "17px" }}>
-                {isLive && flagViews.length === 0
+                {isLive && queueFlags.length === 0
                   ? "Navbatda hech qanday bayroq yo‘q"
                   : isLive && openCount === 0 && selectedStatus === "open"
                   ? "Hozircha ochiq bayroq yo‘q"
                   : "Hech qanday shubhali holat topilmadi"}
               </h3>
               <p style={{ margin: 0, fontSize: "13.5px" }}>
-                {isLive && flagViews.length === 0
+                {isLive && queueFlags.length === 0
                   ? "Tizim yangi signal aniqlasa, holat shu yerda paydo bo‘ladi."
                   : "Filtr mezonlarini o‘zgartiring yoki qidiruv so‘zini tozalang."}
               </p>
@@ -1501,7 +1360,7 @@ export default function ModeratorQueue({
                         onClick={() => openReview(flag)}
                       >
                         <Icon name="file" size={16} />
-                        <span>{flag.vivaSessionId || flag.transcriptExcerpt ? "Viva dialogini ko‘rish" : "Holatni ko‘rib chiqish"}</span>
+                        <span>{flag.transcriptExcerpt ? "Ko‘rib chiqish" : "Holatni ko‘rib chiqish"}</span>
                       </button>
 
                       {flag.status === "open" ? (
@@ -2203,7 +2062,6 @@ export default function ModeratorQueue({
             <h2 style={{ margin: "4px 0 6px" }}>Bayroq turlari</h2>
             <p style={{ fontSize: "13px", color: "var(--muted)", margin: "0 0 16px", maxWidth: "720px" }}>
               Chegara qiymatlari backend konfiguratsiyasida belgilanadi. Har bir signal faqat holatni moderatorga yo‘naltiradi.
-              {isLive ? " Hisoblagich — navbatdagi barcha (ochiq va hal qilingan) bayroqlar soni." : ""}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {Object.entries(FLAG_INFO).map(([code, info]) => (
@@ -2230,11 +2088,6 @@ export default function ModeratorQueue({
                       {code}
                     </span>
                     <strong style={{ fontSize: "14px", color: "var(--navy)" }}>{info.label}</strong>
-                    {isLive && (
-                      <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 600 }}>
-                        · navbatda: {typeCounts[code] || 0} ta
-                      </span>
-                    )}
                   </div>
                   <div style={{ fontSize: "12.5px", color: "var(--text-2)", lineHeight: "1.5" }}>{info.desc}</div>
                 </div>

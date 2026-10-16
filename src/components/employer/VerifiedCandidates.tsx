@@ -4,7 +4,6 @@ import type { IconName } from "../common/Icons";
 import { employerCandidates } from "../../data/ontology";
 import type { DirectionCode } from "../../types";
 import { api, hasSession } from "../../services/api";
-import InviteModal from "./InviteModal";
 
 type DataMode = "loading" | "live" | "demo";
 
@@ -74,8 +73,6 @@ export default function VerifiedCandidates() {
   const [minLevel, setMinLevel] = useState(1);
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [inviteFor, setInviteFor] = useState<PoolCandidate | null>(null);
-  const [invited, setInvited] = useState<Record<string, true>>({});
 
   useEffect(() => {
     if (!hasSession()) return;
@@ -122,17 +119,12 @@ export default function VerifiedCandidates() {
     credentials: shown.reduce((a, c) => a + (c.credentials ?? 0), 0),
   };
 
-  const sendInvite = async (cand: PoolCandidate, jobTitle: string, message: string) => {
-    if (isLive) await api.inviteCandidate(cand.id, { job_title: jobTitle, message: message || undefined });
-    setInvited((prev) => ({ ...prev, [cand.id]: true }));
-  };
-
   return (
     <div className="page">
       <section className="welcome-row">
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <p className="eyebrow" style={{ margin: 0 }}>ISH BERUVCHI PANELI · VERIFIED TALENT POOL</p>
+            <p className="eyebrow" style={{ margin: 0 }}>VERIFIED TALENT POOL</p>
             <span
               style={{
                 display: "inline-flex",
@@ -262,36 +254,33 @@ export default function VerifiedCandidates() {
           </p>
         </div>
       ) : (
-        <div className={`candidates-grid ${shown.length === 1 ? "single-item" : ""}`}>
-          {shown.map((c) => {
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          {shown.map((c, i) => {
             const open = expanded === c.id;
-            const skills = open ? c.skills : c.skills.slice(0, 3);
             return (
-              <article key={c.id} className="candidate-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div
-                      style={{
-                        width: 48,
-                        height: 48,
-                        minWidth: 48,
-                        borderRadius: 14,
-                        background: "linear-gradient(160deg, #2b4fa8, #1e3a8a 45%, #0f2744)",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        fontWeight: 800,
-                        fontSize: 16,
-                      }}
-                    >
-                      {initials(c.name)}
-                    </div>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: 17.5, fontWeight: 700, color: "var(--navy)" }}>{c.name}</h3>
-                      <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}>
-                        {c.direction ?? "—"}
-                        {c.course ? ` · ${c.course}` : ""}
-                      </div>
+              <div key={c.id} style={{ padding: "14px 18px", borderTop: i === 0 ? 0 : "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      minWidth: 40,
+                      borderRadius: 12,
+                      background: "linear-gradient(160deg, #2b4fa8, #1e3a8a 45%, #0f2744)",
+                      color: "#fff",
+                      display: "grid",
+                      placeItems: "center",
+                      fontWeight: 800,
+                      fontSize: 14,
+                    }}
+                  >
+                    {initials(c.name)}
+                  </div>
+                  <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                    <h3 style={{ margin: 0, fontSize: 15.5, fontWeight: 700, color: "var(--navy)" }}>{c.name}</h3>
+                    <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                      {c.direction ?? "—"}
+                      {c.course ? ` · ${c.course}` : ""}
                     </div>
                   </div>
                   <span
@@ -309,91 +298,55 @@ export default function VerifiedCandidates() {
                   >
                     {c.best_level}
                   </span>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
-                  {skills.map((s) => (
-                    <div key={s.code}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 4, gap: 8 }}>
-                        <span style={{ color: "var(--navy)", fontWeight: 600 }}>{s.name}</span>
-                        <span style={{ color: "var(--muted)", whiteSpace: "nowrap" }}>
-                          <strong style={{ color: "var(--royal)" }}>{fmt(s.score)}</strong> ball · ishonch {fmt(s.confidence)}% ·{" "}
-                          {(s.level || "").split(" ")[0]}
-                        </span>
-                      </div>
-                      <div style={{ height: 6, borderRadius: 10, background: "var(--border)" }}>
-                        <div
-                          style={{
-                            width: `${Math.max(0, Math.min(100, s.score ?? 0))}%`,
-                            height: "100%",
-                            borderRadius: 10,
-                            background: "linear-gradient(90deg, var(--royal), var(--success))",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  {c.skills.length > 3 && (
-                    <button
-                      type="button"
-                      onClick={() => setExpanded(open ? null : c.id)}
-                      style={{ alignSelf: "flex-start", border: 0, background: "none", color: "var(--royal)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", padding: 0 }}
-                    >
-                      {open ? "Kamroq ko‘rsatish" : `Yana ${c.skills.length - 3} ta ko‘nikma`}
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 16 }}>
                   <span className="vc-chip">
-                    <Icon name="checkCircle" size={13} /> {c.evidence_verified} ta tasdiqlangan dalil
+                    <Icon name="checkCircle" size={13} /> {c.evidence_verified} ta dalil
                   </span>
-                  {c.human_verified !== null && c.human_verified > 0 && (
-                    <span className="vc-chip">
-                      <Icon name="userCheck" size={13} /> {c.human_verified} tasini o‘qituvchi tasdiqlagan
-                    </span>
-                  )}
                   {(c.credentials ?? 0) > 0 && (
                     <span className="vc-chip vc-chip-warn">
-                      <Icon name="award" size={13} /> {c.credentials} ta OB 3.0 sertifikat
+                      <Icon name="award" size={13} /> {c.credentials} ta sertifikat
                     </span>
                   )}
-                </div>
-
-                <div className="candidate-actions-row">
                   <button
                     type="button"
-                    className={`candidate-invite-btn ${invited[c.id] ? "is-invited" : ""}`}
-                    style={{ flex: 1 }}
-                    disabled={!!invited[c.id]}
-                    onClick={() => setInviteFor(c)}
+                    className="candidate-evidence-btn"
+                    style={{ flex: "0 0 auto" }}
+                    aria-expanded={open}
+                    onClick={() => setExpanded(open ? null : c.id)}
                   >
-                    {invited[c.id] ? (
-                      <>
-                        <Icon name="checkCircle" size={16} />
-                        <span>Taklif yuborildi</span>
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="briefcase" size={16} />
-                        <span>Suhbatga taklif qilish</span>
-                      </>
-                    )}
+                    <Icon name="shieldCheck" size={16} />
+                    <span>{open ? "Yopish" : "Dalillarni ko‘rish"}</span>
                   </button>
                 </div>
-              </article>
+                {open && (
+                  <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginTop: 12, paddingLeft: 52 }}>
+                    {c.skills.map((s) => (
+                      <span
+                        key={s.code}
+                        style={{
+                          padding: "5px 10px",
+                          borderRadius: 8,
+                          background: "var(--surface-3)",
+                          color: "var(--navy)",
+                          fontSize: 11.5,
+                          fontWeight: 600,
+                          border: "1px solid var(--border)",
+                        }}
+                      >
+                        {s.name}: <strong style={{ color: "var(--royal)" }}>{fmt(s.score)}</strong> · {fmt(s.confidence)}% ·{" "}
+                        {(s.level || "").split(" ")[0]}
+                      </span>
+                    ))}
+                    {c.human_verified !== null && c.human_verified > 0 && (
+                      <span className="vc-chip">
+                        <Icon name="userCheck" size={13} /> {c.human_verified} tasini o‘qituvchi tasdiqlagan
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
-      )}
-
-      {inviteFor && (
-        <InviteModal
-          candidateName={inviteFor.name}
-          defaultJobTitle={inviteFor.skills[0] ? `${inviteFor.skills[0].name} mutaxassisi` : ""}
-          onClose={() => setInviteFor(null)}
-          onSubmit={(jobTitle, message) => sendInvite(inviteFor, jobTitle, message)}
-        />
       )}
     </div>
   );

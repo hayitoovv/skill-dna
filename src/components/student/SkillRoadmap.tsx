@@ -164,7 +164,7 @@ export default function SkillRoadmap({
       <div className="sr-header">
         <div className="sr-title-wrap">
           <Icon name="workflow" size={13} />
-          <span>Yo‘l xaritasi (Roadmap)</span>
+          <span>Daraja bosqichlari</span>
         </div>
         <button
           type="button"
@@ -192,7 +192,6 @@ export default function SkillRoadmap({
           {MILESTONES.map((m) => {
             const isCompleted = currentRank > m.level;
             const isCurrent = currentRank === m.level || (currentRank === 0 && m.level === 1);
-            const isLocked = currentRank < m.level && !isCurrent;
             const isHovered = hoveredNode === m.level;
 
             return (
@@ -296,7 +295,7 @@ export default function SkillRoadmap({
         )}
       </div>
 
-      {/* Full Screen Career Roadmap Modal */}
+      {/* Full Screen Level Stages Modal */}
       {modalOpen && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setModalOpen(false)}>
           <div
@@ -319,7 +318,7 @@ export default function SkillRoadmap({
                 <Icon name="workflow" size={20} />
               </div>
               <div>
-                <h2>{directionTitle} — Yo‘l Xaritasi</h2>
+                <h2>{directionTitle} — Daraja bosqichlari</h2>
                 <p>5 ta kompetensiya qatlami bo‘yicha kasbiy o‘sish va darajalar tizimi</p>
               </div>
             </div>

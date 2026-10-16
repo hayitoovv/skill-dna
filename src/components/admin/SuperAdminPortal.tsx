@@ -63,15 +63,14 @@ function Overview({ onOpen }: { onOpen: (tab: AdminTab) => void }) {
   return (
     <div className="page">
       <Header
-        kicker="SUPER ADMIN · BOSHQARUV"
+        kicker="BOSHQARUV"
         title="Platforma boshqaruvi"
         text="Butun platforma bo‘yicha umumiy ko‘rsatkichlar. Super admin barcha portallarga kira oladi — chap yuqoridagi portal tanlagich orqali."
       />
       {error && <div className="card" style={{ padding: 16, color: "var(--rose)" }}>{error}</div>}
       {!data && !error && <div className="card" style={{ padding: 30, color: "var(--muted)" }}>Yuklanmoqda…</div>}
       {data && (
-        <>
-          <section className="admin-grid">
+        <section className="admin-grid">
             {cards.map((c) => (
               <button key={c.label} type="button" className="admin-stat" onClick={() => c.tab && onOpen(c.tab)} disabled={!c.tab}>
                 <span className="admin-stat-icon"><Icon name={c.icon} size={19} /></span>
@@ -81,19 +80,7 @@ function Overview({ onOpen }: { onOpen: (tab: AdminTab) => void }) {
                 </span>
               </button>
             ))}
-          </section>
-          <section className="card" style={{ padding: 22 }}>
-            <h3 style={{ margin: "0 0 14px", color: "var(--navy)" }}>Rollar bo‘yicha</h3>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              {Object.entries(data.users as Record<string, number>).map(([role, n]) => (
-                <span key={role} className="admin-chip">
-                  {ROLE_LABELS[role] ?? role}: <strong>{n}</strong>
-                </span>
-              ))}
-              {data.blocked > 0 && <span className="admin-chip admin-chip-danger">Bloklangan: <strong>{data.blocked}</strong></span>}
-            </div>
-          </section>
-        </>
+        </section>
       )}
     </div>
   );
@@ -172,16 +159,13 @@ function Content() {
   return (
     <div className="page">
       <Header
-        kicker="SUPER ADMIN · KONTENT"
+        kicker="KONTENT"
         title="Sayt matnlari"
         text="Saytdagi istalgan so‘z yoki jumlani o‘zgartiring. O‘zgarish barcha foydalanuvchilarda darhol ko‘rinadi, kod yoki deploy kerak emas."
         action={
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button className="secondary-button" type="button" onClick={openPreview} style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
               <Icon name="lock" size={15} /> Login sahifasini tahrirlash
-            </button>
-            <button className="primary-button" type="button" onClick={() => setEditMode(true)} style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-              <Icon name="edit" size={15} /> Sahifada tahrirlash
             </button>
           </div>
         }
@@ -190,7 +174,7 @@ function Content() {
       <section className="card admin-howto">
         <Icon name="sparkles" size={18} />
         <div>
-          <strong>Qanday ishlaydi:</strong> “Sahifada tahrirlash”ni bosing, so‘ng istalgan portal yoki sahifaga o‘ting va matn ustiga
+          <strong>Qanday ishlaydi:</strong> yuqori paneldagi qalam (tahrirlash) belgisini bosing, so‘ng istalgan portal yoki sahifaga o‘ting va matn ustiga
           bosing. Navigatsiya uchun pastdagi paneldan “Pauza”ni bosing. Til (UZ/RU/EN) bo‘yicha har bir tarjima alohida tahrirlanadi.
         </div>
       </section>
@@ -316,6 +300,11 @@ function Users({ meId }: { meId: string }) {
   const [role, setRole] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    api.adminOverview().then(setStats).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -341,7 +330,20 @@ function Users({ meId }: { meId: string }) {
 
   return (
     <div className="page">
-      <Header kicker="SUPER ADMIN · FOYDALANUVCHILAR" title="Foydalanuvchilar" text="Rolni o‘zgartirish va akkauntlarni bloklash. Har bir o‘zgarish audit jurnaliga yoziladi." />
+      <Header kicker="FOYDALANUVCHILAR" title="Foydalanuvchilar" text="Rolni o‘zgartirish va akkauntlarni bloklash. Har bir o‘zgarish audit jurnaliga yoziladi." />
+      {stats && (
+        <section className="card" style={{ padding: 22 }}>
+          <h3 style={{ margin: "0 0 14px", color: "var(--navy)" }}>Rollar bo‘yicha</h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {Object.entries(stats.users as Record<string, number>).map(([r, n]) => (
+              <span key={r} className="admin-chip">
+                {ROLE_LABELS[r] ?? r}: <strong>{n}</strong>
+              </span>
+            ))}
+            {stats.blocked > 0 && <span className="admin-chip admin-chip-danger">Bloklangan: <strong>{stats.blocked}</strong></span>}
+          </div>
+        </section>
+      )}
       <section className="employer-filter-card" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <input className="admin-search" style={{ flex: "1 1 260px" }} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ism, email yoki telefon" />
         <select value={role} onChange={(e) => setRole(e.target.value)} className="admin-select">
@@ -437,7 +439,7 @@ function Audit() {
   const shown = (rows ?? []).filter((r) => !q || `${r.action} ${r.entity} ${r.actor ?? ""}`.toLowerCase().includes(q));
   return (
     <div className="page">
-      <Header kicker="SUPER ADMIN · AUDIT" title="Audit jurnali" text="Platformadagi barcha muhim amallar: kim, nima qildi va qachon (oxirgi 300 ta yozuv)." />
+      <Header kicker="AUDIT" title="Audit jurnali" text="Platformadagi barcha muhim amallar: kim, nima qildi va qachon (oxirgi 300 ta yozuv)." />
       <section className="employer-filter-card">
         <input className="admin-search" style={{ width: "100%" }} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Amal, obyekt yoki foydalanuvchi bo‘yicha qidirish" />
       </section>

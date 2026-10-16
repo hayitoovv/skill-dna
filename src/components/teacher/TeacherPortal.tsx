@@ -594,7 +594,6 @@ export default function TeacherPortal({
     () => [...liveSkills].sort((a, b) => b.gap_pct - a.gap_pct || a.avg_score - b.avg_score),
     [liveSkills]
   );
-  const weakestSkill = weakSkillsSorted[0] ?? null;
 
   // Keep the live remedial skill selection valid for the current group
   useEffect(() => {
@@ -686,15 +685,6 @@ export default function TeacherPortal({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ease, isLive, liveLayerStats]);
-
-  // Selected layer metric
-  const selectedLayer = groupLayers.find((l) => l.key === selectedLayerKey) || groupLayers[1];
-  const selectedLayerScore = layerScoreOf(selectedLayer.key);
-  const selectedLayerDesc = isLive
-    ? selectedLayerScore === null
-      ? "Bu qatlam bo‘yicha guruhda hali baholar yo‘q."
-      : `Guruh bo‘yicha o‘rtacha ${selectedLayerScore} ball — ${liveLayerStats[selectedLayer.key].skills} ta ko‘nikma ma’lumotlari asosida.`
-    : selectedLayer.desc;
 
   // Filtered Students in Matrix
   const filteredStudents = useMemo(() => {
@@ -957,21 +947,10 @@ export default function TeacherPortal({
             </p>
           )}
         </div>
-        <div className="top-actions">
-          <button
-            className="primary-button"
-            onClick={() => {
-              setTab("remedial");
-              setRemedialModalOpen(true);
-              setGeneratedSuccess(false);
-            }}
-          >
-            <Icon name="code" size={17} /> Remedial topshiriq generatsiyasi
-          </button>
-        </div>
       </section>
 
       {/* Overview Stat Cards with ease-in counting */}
+      {currentTab === "heatmap" && (
       <section className="employer-stats-row">
         <div className="employer-stat-pill">
           <div
@@ -1065,164 +1044,23 @@ export default function TeacherPortal({
           </div>
         </div>
       </section>
-
-      {/* Navigation Filter Tabs (4 modules) */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "24px",
-          borderBottom: "1.5px solid var(--border)",
-          paddingBottom: "10px",
-          flexWrap: "wrap",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setTab("heatmap")}
-          style={{
-            padding: "9px 18px",
-            borderRadius: "10px",
-            border: currentTab === "heatmap" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
-            background: currentTab === "heatmap" ? "var(--navy)" : "#ffffff",
-            color: currentTab === "heatmap" ? "#ffffff" : "var(--navy)",
-            fontSize: "13px",
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            transition: "all 0.15s ease",
-            boxShadow: currentTab === "heatmap" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
-          }}
-        >
-          <Icon name="chart" size={16} />
-          <span>Guruh Skill Heatmap</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTab("queue")}
-          style={{
-            padding: "9px 18px",
-            borderRadius: "10px",
-            border: currentTab === "queue" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
-            background: currentTab === "queue" ? "var(--navy)" : "#ffffff",
-            color: currentTab === "queue" ? "#ffffff" : "var(--navy)",
-            fontSize: "13px",
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            transition: "all 0.15s ease",
-            boxShadow: currentTab === "queue" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
-          }}
-        >
-          <Icon name="check" size={16} />
-          <span>PROVE Tasdiqlash navbati</span>
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "10px",
-              background: currentTab === "queue" ? "rgba(255,255,255,0.2)" : "var(--warning-soft)",
-              color: currentTab === "queue" ? "#ffffff" : "var(--warning)",
-              fontSize: "11px",
-              fontWeight: 800,
-            }}
-          >
-            {proveQueue.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTab("remedial")}
-          style={{
-            padding: "9px 18px",
-            borderRadius: "10px",
-            border: currentTab === "remedial" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
-            background: currentTab === "remedial" ? "var(--navy)" : "#ffffff",
-            color: currentTab === "remedial" ? "#ffffff" : "var(--navy)",
-            fontSize: "13px",
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            transition: "all 0.15s ease",
-            boxShadow: currentTab === "remedial" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
-          }}
-        >
-          <Icon name="code" size={16} />
-          <span>Remedial Generator</span>
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "10px",
-              background: currentTab === "remedial" ? "rgba(255,255,255,0.2)" : "var(--accent-soft)",
-              color: currentTab === "remedial" ? "#ffffff" : "var(--accent)",
-              fontSize: "11px",
-              fontWeight: 800,
-            }}
-          >
-            {remedialTasks.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTab("viva")}
-          style={{
-            padding: "9px 18px",
-            borderRadius: "10px",
-            border: currentTab === "viva" ? "1.5px solid var(--navy)" : "1.5px solid var(--border)",
-            background: currentTab === "viva" ? "var(--navy)" : "#ffffff",
-            color: currentTab === "viva" ? "#ffffff" : "var(--navy)",
-            fontSize: "13px",
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            transition: "all 0.15s ease",
-            boxShadow: currentTab === "viva" ? "0 4px 12px rgba(9, 9, 11, 0.12)" : "none",
-          }}
-        >
-          <Icon name="file" size={16} />
-          <span>AI Viva natijalari</span>
-          <span
-            style={{
-              padding: "2px 7px",
-              borderRadius: "10px",
-              background: currentTab === "viva" ? "rgba(255,255,255,0.2)" : "var(--success-soft)",
-              color: currentTab === "viva" ? "#ffffff" : "var(--success)",
-              fontSize: "11px",
-              fontWeight: 800,
-            }}
-          >
-            {vivaResults.length}
-          </span>
-        </button>
-      </div>
+      )}
 
       {/* =========================================================================
           TAB 1: GURUH SKILL HEATMAP & MATRITSA
          ========================================================================= */}
       {currentTab === "heatmap" && (
         <>
-          {/* Hero Split Section: Group 5-Layer Radar + AI Remedial Recommendation Card */}
-          <section className="summary-grid" style={{ marginBottom: "24px" }}>
-            {/* Left: Group Competency Radar Card */}
+          {/* Group 5-Layer Radar */}
+          <section style={{ marginBottom: "24px" }}>
+            {/* Group Competency Radar Card */}
             <article className="card dna-card">
               <div className="card-heading">
                 <div>
                   <p className="card-kicker">GURUH MALAKA RADARI</p>
                   <h2>5 qatlamli o‘rtacha guruh profili</h2>
                 </div>
-                {isLive ? (
-                  <span className="level-badge">Guruh: {groupLabel}</span>
-                ) : (
+                {!isLive && (
                   <span className="level-badge">Bozorga moslik: {Math.round(74 * ease)}%</span>
                 )}
               </div>
@@ -1298,98 +1136,8 @@ export default function TeacherPortal({
                       <p>Yuqori ishonchlilik · 28 ta talabaning 142 ta tekshirilgan dalillari asosida</p>
                     </>
                   )}
-
-                  {/* Selected Layer Details */}
-                  <div className="selected-layer">
-                    <div className={`layer-icon ${selectedLayer.tone}`}>
-                      <Icon name={selectedLayer.icon} />
-                    </div>
-                    <div>
-                      <span>Tanlangan qatlam tahlili</span>
-                      <strong>
-                        {selectedLayer.key} · {selectedLayer.label} ({selectedLayerScore === null ? "—" : selectedLayerScore} ball)
-                      </strong>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: "12px", color: "var(--muted)", margin: "4px 0 0" }}>
-                    {selectedLayerDesc}
-                  </p>
                 </div>
               </div>
-            </article>
-
-            {/* Right: AI Remedial Highlight Card */}
-            <article className="card task-highlight">
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <p className="task-type">REMEDIAL CHELLINJ · AVTOMATIK TAVSIYA</p>
-                {(!isLive || weakestSkill) && (
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      padding: "3px 8px",
-                      borderRadius: "4px",
-                      background: "var(--success-400)",
-                      color: "white",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {isLive && weakestSkill ? `${weakestSkill.below_70} talaba` : "12 talaba"}
-                  </span>
-                )}
-              </div>
-
-              {isLive ? (
-                weakestSkill ? (
-                  <>
-                    <h2>
-                      {weakestSkill.skill.name} bo‘yicha {weakestSkill.gap_pct}% bo‘shliq aniqlandi
-                    </h2>
-                    <p>
-                      Guruhda ushbu ko‘nikma bo‘yicha baholangan {weakestSkill.students_scored} nafar talabadan {weakestSkill.below_70} nafari 70 balldan past natija ko‘rsatgan.
-                    </p>
-                    <div className="task-meta">
-                      <span>
-                        <Icon name="users" size={16} /> {weakestSkill.students_scored} nafar baholangan
-                      </span>
-                      <span>
-                        <Icon name="award" size={16} /> O‘rtacha {weakestSkill.avg_score} ball
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h2>Bo‘shliqlar hali aniqlanmagan</h2>
-                    <p>Ushbu guruhda baholangan ko‘nikmalar yo‘q — talabalar topshiriq bajargach tavsiyalar shu yerda paydo bo‘ladi.</p>
-                  </>
-                )
-              ) : (
-                <>
-                  <h2>DevOps & CI/CD bo‘yicha 46% bo‘shliq aniqlandi</h2>
-                  <p>
-                    Guruhning 12 nafar talabasida Docker va avtomatlashtirishda yetishmovchilik mavjud. Sun’iy intellekt individual parametrli kod topshiriqlari paketini tayyorladi.
-                  </p>
-
-                  <div className="task-meta">
-                    <span>
-                      <Icon name="file" size={16} /> 12 ta unikal variant
-                    </span>
-                    <span>
-                      <Icon name="award" size={16} /> +14 ballgacha o‘sish
-                    </span>
-                  </div>
-                </>
-              )}
-
-              <button
-                className="dark-button"
-                onClick={() => {
-                  setTab("remedial");
-                  if (isLive && weakestSkill) openRemedialFor(weakestSkill.skill.name, weakestSkill.skill.id);
-                  else if (!isLive) openRemedialFor("DevOps va CI/CD", "");
-                }}
-              >
-                Remedial generatoriga o‘tish <Icon name="arrow" size={17} />
-              </button>
             </article>
           </section>
 
@@ -1400,15 +1148,6 @@ export default function TeacherPortal({
                 <h2>5 qatlamli kompetensiya modeli (Guruh natijasi)</h2>
                 <p>Har bir qatlam bo‘yicha guruhning o‘zlashtirishi va vazn ko‘rsatkichi.</p>
               </div>
-              {isLive ? (
-                <span>
-                  Guruh bali <strong>{overallScore === null ? "—" : Math.round(overallScore * ease)}</strong>
-                </span>
-              ) : (
-                <span>
-                  Umumiy tayyorlik <strong>{Math.round(74 * ease)}%</strong>
-                </span>
-              )}
             </div>
 
             <div className="layer-grid">
@@ -1447,7 +1186,7 @@ export default function TeacherPortal({
                 <p className="card-kicker">KOMPETENSIYA VA BO‘SHLIQLAR XARITASI</p>
                 <h2>Fan va ko‘nikmalar bo‘yicha guruh holati</h2>
               </div>
-              <span className="level-badge">{isLive ? `Guruh: ${groupLabel}` : "2026-yil Bahor semestri"}</span>
+              {!isLive && <span className="level-badge">2026-yil Bahor semestri</span>}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -1539,8 +1278,7 @@ export default function TeacherPortal({
                     style={{ fontSize: "13px" }}
                     onClick={() => {
                       setTab("remedial");
-                      setRemedialSkill(item.skill);
-                      if (item.skillId) setRemedialSkillId(item.skillId);
+                      openRemedialFor(item.skill, item.skillId);
                     }}
                   >
                     Topshiriq tuzish →
@@ -1776,7 +1514,7 @@ export default function TeacherPortal({
                 DALIL TURI:
               </span>
               {[
-                { key: "all", label: `Barchasi (${proveQueue.length})` },
+                { key: "all", label: "Barchasi" },
                 { key: "GitHub Repozitoriy", label: "💻 GitHub Repozitoriy" },
                 { key: "Benchmarking Hisoboti", label: "📊 Benchmarking Hisoboti" },
                 { key: "CI/CD Pipeline", label: "⚙️ CI/CD Pipeline" },
@@ -2013,13 +1751,13 @@ export default function TeacherPortal({
           <div className="card-heading" style={{ marginBottom: "18px" }}>
             <div>
               <p className="card-kicker">ADAPTIV PEDAGOGIKA · AI CHALLENGE GENERATOR</p>
-              <h2>Mustahkamlovchi (Remedial) topshiriqlar generatori</h2>
+              <h2>Remedial topshiriqlar</h2>
             </div>
             <span className="level-badge">AI Viva & Kod Sandbox</span>
           </div>
 
           <p style={{ fontSize: "13.5px", color: "var(--muted)", marginBottom: "22px", maxWidth: "820px", lineHeight: "1.6" }}>
-            Guruhda bo‘shliq aniqlangan ko‘nikmalar bo‘yicha har bir talabaga sun’iy intellekt orqali alohida parametrlar va unikal unit testlar bilan individual chellinjlar generatsiya qiling.
+            Tavsiya etilgan paketni tanlang yoki biriktirilgan topshiriqlar holatini kuzating.
           </p>
 
           {/* Recommended AI Remedial Packages */}
@@ -2345,15 +2083,6 @@ export default function TeacherPortal({
                     >
                       <Icon name="file" size={16} />
                       <span>Audio dialog & Transkript</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="candidate-invite-btn"
-                      onClick={() => showToast(`${v.studentName}ning Viva natijasi tasdiqlandi!`)}
-                    >
-                      <Icon name="checkCircle" size={16} />
-                      <span>Bahoni tasdiqlash</span>
                     </button>
                   </div>
                 </article>

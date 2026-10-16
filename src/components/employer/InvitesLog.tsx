@@ -83,8 +83,6 @@ export default function InvitesLog({ onFindCandidates }: { onFindCandidates?: ()
   const shown = useMemo(() => (filter === "all" ? source : source.filter((r) => r.status === filter)), [source, filter]);
 
   const count = (s: Status) => source.filter((r) => r.status === s).length;
-  const answered = count("accepted") + count("declined");
-  const acceptRate = answered ? Math.round((count("accepted") / answered) * 100) : null;
 
   const withdraw = async (row: InviteRow) => {
     setError(null);
@@ -108,7 +106,7 @@ export default function InvitesLog({ onFindCandidates }: { onFindCandidates?: ()
       <section className="welcome-row">
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <p className="eyebrow" style={{ margin: 0 }}>ISH BERUVCHI PANELI · TAKLIFLAR</p>
+            <p className="eyebrow" style={{ margin: 0 }}>TAKLIFLAR</p>
             <span
               style={{
                 display: "inline-flex",
@@ -135,31 +133,6 @@ export default function InvitesLog({ onFindCandidates }: { onFindCandidates?: ()
             <Icon name="refresh" size={15} /> Yangilash
           </button>
         )}
-      </section>
-
-      <section className="employer-stats-row">
-        {[
-          { icon: "mail" as IconName, label: "Jami yuborilgan", value: source.length, tone: "var(--accent)", soft: "var(--accent-soft)" },
-          { icon: "clock" as IconName, label: "Javob kutilmoqda", value: count("sent"), tone: "var(--warning-fg)", soft: "var(--warning-soft)" },
-          { icon: "checkCircle" as IconName, label: "Qabul qilingan", value: count("accepted"), tone: "var(--success)", soft: "var(--success-soft)" },
-          {
-            icon: "chart" as IconName,
-            label: "Qabul qilish ulushi",
-            value: acceptRate === null ? "—" : `${acceptRate}%`,
-            tone: "var(--royal)",
-            soft: "var(--surface-3)",
-          },
-        ].map((s) => (
-          <div className="employer-stat-pill" key={s.label}>
-            <div style={{ width: 42, height: 42, borderRadius: 12, background: s.soft, color: s.tone, display: "grid", placeItems: "center" }}>
-              <Icon name={s.icon} size={20} />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>{s.label}</div>
-              <strong style={{ fontSize: 19, color: "var(--navy)" }}>{s.value}</strong>
-            </div>
-          </div>
-        ))}
       </section>
 
       <section className="employer-filter-card" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -207,11 +180,11 @@ export default function InvitesLog({ onFindCandidates }: { onFindCandidates?: ()
           {source.length === 0 && (
             <>
               <p style={{ margin: "0 auto 16px", fontSize: 13.5, maxWidth: 440 }}>
-                Nomzodlar qidiruvi yoki tasdiqlangan nomzodlar sahifasidan suhbatga taklif yuboring — ular shu yerda paydo bo‘ladi.
+                Nomzodlar qidiruvi sahifasidan suhbatga taklif yuboring — ular shu yerda paydo bo‘ladi.
               </p>
               {onFindCandidates && (
                 <button className="primary-button" type="button" onClick={onFindCandidates}>
-                  Tasdiqlangan nomzodlarni ko‘rish
+                  Nomzodlarni qidirish
                 </button>
               )}
             </>
