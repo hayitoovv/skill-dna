@@ -339,7 +339,8 @@ export default function AuthScreen({
       setLoading(false);
     }
 
-    // Fallback demo matching
+    // Offline fallback: only the built-in demo accounts; anything else must go through the server
+    // (inventing a student account here sent every role into the student portal when the API was down)
     const matched = Object.values(demoUsers).find(
       (u) =>
         u.email.toLowerCase() === loginIdentifier.trim().toLowerCase() ||
@@ -349,18 +350,7 @@ export default function AuthScreen({
     if (matched) {
       onLogin(matched);
     } else {
-      const customUser: User = {
-        id: `usr-${Date.now()}`,
-        name: loginIdentifier.includes("@")
-          ? loginIdentifier.split("@")[0].toUpperCase()
-          : loginIdentifier,
-        email: loginIdentifier.includes("@") ? loginIdentifier : `${loginIdentifier}@skilldna.uz`,
-        role: "student",
-        direction: "software",
-        organization: "Foydalanuvchi hisobi",
-        avatar: loginIdentifier.slice(0, 2).toUpperCase(),
-      };
-      onLogin(customUser);
+      setLoginError("Server bilan bog‘lanib bo‘lmadi. Backend ishga tushirilganini tekshiring va qayta urinib ko‘ring.");
     }
   };
 
