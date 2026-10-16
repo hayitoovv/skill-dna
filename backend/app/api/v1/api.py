@@ -1,7 +1,9 @@
 """API v1 routes — architecture document v2.0, section 12."""
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import admin, assistant, auth, career, credentials, notifications, ontology, profile, staff, tasks, viva
+from app.core.config import settings
+
+from app.api.v1.endpoints import admin, assistant, auth, career, companies, credentials, notifications, ontology, profile, questions, rating, sponsorships, staff, tasks, viva
 
 api_router = APIRouter()
 
@@ -13,6 +15,11 @@ api_router.include_router(viva.router, prefix="/viva", tags=["AI Viva (DEFEND)"]
 api_router.include_router(assistant.router, prefix="/assistant", tags=["AI assistant (AI-assisted mode)"])
 api_router.include_router(profile.router, prefix="/profile", tags=["Skill DNA & Evidence Graph"])
 api_router.include_router(profile.skills_router, tags=["Skill DNA & Evidence Graph"])
+api_router.include_router(rating.router, prefix="/rating", tags=["Rating"])
+api_router.include_router(companies.router, prefix="/companies", tags=["Companies & vacancies"])
+api_router.include_router(questions.router, prefix="/questions", tags=["Question bank"])
+if settings.SPONSORSHIPS_ENABLED:
+    api_router.include_router(sponsorships.router, prefix="/sponsorships", tags=["Sponsored challenges & scholarships"])
 api_router.include_router(career.router, prefix="/careers", tags=["Career DNA & AI Coach"])
 api_router.include_router(career.legacy_router, prefix="/career", tags=["Career DNA & AI Coach"])
 api_router.include_router(career.employer_router, prefix="/employer", tags=["Employer"])

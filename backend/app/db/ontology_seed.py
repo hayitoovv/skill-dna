@@ -97,6 +97,12 @@ CAREERS = {
          {"CE-OS": (3, 75, True), "CE-VIRT": (2, 70, False), "CE-NET": (2, 65, False), "SE-DEVOPS": (1, 60, False)}),
         ("IoT Engineer", "Sensor → gateway → bulut tizimlari.",
          {"CE-IOT": (3, 70, True), "CE-EMB": (2, 70, False), "CE-NET": (1, 60, False), "CE-NETSEC": (1, 55, False)}),
+        ("Cybersecurity Analyst", "Tarmoq va tizimlardagi tahdidlarni aniqlash, himoya choralarini joriy etish.",
+         {"CE-NETSEC": (3, 75, True), "CE-NET": (2, 70, False), "CE-OS": (2, 65, False), "SE-BACKEND": (1, 55, False)}),
+        ("Cloud Engineer", "Bulut infratuzilmasi, virtualizatsiya va konteynerlarni boshqarish.",
+         {"CE-VIRT": (3, 75, True), "SE-DEVOPS": (2, 65, False), "CE-OS": (2, 65, False), "CE-NET": (1, 60, False)}),
+        ("Hardware / Technical Support Engineer", "Kompyuter va qurilmalarni diagnostika qilish, sozlash va ta’mirlash.",
+         {"CE-HWDIAG": (3, 70, True), "CE-OS": (2, 65, False), "CE-ARCH": (1, 60, False), "CE-NET": (1, 55, False)}),
     ],
     "software": [
         ("Backend Developer", "REST API, ma’lumotlar bazasi va server mantiqi.",
@@ -109,6 +115,10 @@ CAREERS = {
          {"SE-QA": (3, 75, True), "SE-DEBUG": (2, 65, False), "SE-BACKEND": (1, 55, False), "SE-GIT": (1, 55, False)}),
         ("DevOps Engineer", "CI/CD, infratuzilma va monitoring.",
          {"SE-DEVOPS": (3, 75, True), "SE-SYSDES": (2, 65, False), "SE-GIT": (1, 60, False), "SE-DEBUG": (1, 55, False)}),
+        ("Data Engineer", "Ma’lumotlar oqimlari (ETL), omborlar va ularni ishonchli saqlash.",
+         {"SE-SQL": (3, 75, True), "AI-EDA": (2, 65, False), "SE-BACKEND": (1, 60, False), "SE-DEVOPS": (1, 55, False)}),
+        ("Software Architect (Junior)", "Tizim arxitekturasini loyihalash va texnik qarorlarni asoslash.",
+         {"SE-SYSDES": (3, 75, True), "SE-OOP": (2, 70, False), "SE-BACKEND": (2, 70, False), "SE-SQL": (1, 60, False)}),
     ],
     "ai": [
         ("ML Engineer", "Modellarni o‘qitish, baholash va ishlab chiqarishga chiqarish.",
@@ -119,6 +129,10 @@ CAREERS = {
          {"AI-EDA": (3, 75, True), "AI-PYMATH": (2, 70, False), "AI-EVAL": (1, 60, False)}),
         ("NLP Engineer", "Matn bilan ishlovchi modellar va RAG tizimlari.",
          {"AI-NLP": (3, 75, True), "AI-DL": (2, 65, False), "AI-EVAL": (2, 65, False), "AI-PYMATH": (1, 60, False)}),
+        ("Computer Vision Engineer", "Tasvir va videoni tahlil qiluvchi modellar.",
+         {"AI-CV": (3, 75, True), "AI-DL": (2, 70, False), "AI-EVAL": (1, 60, False), "AI-PYMATH": (1, 60, False)}),
+        ("MLOps Engineer", "Modellarni ishlab chiqarishga chiqarish, monitoring va qayta o‘qitish.",
+         {"AI-MLOPS": (3, 75, True), "SE-DEVOPS": (2, 65, False), "AI-EVAL": (1, 60, False), "AI-ML": (1, 60, False)}),
     ],
 }
 
@@ -381,6 +395,15 @@ async def seed_ontology(db: AsyncSession) -> dict:
         if ungradable:
             t.status = "archived"
 
+    # The fixed KNOW questions also become approved bank questions (source "seed"), once per skill
+    from app.models import Question
+    for code, questions in KNOW_BANK.items():
+        has_seed = (await db.execute(select(Question.id).where(Question.skill_id == skills[code].id, Question.source == "seed"))).first()
+        if not has_seed:
+            for q, opts, ans in questions:
+                db.add(Question(skill_id=skills[code].id, text=q, options=list(opts), answer_index=ans, difficulty="L2",
+                                source="seed", status="approved"))
+            stats["bank_questions"] = stats.get("bank_questions", 0) + len(questions)
     for code, questions in KNOW_BANK.items():
         sk = skills[code]
         await upsert_task(

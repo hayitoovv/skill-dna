@@ -6,6 +6,9 @@ from app.models.evidence import Evidence, EvidenceEdge, SkillScore, IntegrityFla
 from app.models.career import CareerProfile, EmployerCriteria, EmployerInvite, Match, Appeal, AuditLog
 from app.models.notification import Notification
 from app.models.content import SiteText
+from app.models.company import Vacancy, HiringStat, EmployerPlan
+from app.models.sponsorship import SponsoredChallenge, Scholarship, ScholarshipAward
+from app.models.question import Question
 
 __all__ = [
     "BaseModel",
@@ -40,4 +43,11 @@ __all__ = [
     "AuditLog",
     "Notification",
     "SiteText",
+    "Vacancy",
+    "HiringStat",
+    "EmployerPlan",
+    "SponsoredChallenge",
+    "Scholarship",
+    "ScholarshipAward",
+    "Question",
 ]

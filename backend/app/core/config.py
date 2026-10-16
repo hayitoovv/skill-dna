@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 16000
     VIVA_GRADER_COUNT: int = 3
 
+    # Sponsored challenges and scholarships: off for now; code and tables stay (frontend: src/config/features.ts)
+    SPONSORSHIPS_ENABLED: bool = False
+
     # Job queue (section 3.1). Empty = jobs run as background tasks inside the API process.
     REDIS_URL: str = ""
 

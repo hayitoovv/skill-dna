@@ -44,3 +44,32 @@ def test_plan_targets_missing_layer_first():
     assert plan[1]["target_layer"] == "DO"  # weakest present layer
     assert plan[0]["reassess_on"] == "2026-10-31"
     assert len(plan) == 2
+
+
+# ---------- Inclination (career recommendations) ----------
+from app.services import career  # noqa: E402
+
+def _reqs():
+    return [career.Requirement("A", 3, 75, must=True), career.Requirement("B", 1, 50)]
+
+
+def test_readiness_does_not_hard_filter_missing_must():
+    states = {"B": career.SkillState(50, 100)}
+    assert career.match(_reqs(), states).match_pct is None
+    assert career.readiness(_reqs(), states) == 25.0  # only B (weight 1 of 4) is met
+
+
+def test_interest_counts_attempts_up_to_cap():
+    assert career.interest(_reqs(), {}) == 0.0
+    assert career.interest(_reqs(), {"A": 3}) == 75.0
+    assert career.interest(_reqs(), {"A": 10, "B": 9}) == 100.0
+
+
+def test_inclination_weights():
+    assert career.inclination(80, 50) == 71.0
+
+
+def test_inclination_reasons():
+    reasons = career.inclination_reasons(_reqs(), {"A": career.SkillState(81, 90)}, {"A": 2}, {"A": "Backend"})
+    assert reasons[0] == "Eng kuchli tomon: Backend (81)"
+    assert "2 ta topshiriq" in reasons[1]

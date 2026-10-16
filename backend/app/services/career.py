@@ -84,6 +84,51 @@ def explanation(result: MatchResult) -> Dict:
     }
 
 
+# ---------- Inclination: which profession suits the student (career recommendations) ----------
+INCLINATION_WEIGHTS = (0.7, 0.3)  # (readiness, interest)
+INTEREST_FULL_ATTEMPTS = 3  # attempts on a skill that count as full engagement with it
+
+
+def readiness(requirements: List[Requirement], skills: Dict[str, SkillState]) -> float:
+    """Soft match: the same weighted formula as `match`, but a missing must-have skill only lowers it.
+    A beginner still gets a ranking instead of “—” everywhere."""
+    den = sum(r.importance for r in requirements)
+    if not den:
+        return 0.0
+    num = sum(r.importance * min(1.0, adjusted(skills.get(r.skill_code, SkillState(0.0, 0.0))) / r.min_score if r.min_score else 1.0)
+              for r in requirements)
+    return round(100 * num / den, 1)
+
+
+def interest(requirements: List[Requirement], attempts_by_skill: Dict[str, int]) -> float:
+    """How much the student works on this profession's skills: importance-weighted engagement,
+    a skill counting fully after INTEREST_FULL_ATTEMPTS attempts."""
+    den = sum(r.importance for r in requirements)
+    if not den:
+        return 0.0
+    num = sum(r.importance * min(1.0, attempts_by_skill.get(r.skill_code, 0) / INTEREST_FULL_ATTEMPTS) for r in requirements)
+    return round(100 * num / den, 1)
+
+
+def inclination(readiness_pct: float, interest_pct: float) -> float:
+    w_ready, w_interest = INCLINATION_WEIGHTS
+    return round(w_ready * readiness_pct + w_interest * interest_pct, 1)
+
+
+def inclination_reasons(requirements: List[Requirement], skills: Dict[str, SkillState], attempts_by_skill: Dict[str, int],
+                        names: Dict[str, str]) -> List[str]:
+    """Short “why this profession” lines from the student's own evidence."""
+    out = []
+    ranked = sorted(requirements, key=lambda r: -adjusted(skills.get(r.skill_code, SkillState(0.0, 0.0))))
+    best = [r for r in ranked if skills.get(r.skill_code) and skills[r.skill_code].score > 0][:2]
+    if best:
+        out.append("Eng kuchli tomon: " + ", ".join(f"{names.get(r.skill_code, r.skill_code)} ({round(skills[r.skill_code].score)})" for r in best))
+    n = sum(attempts_by_skill.get(r.skill_code, 0) for r in requirements)
+    if n:
+        out.append(f"Shu kasb ko‘nikmalari bo‘yicha {n} ta topshiriq bajargansiz")
+    return out
+
+
 LAYER_ACTIONS = {
     "KNOW": "nazariy testni (KNOW) topshiring",
     "DO": "amaliy topshiriqni (DO) bajaring",

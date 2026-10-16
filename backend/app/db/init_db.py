@@ -4,6 +4,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import engine, Base, AsyncSessionLocal
+from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models import (
     Organization, User, StudentProfile, Consent, UserRole,
@@ -13,6 +14,7 @@ from app.models import (
 async def init_database():
     from app.db.ontology_seed import seed_ontology
     from app.db.recompute_scores import recompute_all
+    from app.db.company_seed import seed_sample_companies, seed_sample_sponsorships
 
     print("Creating all database tables in PostgreSQL (skill_dna)...")
     async with engine.begin() as conn:
@@ -27,6 +29,10 @@ async def init_database():
             print("Database already initialized. Updating ontology (section 9) and demo students...")
             await ensure_demo_students(session)
             print("Ontology:", await seed_ontology(session))
+            print("Sample companies:", await seed_sample_companies(session))
+            await session.flush()
+            if settings.SPONSORSHIPS_ENABLED:
+                print("Sample sponsorships:", await seed_sample_sponsorships(session))
             await session.commit()
             print("Recomputed scores:", await recompute_all())
             return
@@ -332,6 +338,10 @@ async def init_database():
         await session.commit()
         await ensure_demo_students(session)
         print("Ontology:", await seed_ontology(session))
+        print("Sample companies:", await seed_sample_companies(session))
+        await session.flush()
+        if settings.SPONSORSHIPS_ENABLED:
+            print("Sample sponsorships:", await seed_sample_sponsorships(session))
         await session.commit()
         print("Recomputed scores:", await recompute_all())
         print("Database seeded with sample users, directions, skills, tasks, and scores!")

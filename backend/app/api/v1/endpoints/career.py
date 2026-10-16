@@ -5,13 +5,13 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import EMPLOYER, client_ip, get_current_user, require_roles
 from app.core.database import get_db
-from app.models import (CareerProfile, Consent, Credential, Direction, EmployerCriteria, EmployerInvite, Evidence, Match,
-                        Skill, StudentProfile, User)
+from app.models import (Attempt, CareerProfile, Consent, Credential, Direction, EmployerCriteria, EmployerInvite, Evidence, Match,
+                        Skill, StudentProfile, Task, User)
 from app.services import audit, career, skill_service
 from app.services.notify import notify
 
@@ -77,6 +77,55 @@ async def list_careers(user: User = Depends(get_current_user), db: AsyncSession 
                     "top_gap": m["result"].gaps[0] if m["result"].gaps else None})
     out.sort(key=lambda x: -(x["matchPct"] or -1))
     return out
+
+
+async def _attempts_by_skill(db: AsyncSession, user_id: uuid.UUID) -> Dict[str, int]:
+    """Skill code -> number of the student's attempts on that skill's tasks."""
+    rows = (await db.execute(
+        select(Skill.code, func.count(Attempt.id))
+        .join(Task, Task.skill_id == Skill.id).join(Attempt, Attempt.task_id == Task.id)
+        .where(Attempt.user_id == user_id).group_by(Skill.code)
+    )).all()
+    return {code: n for code, n in rows}
+
+
+@router.get("/recommendations")
+async def career_recommendations(limit: int = 3, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """GET /careers/recommendations — professions the student leans towards, across all directions:
+    inclination = 0.7 * readiness (soft match) + 0.3 * interest (attempts on the profession's skills)."""
+    states, _, names = await _skill_states(db, user.id)
+    attempts = await _attempts_by_skill(db, user.id)
+    if not states and not attempts:
+        return {"items": [], "hint": "Kamida bitta topshiriq bajaring — shundan keyin sizga mos kasblarni tavsiya qilamiz."}
+    directions = {d.id: d.name for d in (await db.execute(select(Direction))).scalars().all()}
+    items = []
+    for p in (await db.execute(select(CareerProfile).where(CareerProfile.is_deleted.is_(False)))).scalars().all():
+        reqs = career.parse_requirements(p.requirements)
+        ready, intr = career.readiness(reqs, states), career.interest(reqs, attempts)
+        hard = career.match(reqs, states)
+        items.append({
+            "id": str(p.id), "roleName": p.role_name, "description": p.description,
+            "direction": directions.get(p.direction_id),
+            "inclination": career.inclination(ready, intr), "readiness": ready, "interest": intr,
+            "matchPct": hard.match_pct,
+            "reasons": career.inclination_reasons(reqs, states, attempts, names),
+            "top_gap": _named(hard, names).gaps[0] if hard.gaps else None,
+        })
+    items.sort(key=lambda x: -x["inclination"])
+    items = items[:max(1, min(limit, 20))]
+    # Where each recommended profession is hiring right now
+    from app.models import Organization, Vacancy
+    rows = (await db.execute(
+        select(Vacancy.career_profile_id, Organization.name, Vacancy.openings)
+        .join(Organization, Organization.id == Vacancy.org_id)
+        .where(Vacancy.status == "open", Vacancy.is_deleted.is_(False),
+               Vacancy.career_profile_id.in_([uuid.UUID(i["id"]) for i in items]))
+    )).all()
+    for i in items:
+        mine = [r for r in rows if str(r[0]) == i["id"]]
+        i["vacancies"] = {"count": len(mine), "openings": sum(r[2] for r in mine),
+                          "companies": sorted({r[1] for r in mine})[:3]}
+    return {"items": items, "hint": None}
 
 
 async def _get_profile(db: AsyncSession, career_id: uuid.UUID) -> CareerProfile:
@@ -321,6 +370,8 @@ async def invite_candidate(candidate_id: uuid.UUID, request: Request, payload: O
     ))).scalars().first()
     if open_invite:
         raise HTTPException(status_code=409, detail="Bu nomzodga shu lavozim bo‘yicha taklif allaqachon yuborilgan")
+    from app.api.v1.endpoints.companies import spend_invite_credit  # plan limits (financial model)
+    await spend_invite_credit(db, user)
     inv = EmployerInvite(employer_id=user.id, candidate_id=candidate_id, job_title=job_title,
                          message=(payload.message or "").strip() or None)
     db.add(inv)

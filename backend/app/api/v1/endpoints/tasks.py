@@ -18,9 +18,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import STUDENT, client_ip, ensure_can_view, get_current_user
 from app.core.database import get_db
-from app.models import AIUsageLog, Attempt, Skill, Submission, Task, TaskVariant, User
+from app.models import AIUsageLog, Attempt, Question, Skill, Submission, Task, TaskVariant, User
 from app.schemas.assessment import AttemptStart
-from app.services import audit, challenges, evaluation, integrity, skill_service
+import random
+
+from app.services import audit, challenges, evaluation, integrity, question_bank, skill_service
 from app.worker.queue import enqueue
 
 router = APIRouter()
@@ -33,7 +35,8 @@ def public_spec(task: Task) -> Dict[str, Any]:
     """Strips answer keys and hidden tests before a spec leaves the server."""
     spec = {k: v for k, v in (task.spec or {}).items() if k not in PRIVATE_SPEC_KEYS}
     if task.layer == "KNOW" and "questions" in spec:
-        spec["questions"] = [{k: v for k, v in q.items() if k != "answer_index"} for q in spec["questions"]]
+        # Each attempt draws its own set from the bank (see _issue_know_set), so the fixed list is not published
+        spec.pop("questions")
     if task.layer == "DO" and (task.spec or {}).get("tests"):
         spec["visible_tests"] = [t["name"] for t in task.spec["tests"] if not t.get("hidden")]
         spec["tests_total"] = len(task.spec["tests"])
@@ -113,6 +116,31 @@ async def _issue_variant(db: AsyncSession, task: Task, user: User, attempt_no: i
     return row
 
 
+async def _issue_know_set(db: AsyncSession, task: Task, user: User, attempt_no: int) -> Optional[TaskVariant]:
+    """A personal KNOW set: random approved bank questions with shuffled options (answers stay in the variant).
+    Without approved questions the task's own fixed questions are used, still drawn and shuffled."""
+    rows = (await db.execute(select(Question.id, Question.text, Question.options, Question.answer_index).where(
+        Question.skill_id == task.skill_id, Question.status == "approved", Question.is_deleted.is_(False)))).all()
+    pool = [(str(r[0]), r[1], list(r[2]), r[3]) for r in rows]
+    if not pool:
+        pool = [(str(q["id"]), q["text"], list(q["options"]), int(q["answer_index"])) for q in (task.spec or {}).get("questions") or []]
+    if not pool:
+        return None
+    seed = challenges.derive_seed(user.id, task.id, attempt_no)
+    drawn = question_bank.draw(pool, random.Random(seed))
+    row = TaskVariant(task_id=task.id, user_id=user.id, seed=seed, params={"kind": "know", "questions": drawn},
+                      solution_ref="question_bank", checksum=None)
+    db.add(row)
+    await db.flush()
+    return row
+
+
+def know_public(v: Optional[TaskVariant]) -> Optional[list]:
+    if not v or (v.params or {}).get("kind") != "know":
+        return None
+    return [{k: val for k, val in q.items() if k != "answer_index"} for q in v.params["questions"]]
+
+
 def variant_payload(v: TaskVariant) -> Dict[str, Any]:
     p = v.params or {}
     return {"variant_id": str(v.id), "template": p.get("template"), "kind": p.get("kind"),
@@ -127,7 +155,8 @@ async def _start(db: AsyncSession, request: Request, user: User, task_id, ai_mod
     attempt_no = (
         await db.execute(select(func.count(Attempt.id)).where(Attempt.user_id == user.id, Attempt.task_id == task.id))
     ).scalar() + 1
-    variant = await _issue_variant(db, task, user, attempt_no) if task.layer == "ADAPT" else None
+    variant = (await _issue_variant(db, task, user, attempt_no) if task.layer == "ADAPT"
+               else await _issue_know_set(db, task, user, attempt_no) if task.layer == "KNOW" else None)
     attempt = Attempt(
         user_id=user.id,
         task_id=task.id,
@@ -147,7 +176,7 @@ async def _start(db: AsyncSession, request: Request, user: User, task_id, ai_mod
         "layer": task.layer,
         "ai_mode": attempt.ai_mode,
         "duration_minutes": task.duration_minutes,
-        "spec": public_spec(task),
+        "spec": {**public_spec(task), "questions": know_public(variant)} if know_public(variant) is not None else public_spec(task),
         "variant": variant_payload(variant) if variant else None,
         "started_at": attempt.started_at.isoformat(),
     }
@@ -177,8 +206,11 @@ async def _load_attempt(db: AsyncSession, attempt_id, user: User) -> Attempt:
     return attempt
 
 
-def _grade_know(task: Task, answers: Dict[str, Any]):
-    questions = (task.spec or {}).get("questions") or []
+def _grade_know(task: Task, answers: Dict[str, Any], variant: Optional[TaskVariant] = None):
+    if variant and (variant.params or {}).get("kind") == "know":
+        questions = variant.params["questions"]
+    else:
+        questions = (task.spec or {}).get("questions") or []
     if not questions:
         raise HTTPException(status_code=500, detail="KNOW topshirig‘ida savollar yo‘q")
     details = []
@@ -234,7 +266,7 @@ async def _submit(db: AsyncSession, request: Request, user: User, attempt_id, pa
         variant = (await db.execute(select(TaskVariant).where(TaskVariant.id == attempt.variant_id))).scalars().first()
 
     if task.layer == "KNOW":
-        score, details = _grade_know(task, payload.answers or {})
+        score, details = _grade_know(task, payload.answers or {}, variant)
     elif task.layer in ("DO", "ADAPT") and (task.layer == "DO" or (variant and variant.params.get("kind") == "code")):
         if not payload.code_content:
             raise HTTPException(status_code=400, detail="Kod yuborilmadi.")

@@ -29,7 +29,7 @@ router = APIRouter()
 # super admins are provisioned by an administrator (section 2.3).
 SELF_REGISTER_ROLES = {"student", "teacher", "employer"}
 ALL_ROLES = {"student", "teacher", "employer", "university", "moderator", "super_admin"}
-CONSENT_TYPES = {"viva_record", "employer_share", "data_processing"}
+CONSENT_TYPES = {"viva_record", "employer_share", "data_processing", "rating_public"}
 
 
 def _initials(full_name: str) -> str:
