@@ -15,6 +15,7 @@ async def init_database():
     from app.db.ontology_seed import seed_ontology
     from app.db.recompute_scores import recompute_all
     from app.db.company_seed import seed_sample_companies, seed_sample_sponsorships
+    from app.db.rating_seed import remove_sample_students, seed_sample_students
 
     print("Creating all database tables in PostgreSQL (skill_dna)...")
     async with engine.begin() as conn:
@@ -34,6 +35,10 @@ async def init_database():
             if settings.SPONSORSHIPS_ENABLED:
                 print("Sample sponsorships:", await seed_sample_sponsorships(session))
             await session.commit()
+            if settings.SAMPLE_STUDENTS_ENABLED:
+                print("Sample students:", await seed_sample_students(session))
+            else:
+                print("Removed sample students:", await remove_sample_students(session))
             print("Recomputed scores:", await recompute_all())
             return
 
@@ -343,6 +348,10 @@ async def init_database():
         if settings.SPONSORSHIPS_ENABLED:
             print("Sample sponsorships:", await seed_sample_sponsorships(session))
         await session.commit()
+        if settings.SAMPLE_STUDENTS_ENABLED:
+            print("Sample students:", await seed_sample_students(session))
+        else:
+            print("Removed sample students:", await remove_sample_students(session))
         print("Recomputed scores:", await recompute_all())
         print("Database seeded with sample users, directions, skills, tasks, and scores!")
 

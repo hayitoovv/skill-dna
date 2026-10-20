@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     # Sponsored challenges and scholarships: off for now; code and tables stay (frontend: src/config/features.ts)
     SPONSORSHIPS_ENABLED: bool = False
 
+    # Sample students that fill the rating while real ones join (app/db/rating_seed.py). False = init_db removes them.
+    SAMPLE_STUDENTS_ENABLED: bool = True
+
     # Job queue (section 3.1). Empty = jobs run as background tasks inside the API process.
     REDIS_URL: str = ""
 
