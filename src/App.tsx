@@ -40,6 +40,11 @@ export default function App() {
   const { t } = useI18n();
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
+      // A saved profile without a token is a dead session: every API call would 401 and pages would stay empty
+      if (!hasSession()) {
+        localStorage.removeItem("skill_dna_user");
+        return null;
+      }
       const saved = localStorage.getItem("skill_dna_user");
       return saved ? JSON.parse(saved) : null;
     } catch {
