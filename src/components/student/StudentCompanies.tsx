@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FEATURES } from "../../config/features"
 import { Icon } from "../common/Icons"
 import {
@@ -17,7 +17,23 @@ const EMPLOYMENT_LABELS: Record<Vacancy["employment_type"], string> = {
   internship: "Amaliyot (stajyor)",
 }
 
+const EMPLOYMENT_TONES: Record<Vacancy["employment_type"], string> = {
+  full_time: "accent",
+  part_time: "warning",
+  internship: "success",
+}
+
+// Logo tiles: a company always gets the same gradient
+const MONOGRAM_GRADIENTS = [
+  "linear-gradient(135deg, var(--accent-400), var(--accent-strong))",
+  "linear-gradient(135deg, var(--success-400), var(--success-fg))",
+  "linear-gradient(135deg, var(--warning-400), var(--warning-fg))",
+  "linear-gradient(135deg, var(--danger-400), var(--danger-fg))",
+  "linear-gradient(135deg, var(--accent-300), var(--accent))",
+]
+
 type Tab = "companies" | "challenges" | "scholarships"
+type Sort = "vacancies" | "hires" | "name"
 
 const ALL_TABS: { key: Tab; label: string; subtitle: string }[] = [
   {
@@ -42,10 +58,88 @@ const ALL_TABS: { key: Tab; label: string; subtitle: string }[] = [
 
 const TABS = FEATURES.sponsorships ? ALL_TABS : ALL_TABS.filter((t) => t.key === "companies")
 
-const hiresText = (c: CompanyCard) =>
-  c.hires_last_year.hired > 0
-    ? `${c.hires_last_year.year}-yilda universitetingizdan ${c.hires_last_year.hired} talaba ishga olingan`
-    : `${c.hires_last_year.year}-yil bo‘yicha ma’lumot yo‘q`
+const SORTS: { key: Sort; label: string }[] = [
+  { key: "vacancies", label: "Vakansiyalar soni" },
+  { key: "hires", label: "Ishga olinganlar" },
+  { key: "name", label: "Nomi (A–Z)" },
+]
+
+const metaText = (c: CompanyCard) => [c.industry, c.region].filter(Boolean).join(" · ") || "—"
+
+function Monogram({ name, large }: { name: string; large?: boolean }) {
+  let hash = 0
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+  const letters = name.split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+  return (
+    <span
+      className={`co-monogram${large ? " large" : ""}`}
+      style={{ background: MONOGRAM_GRADIENTS[hash % MONOGRAM_GRADIENTS.length] }}
+      aria-hidden="true"
+    >
+      {letters}
+    </span>
+  )
+}
+
+function readinessTone(pct: number) {
+  return pct >= 70 ? "success" : pct >= 40 ? "warning" : "danger"
+}
+
+function VacancyItem({ v }: { v: Vacancy }) {
+  return (
+    <div className="co-vacancy">
+      <div className="co-vacancy-head">
+        <div style={{ minWidth: 0 }}>
+          <strong>{v.title}</strong>
+          {v.career && <span className="co-vacancy-career">{v.career}</span>}
+        </div>
+        <span className="co-openings">{v.openings} o‘rin</span>
+      </div>
+      <div className="co-chips">
+        <span className={`co-chip tone-${EMPLOYMENT_TONES[v.employment_type] ?? "muted"}`}>
+          {EMPLOYMENT_LABELS[v.employment_type] ?? v.employment_type}
+        </span>
+        {v.city && <span className="co-chip">{v.city}</span>}
+        {v.salary_note && <span className="co-chip">{v.salary_note}</span>}
+      </div>
+      {typeof v.readiness === "number" && (
+        <div className={`co-readiness tone-${readinessTone(v.readiness)}`}>
+          <div className="co-readiness-row">
+            <span>Sizning tayyorligingiz</span>
+            <strong>{v.readiness}%</strong>
+          </div>
+          <div className="co-readiness-bar">
+            <i style={{ width: `${Math.max(Math.min(v.readiness, 100), 2)}%` }} />
+          </div>
+          {v.matchPct === null && <small>Majburiy ko‘nikma hali isbotlanmagan</small>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function HiresChart({ hires }: { hires: CompanyDetail["hires"] }) {
+  const rows = [...hires].sort((a, b) => a.year - b.year)
+  const max = Math.max(1, ...rows.map((h) => h.hired))
+  return (
+    <div className="co-hires" role="list">
+      {rows.map((h) => (
+        <div
+          key={h.year}
+          className="co-hires-col"
+          role="listitem"
+          title={h.platform > 0 ? `${h.hired} talaba · platforma orqali ${h.platform}` : `${h.hired} talaba`}
+        >
+          <strong>{h.hired}</strong>
+          <div className="co-hires-track">
+            <i style={{ height: `${Math.max((h.hired / max) * 100, 4)}%` }} />
+          </div>
+          <span>{h.year}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function CompanyModal({ id, onClose }: { id: string; onClose: () => void }) {
   const [detail, setDetail] = useState<CompanyDetail | null>(null)
@@ -66,256 +160,134 @@ function CompanyModal({ id, onClose }: { id: string; onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKey)
   }, [onClose])
 
-  const openVacancies =
-    detail?.vacancies.filter((v) => v.status === "open") ?? []
+  const openVacancies = detail?.vacancies.filter((v) => v.status === "open") ?? []
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <div
-        className="modal"
+        className="modal co-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="company-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: "640px",
-          width: "95%",
-          maxHeight: "90vh",
-          overflowY: "auto",
-        }}
       >
         <button className="modal-close" aria-label="Yopish" onClick={onClose}>
           <Icon name="close" />
         </button>
 
         {error ? (
-          <p style={mutedState}>
-            Ma’lumotni yuklab bo‘lmadi. Server ishlayotganini tekshiring.
-          </p>
+          <p style={mutedState}>Ma’lumotni yuklab bo‘lmadi. Server ishlayotganini tekshiring.</p>
         ) : !detail ? (
           <p style={mutedState}>Yuklanmoqda…</p>
         ) : (
           <>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                marginBottom: "16px",
-                paddingRight: "36px",
-              }}
-            >
-              <div
-                style={{
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "12px",
-                  background: "var(--accent-soft)",
-                  color: "var(--accent)",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Icon name="building" size={22} />
-              </div>
+            <header className="co-modal-head">
+              <Monogram name={detail.name} large />
               <div style={{ minWidth: 0 }}>
-                <h2
-                  id="company-modal-title"
-                  style={{
-                    fontSize: "20px",
-                    margin: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <h2 id="company-modal-title">
                   {detail.name} {detail.demo && <DemoTag />}
                 </h2>
-                <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-                  {[detail.industry, detail.region]
-                    .filter(Boolean)
-                    .join(" · ") || "—"}
-                </span>
+                <span className="co-meta">{metaText(detail)}</span>
+                {detail.website && (
+                  <a
+                    className="co-website"
+                    href={detail.website.startsWith("http") ? detail.website : `https://${detail.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {detail.website.replace(/^https?:\/\//, "").replace(/\/$/, "")} <Icon name="external" size={13} />
+                  </a>
+                )}
+              </div>
+            </header>
+
+            {detail.about && <p className="co-about-full">{detail.about}</p>}
+
+            <div className="co-modal-stats">
+              <div>
+                <strong>{openVacancies.length}</strong>
+                <span>vakansiya</span>
+              </div>
+              <div>
+                <strong>{openVacancies.reduce((n, v) => n + v.openings, 0)}</strong>
+                <span>bo‘sh o‘rin</span>
+              </div>
+              <div>
+                <strong>{detail.hires_last_year.hired}</strong>
+                <span>{detail.hires_last_year.year}-yilda olingan</span>
               </div>
             </div>
 
-            {detail.about && (
-              <p
-                style={{
-                  margin: "0 0 10px",
-                  fontSize: "14px",
-                  color: "var(--text-2)",
-                  lineHeight: 1.55,
-                }}
-              >
-                {detail.about}
-              </p>
-            )}
-            {detail.website && (
-              <a
-                className="text-button"
-                href={
-                  detail.website.startsWith("http")
-                    ? detail.website
-                    : `https://${detail.website}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "13.5px",
-                }}
-              >
-                {detail.website.replace(/^https?:\/\//, "")}{" "}
-                <Icon name="external" size={14} />
-              </a>
-            )}
-
-            <h3
-              style={{
-                fontSize: "15px",
-                margin: "22px 0 10px",
-                color: "var(--navy)",
-              }}
-            >
-              Ochiq vakansiyalar ({openVacancies.length})
+            <h3 className="co-section-title">
+              <Icon name="briefcase" size={16} /> Ochiq vakansiyalar
             </h3>
             {openVacancies.length === 0 ? (
-              <p
-                style={{ margin: 0, fontSize: "13.5px", color: "var(--muted)" }}
-              >
-                Hozircha ochiq vakansiyalar yo‘q.
-              </p>
+              <p className="co-empty-note">Hozircha ochiq vakansiyalar yo‘q.</p>
             ) : (
-              <div style={{ display: "grid", gap: "10px" }}>
+              <div className="co-vacancies">
                 {openVacancies.map((v) => (
-                  <div
-                    key={v.id}
-                    style={{
-                      border: "1px solid var(--border-soft)",
-                      borderRadius: "12px",
-                      padding: "12px 14px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "10px",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <strong
-                          style={{ color: "var(--navy)", fontSize: "14.5px" }}
-                        >
-                          {v.title}
-                        </strong>
-                        {v.career && (
-                          <div
-                            style={{
-                              fontSize: "12.5px",
-                              color: "var(--muted)",
-                            }}
-                          >
-                            {v.career}
-                          </div>
-                        )}
-                      </div>
-                      <span
-                        className="level-badge"
-                        style={{ whiteSpace: "nowrap" }}
-                      >
-                        {v.openings} o‘rin
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "12.5px",
-                        color: "var(--text-3)",
-                        marginTop: "6px",
-                      }}
-                    >
-                      {[
-                        EMPLOYMENT_LABELS[v.employment_type] ??
-                          v.employment_type,
-                        v.city,
-                        v.salary_note,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </div>
-                    {typeof v.readiness === "number" && (
-                      <div style={{ marginTop: "8px", fontSize: "13px" }}>
-                        <span
-                          style={{ color: "var(--accent)", fontWeight: 700 }}
-                        >
-                          Sizning tayyorligingiz {v.readiness}%
-                        </span>
-                        {v.matchPct === null && (
-                          <span
-                            style={{ color: "var(--muted)", marginLeft: "8px" }}
-                          >
-                            · Majburiy ko‘nikma hali isbotlanmagan
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <VacancyItem key={v.id} v={v} />
                 ))}
               </div>
             )}
 
             {detail.hires.length > 0 && (
               <>
-                <h3
-                  style={{
-                    fontSize: "15px",
-                    margin: "22px 0 8px",
-                    color: "var(--navy)",
-                  }}
-                >
-                  Yillar bo‘yicha ishga olinganlar
+                <h3 className="co-section-title">
+                  <Icon name="users" size={16} /> Universitetingizdan ishga olinganlar
                 </h3>
-                <div>
-                  {detail.hires.map((h, i) => (
-                    <div
-                      key={h.year}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "12px",
-                        padding: "8px 0",
-                        fontSize: "13.5px",
-                        borderTop:
-                          i === 0 ? undefined : "1px solid var(--border-soft)",
-                      }}
-                    >
-                      <span style={{ color: "var(--muted)" }}>
-                        {h.year}-yil
-                      </span>
-                      <span style={{ color: "var(--navy)" }}>
-                        <strong>{h.hired}</strong> talaba
-                        {h.platform > 0 && (
-                          <span style={{ color: "var(--muted)" }}>
-                            {" "}
-                            · platforma orqali {h.platform}
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <HiresChart hires={detail.hires} />
               </>
             )}
           </>
         )}
       </div>
     </div>
+  )
+}
+
+function CompanyTile({ c, onOpen, delay }: { c: CompanyCard; onOpen: () => void; delay: number }) {
+  const hasOpen = c.open_vacancies > 0
+  return (
+    <button className={`card co-card${hasOpen ? "" : " is-quiet"}`} onClick={onOpen} style={{ animationDelay: `${delay}ms` }}>
+      <div className="co-card-top">
+        <Monogram name={c.name} />
+        <div className="co-card-title">
+          <strong className="co-card-name">{c.name}</strong>
+          <span className="co-meta" title={metaText(c)}>
+            {metaText(c)}
+          </span>
+          <div className="co-card-tags">
+            <span className={`co-status${hasOpen ? " open" : ""}`}>
+              <i /> {hasOpen ? "Ishga olmoqda" : "Vakansiya yo‘q"}
+            </span>
+            {c.demo && <DemoTag />}
+          </div>
+        </div>
+      </div>
+
+      {c.about && <p className="co-about">{c.about}</p>}
+
+      <div className="co-metrics">
+        <div>
+          <strong>{c.open_vacancies}</strong>
+          <span>vakansiya</span>
+        </div>
+        <div>
+          <strong>{c.openings}</strong>
+          <span>bo‘sh o‘rin</span>
+        </div>
+        <div title={`${c.hires_last_year.year}-yilda universitetingizdan ishga olingan`}>
+          <strong>{c.hires_last_year.hired || "—"}</strong>
+          <span>ishga olingan</span>
+        </div>
+      </div>
+
+      <div className="co-card-foot">
+        <span>Batafsil ko‘rish</span>
+        <Icon name="arrow" size={16} />
+      </div>
+    </button>
   )
 }
 
@@ -330,6 +302,9 @@ export default function StudentCompanies({
   const [error, setError] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>("companies")
+  const [query, setQuery] = useState("")
+  const [onlyOpen, setOnlyOpen] = useState(false)
+  const [sort, setSort] = useState<Sort>("vacancies")
   const careerId = careerFilter?.id
 
   useEffect(() => {
@@ -348,8 +323,34 @@ export default function StudentCompanies({
   const activeTab = careerFilter ? "companies" : tab
   const current = TABS.find((t) => t.key === activeTab) ?? TABS[0]
 
+  const totals = useMemo(() => {
+    const list = companies ?? []
+    return {
+      vacancies: list.reduce((n, c) => n + c.open_vacancies, 0),
+      openings: list.reduce((n, c) => n + c.openings, 0),
+      hired: list.reduce((n, c) => n + c.hires_last_year.hired, 0),
+      year: list[0]?.hires_last_year.year ?? new Date().getFullYear() - 1,
+    }
+  }, [companies])
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const list = (companies ?? []).filter(
+      (c) =>
+        (!onlyOpen || c.open_vacancies > 0) &&
+        (!q || [c.name, c.industry, c.region].some((t) => t?.toLowerCase().includes(q))),
+    )
+    return list.sort((a, b) =>
+      sort === "name"
+        ? a.name.localeCompare(b.name)
+        : sort === "hires"
+          ? b.hires_last_year.hired - a.hires_last_year.hired
+          : b.openings - a.openings || b.open_vacancies - a.open_vacancies,
+    )
+  }, [companies, query, onlyOpen, sort])
+
   return (
-    <div className="page">
+    <div className="page co-page">
       <section className="welcome-row inner-intro">
         <div>
           <p className="eyebrow">KORXONALAR</p>
@@ -359,172 +360,114 @@ export default function StudentCompanies({
       </section>
 
       {TABS.length > 1 && (
-      <div className="filter-row">
-        <div className="filter-tabs">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              className={activeTab === t.key ? "active" : ""}
-              onClick={() => {
-                if (careerFilter && t.key !== "companies") onClearFilter?.()
-                setTab(t.key)
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="filter-row">
+          <div className="filter-tabs">
+            {TABS.map((t) => (
+              <button
+                key={t.key}
+                className={activeTab === t.key ? "active" : ""}
+                onClick={() => {
+                  if (careerFilter && t.key !== "companies") onClearFilter?.()
+                  setTab(t.key)
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
       )}
 
       {activeTab === "challenges" ? (
         <StudentChallenges />
       ) : activeTab === "scholarships" ? (
         <StudentScholarships />
+      ) : error ? (
+        <section className="card" style={mutedState}>
+          Ma’lumotni yuklab bo‘lmadi. Server ishlayotganini tekshiring.
+        </section>
+      ) : !companies ? (
+        <section className="card" style={mutedState}>
+          Yuklanmoqda…
+        </section>
       ) : (
         <>
-          {careerFilter && (
-            <p
-              style={{
-                margin: "0 0 14px",
-                fontSize: "13.5px",
-                color: "var(--text-3)",
-                display: "flex",
-                gap: "10px",
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <span>
-                Kasb bo‘yicha:{" "}
-                <strong style={{ color: "var(--navy)" }}>
-                  {careerFilter.name}
-                </strong>
+          <section className="card co-hero">
+            <div className="co-hero-text">
+              <span className="co-hero-label">
+                <Icon name="target" size={14} /> {careerFilter ? `Kasb: ${careerFilter.name}` : "Bandlik imkoniyatlari"}
               </span>
-              {onClearFilter && (
-                <button className="text-button" onClick={onClearFilter}>
-                  Filtrni olib tashlash
+              <h2>{totals.openings} ta bo‘sh o‘rin</h2>
+              <p>
+                {companies.length} ta korxonada, {totals.vacancies} ta ochiq vakansiya
+              </p>
+              {careerFilter && onClearFilter && (
+                <button className="co-hero-clear" onClick={onClearFilter}>
+                  <Icon name="close" size={13} /> Filtrni olib tashlash
                 </button>
               )}
-            </p>
-          )}
+            </div>
+            <div className="co-hero-stats">
+              <div>
+                <Icon name="building" size={18} />
+                <strong>{companies.length}</strong>
+                <span>korxona</span>
+              </div>
+              <div>
+                <Icon name="briefcase" size={18} />
+                <strong>{totals.vacancies}</strong>
+                <span>vakansiya</span>
+              </div>
+              <div>
+                <Icon name="userCheck" size={18} />
+                <strong>{totals.hired}</strong>
+                <span>{totals.year}-yilda olingan</span>
+              </div>
+            </div>
+          </section>
 
-          {error ? (
-            <section className="card" style={mutedState}>
-              Ma’lumotni yuklab bo‘lmadi. Server ishlayotganini tekshiring.
-            </section>
-          ) : !companies ? (
-            <section className="card" style={mutedState}>
-              Yuklanmoqda…
-            </section>
-          ) : companies.length === 0 ? (
-            <section className="card" style={mutedState}>
+          {companies.length === 0 ? (
+            <section className="card" style={{ ...mutedState, marginTop: "18px" }}>
               Hozircha korxonalar yo‘q
             </section>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              {companies.map((c) => (
-                <button
-                  key={c.id}
-                  className="card"
-                  onClick={() => setOpenId(c.id)}
-                  style={{
-                    textAlign: "left",
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                    font: "inherit",
-                    width: "100%",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "12px",
-                      width: "100%",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "42px",
-                        height: "42px",
-                        borderRadius: "12px",
-                        background: "var(--accent-soft)",
-                        color: "var(--accent)",
-                        display: "grid",
-                        placeItems: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Icon name="building" size={20} />
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <strong
-                          style={{ color: "var(--navy)", fontSize: "15.5px" }}
-                        >
-                          {c.name}
-                        </strong>
-                        {c.demo && <DemoTag />}
-                      </div>
-                      <div
-                        style={{ fontSize: "12.5px", color: "var(--muted)" }}
-                      >
-                        {[c.industry, c.region].filter(Boolean).join(" · ") ||
-                          "—"}
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: "6px",
-                      fontSize: "13px",
-                      color: "var(--text-2)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <Icon name="briefcase" size={15} /> {c.open_vacancies} ta
-                      vakansiya · {c.openings} o‘rin
-                    </span>
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        color:
-                          c.hires_last_year.hired > 0
-                            ? "var(--text-2)"
-                            : "var(--muted)",
-                      }}
-                    >
-                      <Icon name="users" size={15} /> {hiresText(c)}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="co-toolbar">
+                <label className="co-search">
+                  <Icon name="search" size={16} />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Korxona, soha yoki hudud…"
+                    aria-label="Korxonalarni qidirish"
+                  />
+                </label>
+                <div className="co-toolbar-right">
+                  <button className={`co-toggle${onlyOpen ? " active" : ""}`} onClick={() => setOnlyOpen((v) => !v)} aria-pressed={onlyOpen}>
+                    <i /> Faqat vakansiyasi borlar
+                  </button>
+                  <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="Saralash">
+                    {SORTS.map((s) => (
+                      <option key={s.key} value={s.key}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {visible.length === 0 ? (
+                <section className="card" style={mutedState}>
+                  Shartlarga mos korxona topilmadi.
+                </section>
+              ) : (
+                <div className="co-grid">
+                  {visible.map((c, i) => (
+                    <CompanyTile key={c.id} c={c} onOpen={() => setOpenId(c.id)} delay={Math.min(i, 8) * 40} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       )}
