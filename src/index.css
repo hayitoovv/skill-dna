@@ -2523,3 +2523,126 @@ body.cms-editing [data-cms-ignore], body.cms-editing [data-cms-ignore] * { curso
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
+
+/* ---------- Rating page ---------- */
+.rating-page {
+  --gold: #f59e0b;
+  --gold-soft: #fef3c7;
+  --silver: #94a3b8;
+  --silver-soft: #f1f5f9;
+  --bronze: #c2773a;
+  --bronze-soft: #fbeee2;
+}
+.rating-hero { display: grid; grid-template-columns: minmax(300px, .9fr) minmax(0, 2.1fr); gap: 16px; }
+.rating-score-card {
+  position: relative; overflow: hidden; display: flex; align-items: center; gap: 22px; padding: 24px 26px;
+  color: #fff; border: 0; background: var(--accent-gradient); box-shadow: var(--shadow-md);
+}
+.rating-score-card::after {
+  content: ""; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, .16), transparent 70%); pointer-events: none;
+}
+.rating-ring { position: relative; flex-shrink: 0; width: 124px; height: 124px; }
+.rating-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.rating-ring-track { fill: none; stroke: rgba(255, 255, 255, .14); stroke-width: 10; }
+.rating-ring-fill { fill: none; stroke: var(--success-300); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s var(--ease); }
+.rating-ring-value { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.rating-ring-value strong { font-size: 30px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.rating-ring-value span { margin-top: 4px; font-size: 12px; color: rgba(255, 255, 255, .65); font-weight: 600; }
+.rating-score-text { position: relative; z-index: 1; min-width: 0; }
+.rating-score-text .label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(255, 255, 255, .7); }
+.rating-score-text h2 { margin: 6px 0 4px; font-size: 32px; font-weight: 800; color: #fff; line-height: 1.05; letter-spacing: -.03em; }
+.rating-score-sub { margin: 0 0 12px; font-size: 13px; color: rgba(255, 255, 255, .72); font-weight: 500; }
+.rating-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; background: rgba(255, 255, 255, .14); color: #fff; border: 1px solid rgba(255, 255, 255, .2);
+}
+.rating-places { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.rating-place { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 20px 22px; min-width: 0; }
+.rating-place-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rating-place-icon { flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.rating-place-label { min-width: 0; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+.rating-place-label small { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rating-place-value { display: flex; align-items: baseline; gap: 6px; color: var(--navy); }
+.rating-place-value strong { font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.rating-place-value span { font-size: 13px; color: var(--muted); font-weight: 600; }
+.rating-meter { height: 6px; border-radius: 999px; background: var(--surface-3); box-shadow: var(--nm-inset); overflow: hidden; }
+.rating-meter i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-300), var(--accent)); transform-origin: left; animation: rating-grow .9s var(--ease) both; }
+.rating-place-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-weight: 600; }
+@keyframes rating-grow { from { transform: scaleX(0); } }
+
+.rating-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 30px 0 18px; flex-wrap: wrap; }
+.rating-total { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); font-weight: 600; }
+
+.rating-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: end; margin-bottom: 16px; }
+.rating-podium-card {
+  --medal: var(--silver); --medal-soft: var(--silver-soft);
+  position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
+  padding: 26px 18px 20px; min-width: 0; animation: page-in .5s var(--ease) both;
+}
+.rating-podium-card::before { content: ""; position: absolute; left: 18px; right: 18px; top: 0; height: 4px; border-radius: 0 0 4px 4px; background: var(--medal); }
+.rating-podium-card.place-1 { --medal: var(--gold); --medal-soft: var(--gold-soft); padding-top: 40px; padding-bottom: 28px; animation-delay: .05s; }
+.rating-podium-card.place-2 { animation-delay: .12s; }
+.rating-podium-card.place-3 { --medal: var(--bronze); --medal-soft: var(--bronze-soft); animation-delay: .18s; }
+.rating-podium-card.is-me { outline: 2px solid var(--success-300); outline-offset: -2px; }
+.rating-podium-avatar { position: relative; margin-bottom: 10px; }
+.rating-podium-avatar .rating-avatar { width: 64px; height: 64px; font-size: 21px; box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--medal); }
+.rating-podium-card.place-1 .rating-podium-avatar .rating-avatar { width: 78px; height: 78px; font-size: 25px; }
+.rating-medal {
+  position: absolute; right: -6px; bottom: -6px; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #fff; background: var(--medal); box-shadow: 0 0 0 3px var(--surface);
+}
+.rating-podium-card .name { max-width: 100%; color: var(--navy); font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rating-podium-score { margin-top: 10px; padding: 6px 14px; border-radius: 999px; background: var(--medal-soft); color: var(--navy); font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+.rating-podium-score small { font-size: 12px; color: var(--muted); font-weight: 600; }
+.rating-crown { position: absolute; top: 12px; color: var(--gold); }
+
+.rating-list { padding: 6px; overflow: hidden; }
+.rating-row {
+  display: grid; grid-template-columns: 40px 42px minmax(0, 1fr) minmax(120px, 220px) 56px; align-items: center; gap: 14px;
+  padding: 11px 16px; border-radius: 12px; transition: background .2s var(--ease); animation: page-in .4s var(--ease) both;
+}
+.rating-row + .rating-row { margin-top: 2px; }
+.rating-row:hover { background: var(--surface-2); }
+.rating-row.is-me { background: var(--success-soft); box-shadow: inset 0 0 0 1px var(--success-ring); }
+.rating-rank { text-align: center; font-size: 15px; font-weight: 800; color: var(--subtle); font-variant-numeric: tabular-nums; }
+.rating-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; font-weight: 800; flex-shrink: 0; }
+.rating-who { min-width: 0; }
+.rating-who .name { display: flex; align-items: center; gap: 8px; color: var(--navy); font-size: 14.5px; font-weight: 700; }
+.rating-who .name span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rating-me-pill { flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--success); color: #fff; }
+.rating-group { display: inline-block; margin-top: 3px; padding: 1px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600; color: var(--text-3); background: var(--surface-3); }
+.rating-bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.rating-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-300), var(--accent)); transform-origin: left; animation: rating-grow .9s var(--ease) both; }
+.rating-row.is-me .rating-bar i { background: linear-gradient(90deg, var(--success-300), var(--success)); }
+.rating-score { text-align: right; color: var(--navy); font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.rating-gap { display: flex; align-items: center; gap: 10px; padding: 6px 16px; color: var(--subtle); font-size: 12px; font-weight: 600; }
+.rating-gap::before, .rating-gap::after { content: ""; flex: 1; border-top: 1px dashed var(--border-strong); }
+.rating-empty { margin: 0; padding: 32px 24px; text-align: center; color: var(--muted); font-size: 14px; }
+
+@media (max-width: 1080px) {
+  .rating-hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .rating-places { grid-template-columns: 1fr; gap: 10px; }
+  .rating-place { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; padding: 14px 16px; }
+  .rating-place > div:last-child { grid-column: 1 / -1; }
+  .rating-place-value strong { font-size: 22px; }
+  .rating-score-card { padding: 20px; gap: 18px; }
+  .rating-ring { width: 104px; height: 104px; }
+  .rating-podium { gap: 8px; }
+  .rating-medal { width: 22px; height: 22px; font-size: 11px; right: -8px; bottom: -4px; }
+  .rating-podium-card { padding: 22px 8px 16px; }
+  .rating-podium-card.place-1 { padding-top: 34px; }
+  .rating-podium-avatar .rating-avatar { width: 48px; height: 48px; font-size: 16px; }
+  .rating-podium-card.place-1 .rating-podium-avatar .rating-avatar { width: 58px; height: 58px; font-size: 19px; }
+  .rating-podium-card .name { font-size: 13px; }
+  .rating-podium-score { font-size: 15px; padding: 4px 10px; }
+  .rating-row { grid-template-columns: 28px 36px minmax(0, 1fr) 48px; gap: 10px; padding: 10px; }
+  .rating-row .rating-bar { display: none; }
+  .rating-avatar { width: 36px; height: 36px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rating-meter i, .rating-bar i, .rating-row, .rating-podium-card { animation: none; }
+  .rating-ring-fill { transition: none; }
+}
