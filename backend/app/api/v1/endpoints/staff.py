@@ -426,6 +426,86 @@ async def remedial(payload: RemedialRequest, request: Request, actor: User = Dep
 
 
 # ---------------------------------------------------------------------------
+# University student roster: the official direction, group and course of each student.
+# Students pick a direction at registration; afterwards only university staff change it.
+# ---------------------------------------------------------------------------
+
+class StudentPlacement(BaseModel):
+    direction_code: Optional[str] = Field(None, max_length=50)
+    group_id: Optional[str] = Field(None, max_length=100)
+    course: Optional[str] = Field(None, max_length=50)
+
+
+def _placement(student: User, profile: Optional[StudentProfile], direction: Optional[Direction]) -> Dict[str, Any]:
+    return {
+        "id": str(student.id),
+        "full_name": student.full_name,
+        "email": student.email,
+        "direction_code": direction.code if direction else None,
+        "direction_name": direction.name if direction else None,
+        "group_id": profile.group_id if profile else None,
+        "course": profile.course if profile else None,
+        "sample": student.email.endswith("@namuna.skilldna.uz"),
+    }
+
+
+@university_router.get("/students")
+async def roster(actor: User = Depends(require_roles(UNIVERSITY)), db: AsyncSession = Depends(get_db)):
+    students = await _org_students(db, actor)
+    if not students:
+        return []
+    profiles = {p.user_id: p for p in (await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id.in_([s.id for s in students]))
+    )).scalars().all()}
+    directions = {d.id: d for d in (await db.execute(select(Direction))).scalars().all()}
+    rows = []
+    for s in sorted(students, key=lambda u: u.full_name.lower()):
+        p = profiles.get(s.id)
+        rows.append(_placement(s, p, directions.get(p.direction_id) if p and p.direction_id else None))
+    return rows
+
+
+@university_router.put("/students/{student_id}")
+async def place_student(student_id: uuid.UUID, payload: StudentPlacement, request: Request,
+                        actor: User = Depends(require_roles(UNIVERSITY)), db: AsyncSession = Depends(get_db)):
+    student = (await db.execute(
+        select(User).where(User.id == student_id, User.role == "student", User.is_deleted.is_(False))
+    )).scalars().first()
+    if not student or (actor.role not in (MODERATOR, SUPER_ADMIN) and student.org_id != actor.org_id):
+        raise HTTPException(status_code=404, detail="Talaba topilmadi")
+    profile = (await db.execute(select(StudentProfile).where(StudentProfile.user_id == student.id))).scalars().first()
+    if not profile:
+        profile = StudentProfile(user_id=student.id)
+        db.add(profile)
+    old_direction = (await db.execute(select(Direction).where(Direction.id == profile.direction_id))).scalars().first() \
+        if profile.direction_id else None
+    before = _placement(student, profile, old_direction)
+
+    direction = old_direction
+    if payload.direction_code is not None:
+        direction = (await db.execute(select(Direction).where(Direction.code == payload.direction_code))).scalars().first()
+        if not direction:
+            raise HTTPException(status_code=400, detail="Yo‘nalish topilmadi")
+        profile.direction_id = direction.id
+    if payload.group_id is not None:
+        profile.group_id = payload.group_id.strip() or None
+    if payload.course is not None:
+        profile.course = payload.course.strip() or None
+
+    after = _placement(student, profile, direction)
+    keys = ("direction_code", "group_id", "course")
+    audit.record(db, actor_id=actor.id, action="student.placement", entity="student_profile", entity_id=student.id,
+                 before={k: before[k] for k in keys}, after={k: after[k] for k in keys}, ip=client_ip(request))
+    # Evidence stays; the rating simply counts the new direction's core skills from now on
+    if direction and before["direction_code"] != after["direction_code"]:
+        notify(db, student.id, kind="direction_changed", title=f"Yo‘nalishingiz o‘zgartirildi: {direction.name}",
+               body="Universitet administratori yo‘nalishingizni yangiladi. Reyting yangi yo‘nalish ko‘nikmalari bo‘yicha hisoblanadi.",
+               link="student:rating")
+    await db.commit()
+    return after
+
+
+# ---------------------------------------------------------------------------
 # University analytics (section 11: direction/course/skill heatmap, curriculum gaps)
 # ---------------------------------------------------------------------------
 

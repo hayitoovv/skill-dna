@@ -122,6 +122,18 @@ export type RatingSummary = {
 export type RatingEntry = { rank: number; score: number; name: string; group: string | null; is_me: boolean; user_id: string | null };
 export type RatingBoard = { scope: RatingScope; total: number; top: RatingEntry[]; me: RatingEntry | null; groups: string[] | null };
 
+export type RosterStudent = {
+  id: string;
+  full_name: string;
+  email: string;
+  direction_code: string | null;
+  direction_name: string | null;
+  group_id: string | null;
+  course: string | null;
+  sample: boolean;
+};
+export type StudentPlacement = { direction_code?: string; group_id?: string; course?: string };
+
 export type CareerRecommendation = {
   id: string;
   roleName: string;
@@ -530,4 +542,7 @@ export const api = {
 
   // ---------- University ----------
   getUniversityAnalytics: () => request<any>("/university/analytics"),
+  getRoster: () => request<RosterStudent[]>("/university/students"),
+  placeStudent: (id: string, body: StudentPlacement) =>
+    request<RosterStudent>(`/university/students/${id}`, { method: "PUT", body: JSON.stringify(body) }),
 };

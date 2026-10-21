@@ -262,8 +262,10 @@ export default function App() {
             localStorage.setItem("skill_dna_user", JSON.stringify(syncedUser));
             localStorage.setItem("skill_dna_active_role", effectiveRole);
 
+            // The direction is set at registration and changed only by university staff: the server value wins
             if (me.direction_code) {
               setDirection(me.direction_code as DirectionCode);
+              localStorage.setItem("skill_dna_direction", me.direction_code);
             }
           }
         })
@@ -390,13 +392,6 @@ export default function App() {
       setRoleSwitchFeedback(t("shell.viewMode", { portal: t(`role.${newRole}`) }));
       setTimeout(() => setRoleSwitchFeedback(null), 4000);
     }
-  };
-
-  const handleDirectionChange = (newDir: DirectionCode) => {
-    setDirection(newDir);
-    try {
-      localStorage.setItem("skill_dna_direction", newDir);
-    } catch {}
   };
 
   const goTo = (page: PageKey) => {
@@ -744,18 +739,11 @@ export default function App() {
               <strong>{t(`role.${role}`)}</strong>
             </div>
 
-            {/* 3 Pilot Directions Switcher for Students */}
+            {/* Read-only: chosen at registration, changed only by the university admin */}
             {role === "student" && (
-              <div className="direction-switch">
+              <div className="direction-switch" title="Yo‘nalishni universitet administratori o‘zgartiradi">
                 <span>{t("shell.direction")}</span>
-                <select
-                  value={direction}
-                  onChange={(e) => handleDirectionChange(e.target.value as DirectionCode)}
-                >
-                  <option value="software">{t("dir.software")}</option>
-                  <option value="computer">{t("dir.computer")}</option>
-                  <option value="ai">{t("dir.ai")}</option>
-                </select>
+                <strong className="direction-value">{t(`dir.${direction}`)}</strong>
               </div>
             )}
           </div>
