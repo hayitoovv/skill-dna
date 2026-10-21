@@ -612,6 +612,8 @@ export default function StudentView({
     { key: "PROVE", label: "Real dalillar", score: layerScores.PROVE, weight: "15%", weightNum: 0.15, tone: "rose", icon: "award" },
   ];
 
+  const weakestLayer = layers.reduce((min, l) => (l.score < min.score ? l : min), layers[0]);
+
   const overallScoreVal = isNewUser ? 0 : primarySkill.score;
   const confidenceVal = isNewUser ? 0 : primarySkill.confidence;
   const evidenceCountVal = isNewUser ? 0 : live ? live.evidence_count : primarySkill.evidenceCount;
@@ -853,16 +855,60 @@ export default function StudentView({
                 </div>
                 <span className="level-badge">{levelVal}</span>
               </div>
-              <div className="score-summary">
-                <div className="confidence-head">
-                  <span>
-                    Umumiy natija <strong>{Math.round(overallScoreVal * mainEase)}/100</strong> · Ishonchlilik
-                  </span>
-                  <strong>{animatedConfidenceScore}%</strong>
+              {/* A compact summary; the interactive chart and evidence graph live on the Skill DNA page */}
+              <div className="dash-skill">
+                <div className="dash-skill-stats">
+                  <div>
+                    <span>Umumiy natija</span>
+                    <strong>
+                      {Math.round(overallScoreVal * mainEase)}
+                      <small>/100</small>
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Ishonchlilik</span>
+                    <strong>{animatedConfidenceScore}%</strong>
+                  </div>
+                  <div>
+                    <span>Dalillar</span>
+                    <strong>{evidenceCountVal}</strong>
+                  </div>
                 </div>
-                <button className="text-button" onClick={() => goToPage("dna")}>
-                  To‘liq profilni ko‘rish <Icon name="arrow" size={16} />
-                </button>
+                <div className="dash-layers">
+                  {layers.map((layer, index) => {
+                    const value = Math.round(layer.score * getLayerProgress(index));
+                    return (
+                      <div className="dash-layer" key={layer.key}>
+                        <span className={`layer-icon ${layer.tone}`}>
+                          <Icon name={layer.icon as any} size={16} />
+                        </span>
+                        <div className="dash-layer-name">
+                          <strong>{layer.key}</strong>
+                          <span>{layer.label}</span>
+                        </div>
+                        <div className="dash-layer-bar">
+                          <i className={layer.tone} style={{ width: `${Math.max(value, value > 0 ? 3 : 0)}%` }} />
+                        </div>
+                        <b>{value}</b>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="dash-skill-foot">
+                  <p className="dash-hint">
+                    <Icon name="target" size={15} />
+                    {isNewUser ? (
+                      <span>Birinchi topshiriqni bajaring: har bir qatlam alohida dalil bilan to‘ldiriladi.</span>
+                    ) : (
+                      <span>
+                        Eng zaif qatlam: <strong>{weakestLayer.key} · {weakestLayer.label}</strong>. Keyingi topshiriqni shu qatlamdan tanlang.
+                      </span>
+                    )}
+                  </p>
+                  <button className="text-button" onClick={() => goToPage("dna")}>
+                    To‘liq profilni ko‘rish <Icon name="arrow" size={16} />
+                  </button>
+                </div>
               </div>
             </article>
 

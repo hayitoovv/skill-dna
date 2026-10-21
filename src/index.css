@@ -2800,6 +2800,37 @@ body.cms-editing [data-cms-ignore], body.cms-editing [data-cms-ignore] * { curso
   .co-card, .co-readiness-bar i, .co-hires-track i, .co-status.open i { animation: none; }
 }
 
+/* ---------- Dashboard core skill summary ---------- */
+.dash-skill { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; height: calc(100% - 64px); }
+.dash-skill-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.dash-skill-stats > div { padding: 12px 14px; border-radius: 14px; background: var(--surface-3); box-shadow: var(--nm-inset); }
+.dash-skill-stats span { display: block; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.dash-skill-stats strong { display: block; margin-top: 2px; font-size: 24px; font-weight: 800; color: var(--navy); letter-spacing: -.02em; }
+.dash-skill-stats strong small { font-size: 13px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+.dash-skill-stats > div:nth-child(2) strong { color: var(--success); }
+.dash-layers { display: grid; gap: 10px; }
+.dash-layer { display: grid; grid-template-columns: 34px minmax(150px, 190px) minmax(0, 1fr) 34px; align-items: center; gap: 12px; }
+.dash-layer-name { min-width: 0; }
+.dash-layer-name strong { display: block; font-size: 12.5px; color: var(--navy); letter-spacing: .03em; }
+.dash-layer-name span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-layer-bar { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+.dash-layer-bar i { display: block; height: 100%; border-radius: inherit; transition: width .3s var(--ease); }
+.dash-layer-bar i.blue { background: var(--accent-300); }
+.dash-layer-bar i.emerald { background: var(--success-400); }
+.dash-layer-bar i.violet { background: var(--violet); }
+.dash-layer-bar i.amber { background: var(--warning-400); }
+.dash-layer-bar i.rose { background: var(--rose); }
+.dash-layer b { text-align: right; font-size: 14px; color: var(--navy); font-variant-numeric: tabular-nums; }
+.dash-skill-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: auto; padding-top: 14px; border-top: 1px dashed var(--border); }
+.dash-hint { display: flex; align-items: flex-start; gap: 8px; margin: 0; flex: 1 1 260px; font-size: 13px; line-height: 1.5; color: var(--text-3); }
+.dash-hint svg { flex-shrink: 0; margin-top: 2px; color: var(--accent); }
+.dash-hint strong { color: var(--navy); }
+@media (max-width: 760px) {
+  .dash-layer { grid-template-columns: 30px minmax(0, 1fr) 30px; gap: 8px 10px; }
+  .dash-layer-bar { grid-column: 2 / -1; grid-row: 2; }
+  .dash-skill-stats strong { font-size: 20px; }
+}
+
 /* ---------- University student roster ---------- */
 .roster-head { margin-bottom: 18px; }
 .roster-head h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--navy); }
