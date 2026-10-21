@@ -93,7 +93,12 @@ async def ensure_can_view(db: AsyncSession, viewer: User, owner_id: uuid.UUID) -
 
 
 def client_ip(request: Request) -> Optional[str]:
+    # nginx overwrites X-Real-IP with the connecting address; the first X-Forwarded-For entry is whatever
+    # the client sent, so it is only a fallback for setups without X-Real-IP
+    real = request.headers.get("x-real-ip")
+    if real:
+        return real.strip()
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        return forwarded.split(",")[-1].strip()
     return request.client.host if request.client else None

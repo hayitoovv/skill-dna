@@ -170,6 +170,11 @@ async def resolve_appeal(appeal_id: uuid.UUID, payload: AppealResolution, reques
     appeal = (await db.execute(select(Appeal).where(Appeal.id == appeal_id))).scalars().first()
     if not appeal or appeal.status not in ("pending", "under_review"):
         raise HTTPException(status_code=404, detail="Ochiq e’tiroz topilmadi")
+    # Teachers decide only their own university's appeals (multi-tenancy); moderators see all
+    if actor.role == TEACHER:
+        owner_org = (await db.execute(select(User.org_id).where(User.id == appeal.user_id))).scalar()
+        if owner_org is None or owner_org != actor.org_id:
+            raise HTTPException(status_code=404, detail="Ochiq e’tiroz topilmadi")
     if payload.decision not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="decision: approved yoki rejected")
     appeal.status, appeal.resolved_by, appeal.resolution_notes = payload.decision, actor.id, payload.notes
@@ -503,6 +508,48 @@ async def place_student(student_id: uuid.UUID, payload: StudentPlacement, reques
                link="student:rating")
     await db.commit()
     return after
+
+
+# ---------------------------------------------------------------------------
+# Teacher accounts: self-registered teachers wait ("pending") until their university admin approves them
+# ---------------------------------------------------------------------------
+
+def _teacher_row(t: User) -> Dict[str, Any]:
+    return {"id": str(t.id), "full_name": t.full_name, "email": t.email, "phone": t.phone, "status": t.status,
+            "created_at": t.created_at.isoformat() if t.created_at else None}
+
+
+@university_router.get("/teachers")
+async def org_teachers(actor: User = Depends(require_roles(UNIVERSITY)), db: AsyncSession = Depends(get_db)):
+    q = select(User).where(User.role == TEACHER, User.is_deleted.is_(False))
+    if actor.role not in (MODERATOR, SUPER_ADMIN):
+        q = q.where(User.org_id == actor.org_id)
+    teachers = (await db.execute(q.order_by(User.created_at.desc()))).scalars().all()
+    return [_teacher_row(t) for t in teachers]
+
+
+class TeacherDecision(BaseModel):
+    approve: bool
+
+
+@university_router.post("/teachers/{teacher_id}/decision")
+async def decide_teacher(teacher_id: uuid.UUID, payload: TeacherDecision, request: Request,
+                         actor: User = Depends(require_roles(UNIVERSITY)), db: AsyncSession = Depends(get_db)):
+    teacher = (await db.execute(
+        select(User).where(User.id == teacher_id, User.role == TEACHER, User.is_deleted.is_(False))
+    )).scalars().first()
+    if not teacher or (actor.role not in (MODERATOR, SUPER_ADMIN) and teacher.org_id != actor.org_id):
+        raise HTTPException(status_code=404, detail="O‘qituvchi topilmadi")
+    before = teacher.status
+    teacher.status = "active" if payload.approve else "blocked"
+    audit.record(db, actor_id=actor.id, action="teacher.approve" if payload.approve else "teacher.reject",
+                 entity="user", entity_id=teacher.id, before={"status": before}, after={"status": teacher.status},
+                 ip=client_ip(request))
+    if payload.approve:
+        notify(db, teacher.id, kind="account_approved", title="Hisobingiz tasdiqlandi",
+               body="Universitet administratori o‘qituvchi hisobingizni tasdiqladi.")
+    await db.commit()
+    return _teacher_row(teacher)
 
 
 # ---------------------------------------------------------------------------

@@ -5,13 +5,16 @@ from app.api.v1.api import api_router
 from app.api.v1.endpoints.credentials import did_document
 from app.services import llm
 
+# The interactive docs map every endpoint, admin ones included: served everywhere except production
+_public_docs = settings.ENVIRONMENT != "production"
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="AI davrida insonning real kasbiy kompetensiyasini aniqlash, isbotlash, rivojlantirish va ish bilan bog‘lash platformasi API",
     version="2.0.0",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" if _public_docs else None,
+    docs_url="/docs" if _public_docs else None,
+    redoc_url="/redoc" if _public_docs else None,
 )
 
 # CORS Middleware setup
@@ -43,6 +46,6 @@ async def health_check():
 async def root():
     return {
         "message": "SKILL DNA — AI Talent Intelligence Platform API",
-        "docs": "/docs",
+        "docs": "/docs" if _public_docs else None,
         "version": "2.0.0"
     }

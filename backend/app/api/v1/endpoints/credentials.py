@@ -95,6 +95,11 @@ class RevokeRequest(BaseModel):
 async def revoke(credential_id: uuid.UUID, payload: RevokeRequest, request: Request,
                  user: User = Depends(require_roles(MODERATOR, UNIVERSITY)), db: AsyncSession = Depends(get_db)):
     c = (await db.execute(select(Credential).where(Credential.id == credential_id))).scalars().first()
+    if c and user.role == UNIVERSITY:
+        # A university revokes only its own students' credentials; moderators may revoke any
+        holder_org = (await db.execute(select(User.org_id).where(User.id == c.user_id))).scalar()
+        if holder_org is None or holder_org != user.org_id:
+            c = None
     if not c:
         raise HTTPException(status_code=404, detail="Credential topilmadi")
     c.status, c.revoked_at = "revoked", datetime.now(timezone.utc)

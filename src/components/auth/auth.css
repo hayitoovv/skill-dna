@@ -507,6 +507,7 @@
 .a3d-link { border: 0; padding: 0; background: transparent; color: var(--slate-2); font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: color .2s; }
 .a3d-link:hover { color: var(--emerald); text-decoration: underline; text-underline-offset: 3px; }
 
+.a3d-select { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px; color: inherit; cursor: pointer; }
 .a3d-alert { padding: 10px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.45; animation: a3d-face-in .35s cubic-bezier(.16, 1, .3, 1) both; }
 .a3d-alert.error { color: #b91c1c; background: #fef2f2; box-shadow: inset 2px 2px 5px #fbd5d5, inset -2px -2px 5px #fff; }
 .a3d-alert.info { color: var(--emerald); background: #ecfdf5; box-shadow: inset 2px 2px 5px #c9f0de, inset -2px -2px 5px #fff; }

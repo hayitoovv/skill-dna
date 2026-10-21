@@ -202,7 +202,7 @@ function Field({
   autoComplete,
 }: {
   label: string;
-  icon: "mail" | "lock" | "user" | "phone";
+  icon: "mail" | "lock" | "user" | "phone" | "building";
   type?: string;
   placeholder: string;
   value: string;
@@ -267,6 +267,21 @@ export default function AuthScreen({
   const [regDirection, setRegDirection] = useState<DirectionCode>("software");
   const [agreedTerms, setAgreedTerms] = useState(true);
   const [registerError, setRegisterError] = useState("");
+  // Students and teachers join an existing university; employers name their company
+  const [universities, setUniversities] = useState<string[]>([]);
+  const [regUniversity, setRegUniversity] = useState("");
+  const [regCompany, setRegCompany] = useState("");
+
+  useEffect(() => {
+    api
+      .getUniversities()
+      .then((rows) => {
+        const names = rows.map((r) => r.name);
+        setUniversities(names);
+        setRegUniversity((cur) => cur || (names.includes("BSTU") ? "BSTU" : names[0] ?? ""));
+      })
+      .catch(() => setUniversities([]));
+  }, []);
 
   // Mouse parallax: write CSS variables directly to avoid re-rendering the scene
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -404,6 +419,14 @@ export default function AuthScreen({
       setRegisterError("Foydalanish shartlari va Maxfiylik siyosatiga rozilik bildiring");
       return;
     }
+    if (regRole === "employer" && !regCompany.trim()) {
+      setRegisterError("Kompaniya nomini kiriting");
+      return;
+    }
+    if (regRole !== "employer" && universities.length > 0 && !regUniversity) {
+      setRegisterError("Universitetni tanlang");
+      return;
+    }
 
     setLoading(true);
     setRegisterError("");
@@ -416,7 +439,17 @@ export default function AuthScreen({
         role: regRole,
         phone: regPhone.trim() || undefined,
         direction_code: regDirection,
+        organization_name: regRole === "employer" ? regCompany.trim() : regUniversity || undefined,
       });
+
+      if (res?.pending) {
+        // Teachers wait for their university admin; show the reason on the login face
+        setLoading(false);
+        switchTab("login");
+        window.setTimeout(() => setLoginInfo(res.detail || "Hisobingiz tasdiqlanishini kutmoqda."), 300);
+        setLoginIdentifier(regEmail.trim());
+        return;
+      }
 
       if (res && res.user) {
         onLogin({
@@ -788,6 +821,30 @@ export default function AuthScreen({
                     <Field label={t("auth.email")} icon="mail" type="email" placeholder="example@mail.com" value={regEmail} onChange={setRegEmail} autoComplete="email" />
                     <Field label={t("auth.phone")} icon="phone" placeholder="+998 90 123 45 67" value={regPhone} onChange={setRegPhone} autoComplete="tel" />
                   </div>
+
+                  {regRole === "employer" ? (
+                    <Field label="Kompaniya" icon="building" placeholder="Kompaniyangiz nomi" value={regCompany} onChange={setRegCompany} autoComplete="organization" />
+                  ) : (
+                    universities.length > 1 && (
+                      <label className="a3d-field">
+                        <span className="a3d-label">Universitet</span>
+                        <span className="a3d-input">
+                          <Icon name="university" size={17} />
+                          <select className="a3d-select" value={regUniversity} onChange={(e) => setRegUniversity(e.target.value)}>
+                            {universities.map((u) => (
+                              <option key={u} value={u}>
+                                {u}
+                              </option>
+                            ))}
+                          </select>
+                        </span>
+                      </label>
+                    )
+                  )}
+
+                  {regRole === "teacher" && (
+                    <div className="a3d-alert info">O‘qituvchi hisobi universitet administratori tasdiqlagandan so‘ng faollashadi.</div>
+                  )}
 
                   {regRole === "student" && (
                     <DirectionSelect value={regDirection} onChange={setRegDirection} />

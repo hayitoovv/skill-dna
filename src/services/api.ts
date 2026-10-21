@@ -133,6 +133,7 @@ export type RosterStudent = {
   sample: boolean;
 };
 export type StudentPlacement = { direction_code?: string; group_id?: string; course?: string };
+export type OrgTeacher = { id: string; full_name: string; email: string; phone: string | null; status: string; created_at: string | null };
 
 export type CareerRecommendation = {
   id: string;
@@ -282,6 +283,7 @@ export const api = {
   enableMfa: (code: string) => post<{ enabled: boolean; recovery_codes: string[] }>("/auth/mfa/enable", { code }),
   disableMfa: (code: string) => post<{ enabled: boolean }>("/auth/mfa/disable", { code }),
 
+  /** Returns tokens, or `{ pending: true, detail }` when the account waits for approval (teachers, employers of an existing company). */
   async register(payload: {
     full_name: string;
     email: string;
@@ -290,11 +292,17 @@ export const api = {
     phone?: string;
     direction_code?: string;
     course?: string;
+    organization_name?: string;
   }) {
-    const data = await post<{ access_token: string; refresh_token: string; user: any }>("/auth/register", payload);
-    storeTokens(data);
+    const data = await post<{ access_token?: string; refresh_token?: string; user?: any; pending?: boolean; detail?: string }>(
+      "/auth/register",
+      payload,
+    );
+    if (!data.pending) storeTokens(data);
     return data;
   },
+
+  getUniversities: () => request<{ name: string }[]>("/auth/universities"),
 
   logout() {
     clearTokens();
@@ -545,4 +553,6 @@ export const api = {
   getRoster: () => request<RosterStudent[]>("/university/students"),
   placeStudent: (id: string, body: StudentPlacement) =>
     request<RosterStudent>(`/university/students/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  getOrgTeachers: () => request<OrgTeacher[]>("/university/teachers"),
+  decideTeacher: (id: string, approve: boolean) => post<OrgTeacher>(`/university/teachers/${id}/decision`, { approve }),
 };

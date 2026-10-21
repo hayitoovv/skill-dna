@@ -21,13 +21,22 @@ from app.core.security import (
 )
 from app.models import Consent, Direction, Organization, StudentProfile, User, UserMFA, UserPhoto
 from app.schemas.user import ConsentUpdate, Token, UserLogin, UserRegister
-from app.services import audit, photos, totp
+from app.services import audit, photos, ratelimit, totp
+from app.services.notify import notify
 
 router = APIRouter()
 
 # Self-registration is limited to these roles; university admins, moderators and
 # super admins are provisioned by an administrator (section 2.3).
 SELF_REGISTER_ROLES = {"student", "teacher", "employer"}
+# Accounts waiting for approval: a teacher until their university admin confirms them, an employer joining
+# an existing company until a super admin does. They cannot log in before that.
+PENDING = "pending"
+PENDING_MESSAGE = "Hisobingiz tasdiqlanishini kutmoqda. Tasdiqlangach tizimga kira olasiz."
+# Failed attempts per 15 minutes before /login or /mfa/verify answers 429
+MAX_FAILURES_PER_ACCOUNT = 10
+MAX_FAILURES_PER_IP = 30
+TOO_MANY = "Juda ko‘p urinish. 15 daqiqadan so‘ng qayta urinib ko‘ring."
 ALL_ROLES = {"student", "teacher", "employer", "university", "moderator", "super_admin"}
 CONSENT_TYPES = {"viva_record", "employer_share", "data_processing", "rating_public"}
 
@@ -73,20 +82,46 @@ async def _mfa_row(db: AsyncSession, user_id) -> Optional[UserMFA]:
     return (await db.execute(select(UserMFA).where(UserMFA.user_id == user_id))).scalars().first()
 
 
+async def _check_attempts(request: Request, account_key: str) -> tuple[str, str]:
+    ip_key, acct_key = f"ip:{client_ip(request) or 'unknown'}", f"acct:{account_key.strip().lower()}"
+    if (await ratelimit.failures(acct_key)) >= MAX_FAILURES_PER_ACCOUNT or (await ratelimit.failures(ip_key)) >= MAX_FAILURES_PER_IP:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=TOO_MANY)
+    return ip_key, acct_key
+
+
+async def _fail_attempt(*keys: str) -> None:
+    for key in keys:
+        await ratelimit.record_failure(key)
+
+
+@router.get("/universities")
+async def universities(db: AsyncSession = Depends(get_db)):
+    """Public: universities a student or teacher can register into."""
+    rows = (await db.execute(select(Organization.name).where(Organization.type == "university").order_by(Organization.name))).scalars().all()
+    return [{"name": n} for n in rows]
+
+
 @router.post("/login")
 async def login(credentials: UserLogin, request: Request, db: AsyncSession = Depends(get_db)):
+    ip_key, acct_key = await _check_attempts(request, f"login:{credentials.identifier}")
     query = select(User).where(
         or_(User.email == credentials.identifier, User.phone == credentials.identifier),
         User.is_deleted.is_(False),
     )
     user = (await db.execute(query)).scalars().first()
 
-    if not user or not verify_password(credentials.password, user.hashed_password) or user.status != "active":
+    password_ok = bool(user) and verify_password(credentials.password, user.hashed_password)
+    if password_ok and user.status == PENDING:
+        # Only someone who knows the password learns the account exists and is waiting
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=PENDING_MESSAGE)
+    if not password_ok or user.status != "active":
+        await _fail_attempt(ip_key, acct_key)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email/telefon yoki parol noto‘g‘ri kiritildi.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    await ratelimit.reset(acct_key)
 
     mfa = await _mfa_row(db, user.id)
     if mfa and mfa.enabled:
@@ -101,8 +136,10 @@ async def login(credentials: UserLogin, request: Request, db: AsyncSession = Dep
     return await _token_response(db, user)
 
 
-@router.post("/register", response_model=Token)
+@router.post("/register")
 async def register(payload: UserRegister, request: Request, db: AsyncSession = Depends(get_db)):
+    """Students join an existing university at once. Teachers join an existing university and wait for its
+    admin's approval. Employers create their company, or wait for a super admin when the company exists."""
     role = (payload.role or "student").strip().lower()
     if role not in SELF_REGISTER_ROLES:
         raise HTTPException(status_code=400, detail="Bu rol bilan o‘zingiz ro‘yxatdan o‘ta olmaysiz.")
@@ -113,12 +150,27 @@ async def register(payload: UserRegister, request: Request, db: AsyncSession = D
     if existing.scalars().first():
         raise HTTPException(status_code=400, detail="Ushbu email bilan ro‘yxatdan o‘tilgan. Tizimga kiring.")
 
-    org_name = payload.organization_name or "BSTU"
-    org = (await db.execute(select(Organization).where(Organization.name == org_name))).scalars().first()
-    if not org:
-        org = Organization(name=org_name, type="company" if role == "employer" else "university")
-        db.add(org)
-        await db.flush()
+    org_name = (payload.organization_name or "").strip()
+    org = (await db.execute(select(Organization).where(Organization.name == org_name))).scalars().first() if org_name else None
+    account_status = "active"
+    if role == "employer":
+        if not org_name:
+            raise HTTPException(status_code=400, detail="Kompaniya nomini kiriting.")
+        if org and org.type != "company":
+            raise HTTPException(status_code=400, detail="Bu nom ta’lim muassasasiga tegishli. Kompaniyangiz nomini kiriting.")
+        if org:
+            account_status = PENDING  # someone else already represents this company
+        else:
+            org = Organization(name=org_name, type="company")
+            db.add(org)
+            await db.flush()
+    else:
+        if not org_name:  # older clients sent no organisation: the pilot university
+            org = (await db.execute(select(Organization).where(Organization.name == "BSTU"))).scalars().first()
+        if not org or org.type != "university":
+            raise HTTPException(status_code=400, detail="Universitet topilmadi. Ro‘yxatdan universitetni tanlang.")
+        if role == "teacher":
+            account_status = PENDING
 
     new_user = User(
         full_name=payload.full_name.strip(),
@@ -128,7 +180,7 @@ async def register(payload: UserRegister, request: Request, db: AsyncSession = D
         role=role,
         org_id=org.id,
         locale="uz",
-        status="active",
+        status=account_status,
         bio="",
     )
     db.add(new_user)
@@ -149,9 +201,17 @@ async def register(payload: UserRegister, request: Request, db: AsyncSession = D
 
     audit.record(
         db, actor_id=new_user.id, action="auth.register", entity="user", entity_id=new_user.id,
-        after={"role": role, "email": new_user.email}, ip=client_ip(request),
+        after={"role": role, "email": new_user.email, "status": account_status, "org": org.name}, ip=client_ip(request),
     )
+    if account_status == PENDING and role == "teacher":
+        approvers = (await db.execute(select(User.id).where(
+            User.org_id == org.id, User.role == "university", User.status == "active", User.is_deleted.is_(False)))).scalars().all()
+        for admin_id in approvers:
+            notify(db, admin_id, kind="teacher_pending", title=f"Yangi o‘qituvchi tasdiqlashni kutmoqda: {new_user.full_name}",
+                   body=new_user.email, link="university:teachers")
     await db.commit()
+    if account_status == PENDING:
+        return {"pending": True, "detail": PENDING_MESSAGE, "role": role}
     return await _token_response(db, new_user)
 
 
@@ -193,6 +253,8 @@ async def mfa_verify(payload: MfaVerify, request: Request, db: AsyncSession = De
     mfa = await _mfa_row(db, user.id) if user else None
     if not user or not mfa or not mfa.enabled:
         raise HTTPException(status_code=401, detail="Sessiya muddati tugadi, qaytadan kiring.")
+    # A 6-digit code has a million values: cap guesses per account, not just per login token
+    ip_key, acct_key = await _check_attempts(request, f"mfa:{user.id}")
     secret = totp.decrypt(mfa.secret_encrypted)
     step = totp.verify(secret, payload.code, mfa.last_used_step) if secret else None
     if step is not None:
@@ -203,9 +265,11 @@ async def mfa_verify(payload: MfaVerify, request: Request, db: AsyncSession = De
         if remaining is None:
             audit.record(db, actor_id=user.id, action="auth.mfa_failed", entity="user", entity_id=user.id, ip=client_ip(request))
             await db.commit()
+            await _fail_attempt(ip_key, acct_key)
             raise HTTPException(status_code=401, detail="Kod noto‘g‘ri yoki allaqachon ishlatilgan.")
         mfa.recovery_hashes = remaining
         method = "recovery_code"
+    await ratelimit.reset(acct_key)
     audit.record(db, actor_id=user.id, action="auth.login", entity="user", entity_id=user.id,
                  after={"mfa": method}, ip=client_ip(request))
     await db.commit()

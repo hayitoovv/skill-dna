@@ -409,6 +409,9 @@ export default function App() {
     else if (portal === "employer" && role === "employer" && (target === "search" || target === "verified" || target === "invites")) {
       handleEmployerTabChange(target);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (portal === "university" && role === "university" && (target === "teachers" || target === "students")) {
+      handleUnivTabChange(target);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 

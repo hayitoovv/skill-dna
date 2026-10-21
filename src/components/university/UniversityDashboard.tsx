@@ -7,6 +7,7 @@ import { printRectorReport } from "./rectorReport";
 import UniversityRating from "./UniversityRating";
 import UniversityCompanies from "./UniversityCompanies";
 import UniversityStudents from "./UniversityStudents";
+import UniversityTeacherApprovals from "./UniversityTeacherApprovals";
 
 export type AdminTab = "dashboard" | "analytics" | "groups" | "teachers" | "students" | "curriculum" | "levels" | "companies";
 
@@ -1653,6 +1654,7 @@ export default function UniversityDashboard({
       {/* TAB 2: TEACHERS MANAGEMENT */}
       {activeTab === "teachers" && (
         <div>
+          <UniversityTeacherApprovals />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", flexWrap: "wrap", gap: "12px" }}>
             <div>
               <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--navy)", margin: 0 }}>
