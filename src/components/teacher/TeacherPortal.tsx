@@ -410,7 +410,7 @@ export default function TeacherPortal({
   };
 
   // State for PROVE Queue
-  const [proveQueue, setProveQueue] = useState<ProveRow[]>(teacherGroupData.proveQueue);
+  const [proveQueue, setProveQueue] = useState<ProveRow[]>(() => (hasSession() ? [] : teacherGroupData.proveQueue));
   const [proveScore, setProveScore] = useState<number>(80);
   const [proveBusy, setProveBusy] = useState(false);
 
@@ -508,7 +508,7 @@ export default function TeacherPortal({
   const [inspectedStudent, setInspectedStudent] = useState<MatrixRow | null>(null);
 
   // State for Remedial Challenge Generator
-  const [remedialTasks, setRemedialTasks] = useState<RemedialTaskRow[]>(teacherGroupData.remedialTasks);
+  const [remedialTasks, setRemedialTasks] = useState<RemedialTaskRow[]>(() => (hasSession() ? [] : teacherGroupData.remedialTasks));
   const [remedialModalOpen, setRemedialModalOpen] = useState(false);
   const [remedialSkill, setRemedialSkill] = useState("DevOps va CI/CD");
   const [remedialDifficulty, setRemedialDifficulty] = useState("L3");
@@ -518,7 +518,8 @@ export default function TeacherPortal({
   const [generationStep, setGenerationStep] = useState(1);
 
   // State for AI Viva Results
-  const [vivaResults, setVivaResults] = useState<any[]>(teacherGroupData.vivaResults);
+  // With a session the portal starts empty and fills from the API (demo rows only when it falls back to demo)
+  const [vivaResults, setVivaResults] = useState<any[]>(() => (hasSession() ? [] : teacherGroupData.vivaResults));
   const [vivaSource, setVivaSource] = useState<"loading" | "live" | "demo">("demo");
   const [vivaSearch, setVivaSearch] = useState("");
   const [vivaFilter, setVivaFilter] = useState("all");
@@ -584,10 +585,13 @@ export default function TeacherPortal({
     return weight ? Math.round(sum / weight) : null;
   }, [liveSkills]);
 
+  // Demo numbers only in demo mode: while the first request is in flight nothing is shown, so the
+  // page doesn't flash sample figures and then swap them for the real ones
+  const isDemo = dataMode === "demo";
   const layerScoreOf = (key: LayerKey): number | null =>
-    isLive ? liveLayerStats[key].score : groupLayers.find((l) => l.key === key)?.score ?? null;
-  const overallScore: number | null = isLive ? liveOverall : teacherGroupData.avgScore;
-  const totalStudents = isLive ? liveGaps?.students_total ?? 0 : teacherGroupData.totalStudents;
+    isLive ? liveLayerStats[key].score : isDemo ? groupLayers.find((l) => l.key === key)?.score ?? null : null;
+  const overallScore: number | null = isLive ? liveOverall : isDemo ? teacherGroupData.avgScore : null;
+  const totalStudents = isLive ? liveGaps?.students_total ?? 0 : isDemo ? teacherGroupData.totalStudents : 0;
   const groupLabel = isLive ? selectedGroupId ?? "—" : teacherGroupData.groupCode;
 
   const weakSkillsSorted = useMemo(
@@ -611,7 +615,9 @@ export default function TeacherPortal({
         gapPct: s.gap_pct,
         status: heatmapStatus(s.avg_score),
       }))
-    : teacherGroupData.skillHeatmap.map((h) => ({ ...h, skillId: "" }));
+    : isDemo
+    ? teacherGroupData.skillHeatmap.map((h) => ({ ...h, skillId: "" }))
+    : [];
 
   const matrixRows: MatrixRow[] = useMemo(() => {
     if (isLive) {
@@ -629,6 +635,7 @@ export default function TeacherPortal({
         layers: null,
       }));
     }
+    if (!isDemo) return [];
     return initialStudents.map((s) => ({
       id: s.id,
       name: s.name,
@@ -642,7 +649,7 @@ export default function TeacherPortal({
       status: s.status,
       layers: s.layers,
     }));
-  }, [isLive, liveGaps]);
+  }, [isLive, isDemo, liveGaps]);
 
   const remedialPackages = isLive
     ? weakSkillsSorted.slice(0, 3).map((s) => ({
@@ -721,6 +728,10 @@ export default function TeacherPortal({
 
   // Live AI Viva results for the selected group (GET /teacher/viva-results)
   useEffect(() => {
+    if (dataMode === "loading") {
+      setVivaSource("loading");
+      return;
+    }
     if (!isLive) {
       setVivaSource("demo");
       setVivaResults(teacherGroupData.vivaResults);
@@ -743,7 +754,7 @@ export default function TeacherPortal({
     return () => {
       cancelled = true;
     };
-  }, [isLive, selectedGroupId]);
+  }, [dataMode, isLive, selectedGroupId]);
 
   const openViva = async (v: any) => {
     setInspectedViva(v);
@@ -941,10 +952,12 @@ export default function TeacherPortal({
               )}{" "}
               ({totalStudents} nafar talaba)
             </p>
-          ) : (
+          ) : isDemo ? (
             <p className="subtitle">
               Guruh: <strong>{teacherGroupData.groupCode}</strong> · Yo‘nalish: <strong>{teacherGroupData.directionName}</strong> (28 nafar talaba) · <strong>BSTU</strong>
             </p>
+          ) : (
+            <p className="subtitle">Guruh ma’lumotlari yuklanmoqda…</p>
           )}
         </div>
       </section>
@@ -1060,7 +1073,7 @@ export default function TeacherPortal({
                   <p className="card-kicker">GURUH MALAKA RADARI</p>
                   <h2>5 qatlamli o‘rtacha guruh profili</h2>
                 </div>
-                {!isLive && (
+                {isDemo && (
                   <span className="level-badge">Bozorga moslik: {Math.round(74 * ease)}%</span>
                 )}
               </div>
@@ -1119,11 +1132,51 @@ export default function TeacherPortal({
                 </div>
 
                 <div className="score-summary">
-                  {isLive ? (
-                    <p>
-                      {totalStudents} nafar talaba · {liveSkills.length} ta ko‘nikma bo‘yicha baholar asosida
-                      {liveSkills.length === 0 ? " — guruhda hali baholangan ko‘nikmalar yo‘q." : ""}
-                    </p>
+                  {dataMode === "loading" ? (
+                    <p>Guruh ma’lumotlari yuklanmoqda…</p>
+                  ) : isLive ? (
+                    <div className="group-summary">
+                      <div className="dash-skill-stats">
+                        <div>
+                          <span>Talabalar</span>
+                          <strong>{totalStudents}</strong>
+                        </div>
+                        <div>
+                          <span>Ko‘nikmalar</span>
+                          <strong>{liveSkills.length}</strong>
+                        </div>
+                        <div>
+                          <span>70 dan past</span>
+                          <strong>{liveSkills.reduce((n, s) => n + s.below_70, 0)}</strong>
+                        </div>
+                      </div>
+                      {liveSkills.length === 0 ? (
+                        <p>Guruhda hali baholangan ko‘nikmalar yo‘q.</p>
+                      ) : (
+                        <>
+                          <p className="group-summary-title">Eng zaif ko‘nikmalar</p>
+                          <div className="group-weak">
+                            {weakSkillsSorted.slice(0, 3).map((s) => (
+                              <div key={s.skill.id} className="group-weak-row">
+                                <div className="group-weak-name">
+                                  <strong title={s.skill.name}>{s.skill.name}</strong>
+                                  <span>
+                                    O‘rtacha {Math.round(s.avg_score)} · {s.below_70} talaba 70 dan past
+                                  </span>
+                                </div>
+                                <div className="dash-layer-bar" title={`${s.gap_pct}% bo‘shliq`}>
+                                  <i className="rose" style={{ width: `${Math.min(100, Math.max(s.gap_pct, s.gap_pct > 0 ? 3 : 0))}%` }} />
+                                </div>
+                                <b>{s.gap_pct}%</b>
+                              </div>
+                            ))}
+                          </div>
+                          <p>
+                            {totalStudents} nafar talaba · {liveSkills.length} ta ko‘nikma bo‘yicha baholar asosida
+                          </p>
+                        </>
+                      )}
+                    </div>
                   ) : (
                     <>
                       <div className="confidence-head">
@@ -1186,7 +1239,7 @@ export default function TeacherPortal({
                 <p className="card-kicker">KOMPETENSIYA VA BO‘SHLIQLAR XARITASI</p>
                 <h2>Fan va ko‘nikmalar bo‘yicha guruh holati</h2>
               </div>
-              {!isLive && <span className="level-badge">2026-yil Bahor semestri</span>}
+              {isDemo && <span className="level-badge">2026-yil Bahor semestri</span>}
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -1508,7 +1561,7 @@ export default function TeacherPortal({
             </div>
 
             {/* Type Filter Chips (demo only — live evidence has no type field) */}
-            {!isLive && (
+            {isDemo && (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", minWidth: "90px" }}>
                 DALIL TURI:
@@ -1876,7 +1929,7 @@ export default function TeacherPortal({
                     <strong style={{ fontSize: "14px", color: "var(--navy)" }}>{task.progress}</strong>
                   </div>
 
-                  {!isLive && (
+                  {isDemo && (
                     <button
                       type="button"
                       className="candidate-evidence-btn"
@@ -2193,7 +2246,7 @@ export default function TeacherPortal({
             )}
 
             <div style={{ display: "flex", gap: "10px" }}>
-              {!isLive && (
+              {isDemo && (
                 <button
                   className="primary-button"
                   style={{ flex: 1 }}
@@ -2420,7 +2473,7 @@ export default function TeacherPortal({
                 </p>
               )}
 
-              {!isLive && (
+              {isDemo && (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <label style={{ fontSize: "12.5px", fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: "6px" }}>

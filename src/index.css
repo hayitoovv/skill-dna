@@ -2831,6 +2831,17 @@ body.cms-editing [data-cms-ignore], body.cms-editing [data-cms-ignore] * { curso
   .dash-skill-stats strong { font-size: 20px; }
 }
 
+/* ---------- Teacher group radar summary ---------- */
+.group-summary { display: flex; flex-direction: column; gap: 14px; }
+.group-summary > p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.group-summary .group-summary-title { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.group-weak { display: grid; gap: 10px; }
+.group-weak-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(60px, 1fr) 40px; align-items: center; gap: 12px; }
+.group-weak-name { min-width: 0; }
+.group-weak-name strong { display: block; font-size: 13.5px; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.group-weak-name span { display: block; font-size: 12px; color: var(--muted); }
+.group-weak-row b { text-align: right; font-size: 13.5px; color: var(--rose); font-variant-numeric: tabular-nums; }
+
 /* ---------- University teacher approvals ---------- */
 .approvals { padding: 20px 22px; margin-bottom: 22px; }
 .approvals-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
